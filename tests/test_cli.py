@@ -2,6 +2,7 @@
 
 from __future__ import unicode_literals, print_function
 
+import os
 import pytest
 import sys
 import logging
@@ -20,9 +21,11 @@ import bumpversion
 from bumpversion import main, DESCRIPTION, WorkingDirectoryIsDirtyException, \
     split_args_in_optional_and_positional
 
-SUBPROCESS_ENV = dict(
-    list(environ.items()) + [(b'HGENCODING', b'utf-8')]
-)
+def _get_subprocess_env():
+    env = os.environ.copy()
+    env['HGENCODING'] = 'utf-8'
+    return env
+SUBPROCESS_ENV = _get_subprocess_env()
 
 call = partial(subprocess.call, env=SUBPROCESS_ENV)
 check_call = partial(subprocess.check_call, env=SUBPROCESS_ENV)

@@ -71,9 +71,9 @@ class BaseVCS(object):
         f = NamedTemporaryFile('wb', delete=False)
         f.write(message.encode('utf-8'))
         f.close()
-        subprocess.check_output(cls._COMMIT_COMMAND + [f.name], env=dict(
-            list(os.environ.items()) + [(str('HGENCODING'), str('utf-8'))]
-        ))
+        env = os.environ.copy()
+        env['HGENCODING'] = 'utf-8'
+        subprocess.check_output(cls._COMMIT_COMMAND + [f.name], env=env)
         os.unlink(f.name)
 
     @classmethod
@@ -824,7 +824,7 @@ def main(original_args=None):
 
     if args.dry_run:
         logger.info("Dry run active, won't touch any files.")
-    
+
     if args.new_version:
         new_version = vc.parse(args.new_version)
 
