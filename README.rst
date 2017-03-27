@@ -10,6 +10,7 @@ Unfortunately it seems like development has been stuck for some time and no acti
 author, to that end this project is a drop-in replacement that merges in some of the more important fixes.
 Hopefully we can merged back into the original bumpversion and carry on development there.
 
+--
 
 Version-bump your software with a single command!
 
@@ -379,21 +380,25 @@ Execute the following commands::
     git checkout master
     git pull
     tox
-    bumpversion release
+    bump2version release
     python setup.py sdist bdist_wheel upload
-    bumpversion --no-tag patch
+    bump2version --no-tag patch
     git push origin master --tags
 
 License
 =======
 
-bumpversion is licensed under the MIT License - see the LICENSE.rst file for details
+bump2version is licensed under the MIT License - see the LICENSE.rst file for details
 
 Changes
 =======
 
 **unreleased**
 **v0.5.5-dev**
+
+- Added support for annotated tags
+  (thanks: @ekohl @gvangool `#58 <https://github.com/peritus/bumpversion/pull/58>`)
+
 **v0.5.4**
 
 - Renamed to bump2version to ensure no conflicts with original package
