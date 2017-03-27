@@ -51,7 +51,7 @@ operations.
 
 ::
 
-    bumpversion [options] part [file]
+    bump2version [options] part [file]
 
 
 ``part`` (required)
@@ -61,7 +61,7 @@ operations.
 
   Example `bumping 0.5.1 to 0.6.0`::
 
-     bumpversion --current-version 0.5.1 minor src/VERSION
+     bump2version --current-version 0.5.1 minor src/VERSION
 
 ``[file]``
   **default: none** (optional)
@@ -74,13 +74,13 @@ operations.
 
   Example `bumping 1.1.9 to 2.0.0`::
 
-     bumpversion --current-version 1.1.9 major setup.py
+     bump2version --current-version 1.1.9 major setup.py
 
 Configuration
 +++++++++++++
 
 All options can optionally be specified in a config file called
-``.bumpversion.cfg`` so that once you know how ``bumpversion`` needs to be
+``.bumpversion.cfg`` so that once you know how ``bump2version`` needs to be
 configured for one particular software package, you can run it without
 specifying options later. You should add that file to VCS so others can also
 bump versions.
@@ -98,7 +98,7 @@ Example ``.bumpversion.cfg``::
 
   [bumpversion:file:setup.py]
 
-If no ``.bumpversion.cfg`` exists, ``bumpversion`` will also look into
+If no ``.bumpversion.cfg`` exists, ``bump2version`` will also look into
 ``setup.cfg`` for configuration.
 
 Global configuration
@@ -111,7 +111,7 @@ General configuration is grouped in a ``[bumpversion]`` section.
 
   The current version of the software package before bumping.
 
-  Also available as ``--current-version`` (e.g. ``bumpversion --current-version 0.5.1 patch setup.py``)
+  Also available as ``--current-version`` (e.g. ``bump2version --current-version 0.5.1 patch setup.py``)
 
 ``new_version =``
   **no default value** (optional)
@@ -120,7 +120,7 @@ General configuration is grouped in a ``[bumpversion]`` section.
   automatically determined.
 
   Also available as ``--new-version`` (e.g. `to go from 0.5.1 directly to
-  0.6.1`: ``bumpversion --current-version 0.5.1 --new-version 0.6.1 patch
+  0.6.1`: ``bump2version --current-version 0.5.1 --new-version 0.6.1 patch
   setup.py``).
 
 ``tag = (True | False)``
@@ -144,7 +144,7 @@ General configuration is grouped in a ``[bumpversion]`` section.
   the variables ``now`` or ``utcnow`` to get a current timestamp. Both accept
   datetime formatting (when used like as in ``{now:%d.%m.%Y}``).
 
-  Also available as ``--tag-name`` (e.g. ``bumpversion --message 'Jenkins Build
+  Also available as ``--tag-name`` (e.g. ``bump2version --message 'Jenkins Build
   {$BUILD_NUMBER}: {new_version}' patch``).
 
 ``commit = (True | False)``
@@ -166,7 +166,7 @@ General configuration is grouped in a ``[bumpversion]`` section.
   the variables ``now`` or ``utcnow`` to get a current timestamp. Both accept
   datetime formatting (when used like as in ``{now:%d.%m.%Y}``).
 
-  Also available as ``--message`` (e.g.: ``bumpversion --message
+  Also available as ``--message`` (e.g.: ``bump2version --message
   '[{now:%Y-%m-%d}] Jenkins Build {$BUILD_NUMBER}: {new_version}' patch``)
 
 
@@ -229,8 +229,8 @@ The following options are valid inside a part configuration:
       beta
       gamma
 
-  Here, ``bumpversion release`` would bump ``1.alpha`` to ``1.beta``. Executing
-  ``bumpversion release`` again would bump ``1.beta`` to ``1``, because
+  Here, ``bump2version release`` would bump ``1.alpha`` to ``1.beta``. Executing
+  ``bump2version release`` again would bump ``1.beta`` to ``1``, because
   `release` being ``gamma`` is configured optional.
 
 ``first_value =``
@@ -355,14 +355,14 @@ new version, before applying the change.
 
 The standard way to get it in a bash script is
 
-    bumpversion --dry-run --list <part> | grep <field name> | sed -r s,"^.*=",,
+    bump2version --dry-run --list <part> | grep <field name> | sed -r s,"^.*=",,
 
 where <part> is as usual the part of the version number you are updating. You need to specify
 `--dry-run` to avoid bumpversion actually bumping the version number.
 
 For example, if you are updating the minor number and looking for the new version number this becomes
 
-    bumpversion --dry-run --list minor | grep new_version | sed -r s,"^.*=",,
+    bump2version --dry-run --list minor | grep new_version | sed -r s,"^.*=",,
 
 Development
 ===========
@@ -395,10 +395,11 @@ Changes
 
 **unreleased**
 **v0.5.6-dev**
+
 **v0.5.5**
 
 - Added support for annotated tags
-  (thanks: @ekohl @gvangool `#58 <https://github.com/peritus/bumpversion/pull/58>`)
+  (thanks: @ekohl @gvangool (`#58 <https://github.com/peritus/bumpversion/pull/58>`_)
 
 **v0.5.4**
 
