@@ -10,18 +10,18 @@ long_description = re.sub(
 )
 
 setup(
-    name='bumpversion',
+    name='bump2version',
     version='0.5.4-dev',
-    url='https://github.com/peritus/bumpversion',
-    author='Filip Noetzel',
-    author_email='filip+bumpversion@j03.de',
+    url='https://github.com/c4urself/bump2version',
+    author='Christian Verkerk',
+    author_email='christianverkerk@ymail.com',
     license='MIT',
     packages=['bumpversion'],
     description=description,
     long_description=long_description,
     entry_points={
         'console_scripts': [
-            'bumpversion = bumpversion:main',
+            'bump2version = bumpversion:main',
         ]
     },
     classifiers=(

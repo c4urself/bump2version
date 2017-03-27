@@ -1,6 +1,15 @@
 ===========
-bumpversion
+bump2version
 ===========
+
+NOTE
+====
+
+This is an interim fork of the excellent project that can be found here: https://github.com/peritus/bumpversion
+Unfortunately it seems like development has been stuck for some time and no activity has been seen from the
+author, to that end this project is a drop-in replacement that merges in some of the more important fixes.
+Hopefully we can merged back into the original bumpversion and carry on development there.
+
 
 Version-bump your software with a single command!
 
@@ -30,7 +39,7 @@ Installation
 
 You can download and install the latest version of this software from the Python package index (PyPI) as follows::
 
-    pip install --upgrade bumpversion
+    pip install --upgrade bump2version
 
 Usage
 =====
@@ -144,7 +153,7 @@ General configuration is grouped in a ``[bumpversion]`` section.
 
   Also available as ``(--commit | --no-commit)``.
 
-``message =`` 
+``message =``
   **default:** ``Bump version: {current_version} → {new_version}``
 
   The commit message to use when creating a commit. Only valid when using ``--commit`` / ``commit = True``.
@@ -386,6 +395,8 @@ Changes
 **unreleased**
 **v0.5.4-dev**
 
+- Renamed to bump2version to ensure no conflicts with original package
+
 **v0.5.3**
 
 - Fix bug where ``--new-version`` value was not used when config was present
@@ -416,7 +427,7 @@ in the configuration format. This release is fully backwards compatible to
 *v0.4.1*, however deprecates two uses that will be removed in a future version.
 
 - New feature: `Part specific configuration <#part-specific-configuration>`_
-- New feature: `File specific configuration <#file-specific-configuration>`_ 
+- New feature: `File specific configuration <#file-specific-configuration>`_
 - New feature: parse option can now span multiple line (allows to comment complex
   regular expressions. See `re.VERBOSE in the Python documentation
   <https://docs.python.org/library/re.html#re.VERBOSE>`_ for details, `this
@@ -424,7 +435,7 @@ in the configuration format. This release is fully backwards compatible to
   <https://github.com/peritus/bumpversion/blob/165e5d8bd308e9b7a1a6d17dba8aec9603f2d063/tests.py#L1202-L1211>`_
   as an example.)
 - New feature: ``--allow-dirty`` (`#42 <https://github.com/peritus/bumpversion/pull/42>`_).
-- Fix: Save the files in binary mode to avoid mutating newlines (thanks @jaraco `#45 <https://github.com/peritus/bumpversion/pull/45>`_). 
+- Fix: Save the files in binary mode to avoid mutating newlines (thanks @jaraco `#45 <https://github.com/peritus/bumpversion/pull/45>`_).
 - License: bumpversion is now licensed under the MIT License (`#47 <https://github.com/peritus/bumpversion/issues/47>`_)
 
 - Deprecate multiple files on the command line (use a `configuration file <#configuration>`_ instead, or invoke ``bumpversion`` multiple times)

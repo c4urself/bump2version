@@ -4,4 +4,7 @@ bin/
 include/
 lib/
 .Python
-bumpversion.egg-info/
+*.egg-info/
+__pycache__
+.cache
+dist
