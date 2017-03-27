@@ -394,7 +394,6 @@ Changes
 
 **unreleased**
 **v0.5.4**
-**v0.5.4-dev**
 
 - Renamed to bump2version to ensure no conflicts with original package
 
