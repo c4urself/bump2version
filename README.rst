@@ -394,6 +394,7 @@ Changes
 =======
 
 **unreleased**
+**v0.5.5**
 **v0.5.5-dev**
 
 - Added support for annotated tags
