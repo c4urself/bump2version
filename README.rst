@@ -394,8 +394,8 @@ Changes
 =======
 
 **unreleased**
+**v0.5.6-dev**
 **v0.5.5**
-**v0.5.5-dev**
 
 - Added support for annotated tags
   (thanks: @ekohl @gvangool `#58 <https://github.com/peritus/bumpversion/pull/58>`)

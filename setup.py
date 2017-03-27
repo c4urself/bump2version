@@ -11,7 +11,7 @@ long_description = re.sub(
 
 setup(
     name='bump2version',
-    version='0.5.5',
+    version='0.5.6-dev',
     url='https://github.com/c4urself/bump2version',
     author='Christian Verkerk',
     author_email='christianverkerk@ymail.com',
