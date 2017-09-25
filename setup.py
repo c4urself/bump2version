@@ -21,6 +21,7 @@ setup(
     long_description=long_description,
     entry_points={
         'console_scripts': [
+            'bumpversion = bumpversion:main',
             'bump2version = bumpversion:main',
         ]
     },
