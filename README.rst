@@ -394,6 +394,7 @@ Changes
 =======
 
 **unreleased**
+**v0.5.7-dev**
 **v0.5.6**
 
 - Added compatibility with `bumpversion` by making script install as `bumpversion` as well
