@@ -25,7 +25,7 @@ setup(
             'bump2version = bumpversion:main',
         ]
     },
-    classifiers=(
+    classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
@@ -38,5 +38,5 @@ setup(
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: Implementation :: PyPy',
-    ),
+    ],
 )
