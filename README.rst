@@ -394,6 +394,7 @@ Changes
 =======
 
 **unreleased**
+**v0.5.6**
 
 - Added compatibility with `bumpversion` by making script install as `bumpversion` as well
   (thanks: @the-allanc `#2 https://github.com/c4urself/bump2version/pull/2`_)
