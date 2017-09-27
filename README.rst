@@ -379,7 +379,7 @@ Execute the following commands::
 
     git checkout master
     git pull
-    tox
+    make test
     bump2version release
     python setup.py sdist bdist_wheel upload
     bump2version --no-tag patch
@@ -394,7 +394,9 @@ Changes
 =======
 
 **unreleased**
-**v0.5.6-dev**
+
+- Added compatibility with `bumpversion` by making script install as `bumpversion` as well
+  (thanks: @the-allanc `#2 https://github.com/c4urself/bump2version/pull/2`_)
 
 **v0.5.5**
 
