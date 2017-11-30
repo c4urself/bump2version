@@ -132,6 +132,13 @@ General configuration is grouped in a ``[bumpversion]`` section.
 
   Also available on the command line as ``(--tag | --no-tag)``.
 
+``sign_tags = (True | False)``
+  **default:** False (`Don't sign tags`)
+
+  Whether to sign tags.
+
+  Also available on the command line as ``(--sign-tags | --no-sign-tags)``.
+
 ``tag_name =``
   **default:** ``v{new_version}``
 
