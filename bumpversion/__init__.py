@@ -187,6 +187,10 @@ class Mercurial(BaseVCS):
     @classmethod
     def tag(cls, sign, name, message):
         command = ["hg", "tag", name]
+        if sign:
+            raise MercurialDoesNotSupportSignedTagsException(
+                'Mercurial does not support signed tags.'
+            )
         if message:
             command += ['--message', message]
         subprocess.check_output(command)
@@ -298,6 +302,10 @@ class MissingValueForSerializationException(Exception):
         self.message = message
 
 class WorkingDirectoryIsDirtyException(Exception):
+    def __init__(self, message):
+        self.message = message
+
+class MercurialDoesNotSupportSignedTagsException(Exception):
     def __init__(self, message):
         self.message = message
 
