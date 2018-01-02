@@ -78,6 +78,7 @@ EXPECTED_OPTIONS = """
 --new-version VERSION
 [--commit | --no-commit]
 [--tag | --no-tag]
+[--sign-tags | --no-sign-tags]
 [--tag-name TAG_NAME]
 [--tag-message TAG_MESSAGE]
 [--message COMMIT_MSG]
@@ -119,6 +120,8 @@ optional arguments:
   --no-commit           Do not commit to version control
   --tag                 Create a tag in version control (default: False)
   --no-tag              Do not create a tag in version control
+  --sign-tags           Sign tags if created (default: False)
+  --no-sign-tags        Do not sign tags if created
   --tag-name TAG_NAME   Tag name (only works with --tag) (default:
                         v{new_version})
   --tag-message TAG_MESSAGE

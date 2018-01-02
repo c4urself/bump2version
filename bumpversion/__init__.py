@@ -148,8 +148,10 @@ class Git(BaseVCS):
         subprocess.check_output(["git", "add", "--update", path])
 
     @classmethod
-    def tag(cls, name, message):
+    def tag(cls, sign, name, message):
         command = ["git", "tag", name]
+        if sign:
+            command += ['-s']
         if message:
             command += ['--message', message]
         subprocess.check_output(command)
@@ -183,8 +185,12 @@ class Mercurial(BaseVCS):
         pass
 
     @classmethod
-    def tag(cls, name, message):
+    def tag(cls, sign, name, message):
         command = ["hg", "tag", name]
+        if sign:
+            raise MercurialDoesNotSupportSignedTagsException(
+                'Mercurial does not support signed tags.'
+            )
         if message:
             command += ['--message', message]
         subprocess.check_output(command)
@@ -296,6 +302,10 @@ class MissingValueForSerializationException(Exception):
         self.message = message
 
 class WorkingDirectoryIsDirtyException(Exception):
+    def __init__(self, message):
+        self.message = message
+
+class MercurialDoesNotSupportSignedTagsException(Exception):
     def __init__(self, message):
         self.message = message
 
@@ -782,6 +792,12 @@ def main(original_args=None):
     taggroup.add_argument('--no-tag', action='store_false', dest="tag",
                           help='Do not create a tag in version control', default=argparse.SUPPRESS)
 
+    signtagsgroup = parser3.add_mutually_exclusive_group()
+    signtagsgroup.add_argument('--sign-tags', action='store_true', dest="sign_tags",
+                          help='Sign tags if created', default=defaults.get("sign_tags", False))
+    signtagsgroup.add_argument('--no-sign-tags', action='store_false', dest="sign_tags",
+                          help='Do not sign tags if created', default=argparse.SUPPRESS)
+
     parser3.add_argument('--tag-name', metavar='TAG_NAME',
                          help='Tag name (only works with --tag)',
                          default=defaults.get('tag_name', 'v{new_version}'))
@@ -921,14 +937,16 @@ def main(original_args=None):
     if do_commit:
         vcs.commit(message=commit_message)
 
+    sign_tags = args.sign_tags
     tag_name = args.tag_name.format(**vcs_context)
     tag_message = args.tag_message.format(**vcs_context)
-    logger.info("{} '{}' {} in {}".format(
+    logger.info("{} '{}' {} in {} and {}".format(
         "Would tag" if not do_tag else "Tagging",
         tag_name,
         "with message '{}'".format(tag_message) if tag_message else "without message",
-        vcs.__name__
+        vcs.__name__,
+        "signing" if sign_tags else "not signing"
     ))
 
     if do_tag:
-        vcs.tag(tag_name, tag_message)
+        vcs.tag(sign_tags, tag_name, tag_message)
