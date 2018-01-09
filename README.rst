@@ -401,9 +401,8 @@ Changes
 =======
 
 **unreleased**
-**v0.5.7**
 
-**v0.5.7-dev**
+**v0.5.7**
 
 - Added support for signing tags (git tag -s)
   thanks: @Californian (`https://github.com/c4urself/bump2version/pull/6`_)
