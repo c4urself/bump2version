@@ -401,6 +401,7 @@ Changes
 =======
 
 **unreleased**
+**v0.5.7**
 
 **v0.5.7-dev**
 
