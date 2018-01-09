@@ -405,12 +405,12 @@ Changes
 **v0.5.7**
 
 - Added support for signing tags (git tag -s)
-  thanks: @Californian (`https://github.com/c4urself/bump2version/pull/6`_)
+  thanks: @Californian (`#6 <https://github.com/c4urself/bump2version/pull/6>`_)
 
 **v0.5.6**
 
 - Added compatibility with `bumpversion` by making script install as `bumpversion` as well
-  thanks: @the-allanc (`#2 https://github.com/c4urself/bump2version/pull/2`_)
+  thanks: @the-allanc (`#2 <https://github.com/c4urself/bump2version/pull/2>`_)
 
 **v0.5.5**
 
