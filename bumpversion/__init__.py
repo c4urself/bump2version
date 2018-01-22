@@ -538,6 +538,10 @@ def main(original_args=None):
       sys.argv[1:] if original_args is None else original_args
     )
 
+    if positionals[0] not in ('major', 'minor', 'patch'):
+        print("ERROR: Must provide a valid version part: 'major', 'minor', or 'patch'")
+        return 1
+
     if len(positionals[1:]) > 2:
         warnings.warn("Giving multiple files on the command line will be deprecated, please use [bumpversion:file:...] in a config file.", PendingDeprecationWarning)
 
@@ -824,7 +828,7 @@ def main(original_args=None):
 
     if args.dry_run:
         logger.info("Dry run active, won't touch any files.")
-    
+
     if args.new_version:
         new_version = vc.parse(args.new_version)
 
