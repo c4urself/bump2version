@@ -29,6 +29,7 @@ import sys
 import codecs
 
 from bumpversion.version_part import VersionPart, NumericVersionPartConfiguration, ConfiguredVersionPartConfiguration
+from bumpversion.functions import NumericFunction
 
 if sys.version_info[0] == 2:
     sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
@@ -314,8 +315,9 @@ def keyvaluestring(d):
 
 class Version(object):
 
-    def __init__(self, values, original=None):
+    def __init__(self, values, config, original=None):
         self._values = dict(values)
+        self.config = config
         self.original = original
 
     def __getitem__(self, key):
@@ -328,7 +330,75 @@ class Version(object):
         return iter(self._values)
 
     def __repr__(self):
-        return '<bumpversion.Version:{}>'.format(keyvaluestring(self._values))
+        by_part = ", ".join("{}={}".format(k, v) for k, v in self.items())
+        return '<bumpversion.Version:{}>'.format(by_part)
+
+    def __hash__(self):
+        return hash(tuple((k, v) for k, v in self.items()))
+
+    def _compare(self, other, method):
+        """
+        For >=, <= and == we need to compare all parts
+        For > and < we use the opposite operator and flip the operands
+        :param other:
+        :param method:
+        :return:
+        """
+        try:
+            for vals in ((k, v, other[k]) for k, v in self.items()):
+                if not method(vals[1], vals[2]):
+                    return False
+        except KeyError:
+            raise TypeError("Versions use different parts, cant compare them.")
+        return True
+
+    def __eq__(self, other):
+        if self is other:
+            return True
+        if not isinstance(other, Version):
+            return False
+        return self._compare(other, lambda s, o: s == o)
+
+    def __le__(self, other):
+        return self._compare(other, lambda s, o: s <= o)
+
+    def __ge__(self, other):
+        return self._compare(other, lambda s, o: s >= o)
+
+    # def _compare_fast(self, other, method):
+    #     """
+    #     For >, < and != comparision can stop at first fail
+    #     :param other:
+    #     :param method:
+    #     :return:
+    #     """
+    #     try:
+    #         for vals in ((k, v, other[k]) for k, v in self.items()):
+    #             if method(vals[1], vals[2]):
+    #                 return True
+    #     except KeyError:
+    #         raise TypeError("Versions use different parts, cant compare them.")
+    #     return False
+
+    def __lt__(self, other):
+        return self._compare_fast(other, lambda s, o: o >= s)   # s < o
+
+    def __gt__(self, other):
+        return self._compare(other, lambda s, o: o <= s)        # s > o
+
+    def __ne__(self, other):
+        if self is other:
+            return False
+        if not isinstance(other, Version):
+            return True
+        return not self._compare(other, lambda s, o: s == o)
+
+    def items(self):
+        for k in self.config.order():
+            try:
+                yield k, self._values[k]
+            except KeyError:
+                raise StopIteration
 
     def bump(self, part_name, order):
         bumped = False
@@ -346,7 +416,7 @@ class Version(object):
             else:
                 new_values[label] = self._values[label].copy()
 
-        new_version = Version(new_values)
+        new_version = Version(new_values, self.config)
 
         return new_version
 
@@ -403,7 +473,7 @@ class VersionConfig(object):
             _parsed[key] = VersionPart(value, self.part_configs.get(key))
 
 
-        v = Version(_parsed, version_string)
+        v = Version(_parsed, self, version_string)
 
         logger.info("Parsed the following values: %s" % keyvaluestring(v._values))
 

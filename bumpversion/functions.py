@@ -82,8 +82,11 @@ class ValuesFunction(object):
 
     def bump(self, value):
         try:
-            return self._values[self._values.index(value)+1]
+            return self._values[self.index(value) + 1]
         except IndexError:
             raise ValueError(
                 "The part has already the maximum value among {} and cannot be bumped.".format(self._values))
+
+    def index(self, value):
+        return self._values.index(value)
 
