@@ -678,7 +678,7 @@ def main(original_args=None):
                 filename = section_value
 
                 if 'serialize' in section_config:
-                    section_config['serialize'] = list(filter(None, (x.strip() for x in section_config['serialize'].splitlines())))
+                    section_config['serialize'] = list(filter(None, (x.strip().replace("\\n", "\n") for x in section_config['serialize'].splitlines())))
 
                 section_config['part_configs'] = part_configs
 
