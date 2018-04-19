@@ -73,7 +73,15 @@ class BaseVCS(object):
         f.close()
         env = os.environ.copy()
         env['HGENCODING'] = 'utf-8'
-        subprocess.check_output(cls._COMMIT_COMMAND + [f.name], env=env)
+        try:
+            subprocess.check_output(cls._COMMIT_COMMAND + [f.name], env=env)
+        except subprocess.CalledProcessError as exc:
+            err_msg = "Failed to run {}: return code {}, output: {}".format(
+                exc.cmd,
+                exc.returncode,
+                exc.output)
+            logger.exception(err_msg)
+            raise exc
         os.unlink(f.name)
 
     @classmethod
