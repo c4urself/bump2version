@@ -901,6 +901,19 @@ def test_non_vcs_operations_if_vcs_is_not_installed(tmpdir, vcs, monkeypatch):
 
     assert '32.0.0' == tmpdir.join("VERSION").read()
 
+def test_serialize_newline(tmpdir):
+    tmpdir.join("filenewline").write("MAJOR=31\nMINOR=0\nPATCH=3\n")
+    tmpdir.chdir()
+    main([
+        '--current-version', 'MAJOR=31\nMINOR=0\nPATCH=3\n',
+        '--parse', 'MAJOR=(?P<major>\d+)\\nMINOR=(?P<minor>\d+)\\nPATCH=(?P<patch>\d+)\\n',
+        '--serialize', 'MAJOR={major}\nMINOR={minor}\nPATCH={patch}\n',
+        '--verbose',
+        'major',
+        'filenewline'
+        ])
+    assert 'MAJOR=32\nMINOR=0\nPATCH=0\n' == tmpdir.join("filenewline").read()
+
 def test_multiple_serialize_threepart(tmpdir):
     tmpdir.join("fileA").write("Version: 0.9")
     tmpdir.chdir()
