@@ -6,7 +6,7 @@ description = 'Version-bump your software with a single command!'
 long_description = re.sub(
   "\`(.*)\<#.*\>\`\_",
   r"\1",
-  str(open('README.rst', 'rb').read()).replace(description, '')
+  str(open('README.md', 'rb').read()).replace(description, '')
 )
 
 setup(
@@ -34,9 +34,10 @@ setup(
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.2',
-        'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: Implementation :: PyPy',
+        'Programming Language :: Python :: Implementation :: PyPy3',
     ],
 )

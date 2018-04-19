@@ -1,11 +1,15 @@
 # bump2version
 
+[![Build Status](https://travis-ci.org/c4urself/bump2version.svg?branch=master)](https://travis-ci.org/c4urself/bump2version)
+
 ## NOTE
 
 This is an interim fork of the excellent project that can be found here: https://github.com/peritus/bumpversion
 Unfortunately it seems like development has been stuck for some time and no activity has been seen from the
 author, to that end this project is a drop-in replacement that merges in some of the more important fixes.
 Hopefully we can merged back into the original bumpversion and carry on development there.
+
+## Overview
 
 Version-bump your software with a single command!
 
@@ -17,8 +21,8 @@ commits and tags:
 * works without any VCS, but happily reads tag information from and writes
   commits and tags to Git and Mercurial if available
 * just handles text files, so it's not specific to any programming language
+* supports Python2, Python3 and Pypy
 
-[![Build Status](https://travis-ci.org/c4urself/bump2version.svg?branch=master)](https://travis-ci.org/c4urself/bump2version)
 
 ## Screencast
 
@@ -278,8 +282,7 @@ This configuration is in the section: `[bumpversion:file:…]`
   Template string how to search for the string to be replaced in the file.
   Useful if the remotest possibility exists that the current version number
   might be multiple times in the file and you mean to only bump one of the
-  occurences. Can be multiple lines, templated using `Python Format String Syntax
-  <http://docs.python.org/2/library/string.html#format-string-syntax>`_.
+  occurences. Can be multiple lines, templated using [Python Format String Syntax](http://docs.python.org/2/library/string.html#format-string-syntax)
 
 #### `replace =`
   **default:** `{new_version}`
@@ -302,8 +305,7 @@ This configuration is in the section: `[bumpversion:file:…]`
     search = MyProject=={current_version}
     replace = MyProject=={new_version}
 
-  Can be multiple lines, templated using `Python Format String Syntax
-  http://docs.python.org/2/library/string.html#format-string-syntax.
+  Can be multiple lines, templated using [Python Format String Syntax](http://docs.python.org/2/library/string.html#format-string-syntax).
 
 ## Command-line Options
 
