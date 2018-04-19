@@ -384,6 +384,13 @@ bump2version is licensed under the MIT License - see the LICENSE.rst file for de
 
 **unreleased**
 
+- Updated the readme to markdown for easier maintainability
+- Fixed travis testing, thanks: @sharksforarms #15
+- Added support for newlines, thanks; @sharksforarms #14
+- Fixed an issue with a TypeError on Windows, thanks: @lorengordon #12
+- Standardised the python versions, thanks: @ekohl #8
+- Fixed testing for pypy, #7
+
 **v0.5.7**
 
 - Added support for signing tags (git tag -s)
