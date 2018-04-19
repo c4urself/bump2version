@@ -383,6 +383,7 @@ bump2version is licensed under the MIT License - see the LICENSE.rst file for de
 ## Changes
 
 **unreleased**
+**v0.5.8-dev**
 
 - Updated the readme to markdown for easier maintainability
 - Fixed travis testing, thanks: @sharksforarms #15
