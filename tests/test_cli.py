@@ -1842,6 +1842,36 @@ def test_regression_tag_name_with_hyphens(tmpdir, capsys, vcs):
 
     main(['patch', 'somesource.txt'])
 
+
+@pytest.mark.parametrize(("vcs"), [xfail_if_no_git("git")])
+def test_unclean_repo_exception(tmpdir, vcs, caplog):
+    tmpdir.chdir()
+
+    config = """[bumpversion]
+current_version = 0.0.0
+tag = True
+commit = True
+message = XXX
+"""
+
+    tmpdir.join("file1").write("foo")
+
+    # If I have a repo with an initial commit
+    check_call([vcs, "init"])
+    check_call([vcs, "add", "file1"])
+    check_call([vcs, "commit", "-m", "initial commit"])
+
+    # If I add the bumpversion config, uncommitted
+    tmpdir.join(".bumpversion.cfg").write(config)
+
+    # I expect bumpversion patch to fail
+    with pytest.raises(subprocess.CalledProcessError):
+        main(['patch'])
+
+    # And return the output of the failing command
+    assert "Failed to run" in caplog.text
+
+
 def test_regression_characters_after_last_label_serialize_string(tmpdir, capsys):
     tmpdir.chdir()
     tmpdir.join("bower.json").write('''
