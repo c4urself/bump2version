@@ -1,13 +1,11 @@
-import re
+import io
 from setuptools import setup
 
 description = 'Version-bump your software with a single command!'
 
-long_description = re.sub(
-  "\`(.*)\<#.*\>\`\_",
-  r"\1",
-  str(open('README.md', 'rb').read()).replace(description, '')
-)
+with io.open('README.rst', encoding="utf-8") as f:
+    long_description = f.read()
+
 
 setup(
     name='bump2version',
