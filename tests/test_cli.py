@@ -154,7 +154,7 @@ def test_usage_string_fork(tmpdir, capsys):
     try:
         out = check_output('bumpversion --help', shell=True, stderr=subprocess.STDOUT).decode('utf-8')
     except subprocess.CalledProcessError as e:
-        out = e.output
+        out = e.output.decode('utf-8')
 
     if not 'usage: bumpversion [-h]' in out:
         print(out)
