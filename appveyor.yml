@@ -1,47 +1,38 @@
-
-version: '{build}'
-
-build: off
-
+build: false  # Not a C# project
 environment:
   matrix:
-    - PYTHON: "C:/Python27"
-      TOXENV: "py27"
+    - TOXENV: py27
+    - TOXENV: py27-configparser
+    - TOXENV: py34
+    - TOXENV: py35
+    - TOXENV: py36
+    - TOXENV: pypy 
+    - TOXENV: pypy3
 
-    - PYTHON: "C:/Python27"
-      TOXENV: "py27-configparser"
-
-    - PYTHON: "C:/Python33"
-      TOXENV: "py33"
-
-    - PYTHON: "C:/Python34"
-      TOXENV: "py34"
-
-init:
-  - "ECHO %TOXENV%"
-  - "ECHO %PYTHON%"
-  - ps: "ls C:/Python*"
 
 install:
+  # on Windows, Mercurial is available only for Python 2.7
   - ps: (new-object net.webclient).DownloadFile('https://bootstrap.pypa.io/get-pip.py', 'C:/get-pip.py')
-  - "%PYTHON%/python.exe C:/get-pip.py"
-  - "%PYTHON%/Scripts/pip.exe install virtualenv"
-  - "%PYTHON%/Scripts/pip.exe install tox"
-  - "%PYTHON%/Scripts/pip.exe install mercurial"
-  - "%PYTHON%/Scripts/pip.exe install -e ."
+  - C:\Python27\python.exe C:\get-pip.py"
+  - C:\Python27\Scripts\pip.exe install mercurial
+  # Install tox (will cover all python versions)
+  - C:\Python36\python -m pip install -U tox
 
+  # prepare git
   - 'git config --global user.email "bumpversion-test-git@appveyor.ci"'
   - 'git config --global user.name "Testing Git on AppVeyor CI"'
   - 'git --version'
   - 'git config --list'
 
+  # prepare mercurial
   - ps: Add-Content $ENV:UserProfile\Mercurial.ini "[ui]`r`nusername = Testing Mercurial on AppVeyor CI <bumpversion-test-hg@appveyor.ci>"
   - ps: Write-Host $ENV:UserProfile\Mercurial.ini
   - ps: Get-Content $ENV:UserProfile\Mercurial.ini
   - 'hg --version'
 
 test_script:
-  - "%PYTHON%/Scripts/pip.exe --version"
-  - "%PYTHON%/Scripts/virtualenv.exe --version"
-  - "%PYTHON%/Scripts/tox.exe --version"
-  - "%PYTHON%/Scripts/tox.exe -- -v"
+  - C:\Python36\scripts\tox
+
+cache:
+  - '%LOCALAPPDATA%\pip\cache'
+  - '%USERPROFILE%\.cache\pre-commit'
