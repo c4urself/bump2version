@@ -4,14 +4,12 @@ from __future__ import unicode_literals, print_function
 
 import os
 import pytest
-import sys
-import logging
+import py
 import mock
 
 import argparse
 import subprocess
-from os import curdir, makedirs, chdir, environ
-from os.path import join, curdir, dirname
+from os import environ
 from shlex import split as shlex_split
 from textwrap import dedent
 from functools import partial
@@ -32,12 +30,12 @@ check_call = partial(subprocess.check_call, env=SUBPROCESS_ENV)
 check_output = partial(subprocess.check_output,  env=SUBPROCESS_ENV)
 
 xfail_if_no_git = pytest.mark.xfail(
-  call(["git", "help"]) != 0,
+  not py.path.local.sysfind("git"),
   reason="git is not installed"
 )
 
 xfail_if_no_hg = pytest.mark.xfail(
-  call(["hg", "help"]) != 0,
+  not py.path.local.sysfind("hg"),
   reason="hg is not installed"
 )
 
@@ -156,7 +154,7 @@ def test_usage_string_fork(tmpdir, capsys):
     try:
         out = check_output('bumpversion --help', shell=True, stderr=subprocess.STDOUT).decode('utf-8')
     except subprocess.CalledProcessError as e:
-        out = e.output
+        out = e.output.decode('utf-8')
 
     if not 'usage: bumpversion [-h]' in out:
         print(out)
@@ -1070,7 +1068,8 @@ def test_complex_info_logging(tmpdir, capsys):
     with mock.patch("bumpversion.logger") as logger:
         main(['patch'])
 
-    # beware of the trailing space (" ") after "serialize =":
+    # beware of the trailing space (" ") after 2nd "serialize =":
+    # as some editors remove trailing spaces, space is interpolated
     EXPECTED_LOG = dedent("""
         info|Reading config file .bumpversion.cfg:|
         info|[bumpversion]
@@ -1099,13 +1098,13 @@ def test_complex_info_logging(tmpdir, capsys):
         info|[bumpversion]
         files = fileE
         current_version = 0.4.1
-        serialize = 
+        serialize =%(space)s
         	{major}.{minor}.{patch}
         	{major}.{minor}
         parse = (?P<major>\d+)\.(?P<minor>\d+)(\.(?P<patch>\d+))?
-        
+
         |
-        """).strip()
+        """).strip() % dict(space=" ")
 
     actual_log ="\n".join(_mock_calls_to_string(logger)[4:])
 
@@ -1136,7 +1135,8 @@ def test_subjunctive_dry_run_logging(tmpdir, vcs):
     with mock.patch("bumpversion.logger") as logger:
         main(['patch', '--dry-run'])
 
-    # beware of the trailing space (" ") after "serialize =":
+    # beware of the trailing space (" ") after 2nd "serialize =":
+    # as some editors remove trailing spaces, space is interpolated
     EXPECTED_LOG = dedent("""
         info|Reading config file .bumpversion.cfg:|
         info|[bumpversion]
@@ -1170,7 +1170,7 @@ def test_subjunctive_dry_run_logging(tmpdir, vcs):
         current_version = 0.8.1
         commit = True
         tag = True
-        serialize = 
+        serialize =%(space)s
         	{major}.{minor}.{patch}
         	{major}.{minor}
         parse = (?P<major>\d+)\.(?P<minor>\d+)(\.(?P<patch>\d+))?
@@ -1181,7 +1181,7 @@ def test_subjunctive_dry_run_logging(tmpdir, vcs):
         info|Would add changes in file '.bumpversion.cfg' to Git|
         info|Would commit to Git with message 'Bump version: 0.8 \u2192 0.8.1'|
         info|Would tag 'v0.8.1' with message 'Bump version: 0.8 \u2192 0.8.1' in Git and not signing|
-        """).strip()
+        """).strip() % dict(space=" ")
 
     if vcs == "hg":
         EXPECTED_LOG = EXPECTED_LOG.replace("Git", "Mercurial")
@@ -1240,7 +1240,7 @@ def test_log_commitmessage_if_no_commit_tag_but_usable_vcs(tmpdir, vcs):
         current_version = 0.3.4
         commit = False
         tag = False
-        
+
         |
         info|Would prepare Git commit|
         info|Would add changes in file 'please_touch_me.txt' to Git|
@@ -1357,7 +1357,7 @@ def test_optional_value_from_documentation(tmpdir):
       serialize =
         {num}.{release}
         {num}
-  
+
       [bumpversion:part:release]
       optional_value = gamma
       values =
@@ -1613,7 +1613,7 @@ def test_search_replace_expanding_changelog(tmpdir, capsys):
     * Another old nice feature
 
     """))
-    
+
     config_content = dedent("""
       [bumpversion]
       current_version = 8.1.1
@@ -1718,18 +1718,18 @@ def test_file_specific_config_inherits_parse_serialize(tmpdir):
       [bumpversion]
       current_version = 14-chocolate
       parse = (?P<major>\d+)(\-(?P<flavor>[a-z]+))?
-      serialize = 
+      serialize =
       	{major}-{flavor}
       	{major}
 
       [bumpversion:file:todays_icecream]
-      serialize = 
+      serialize =
       	{major}-{flavor}
 
       [bumpversion:file:todays_cake]
 
       [bumpversion:part:flavor]
-      values = 
+      values =
       	vanilla
       	chocolate
       	strawberry
