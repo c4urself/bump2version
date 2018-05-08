@@ -4,14 +4,12 @@ from __future__ import unicode_literals, print_function
 
 import os
 import pytest
-import sys
-import logging
+import py
 import mock
 
 import argparse
 import subprocess
-from os import curdir, makedirs, chdir, environ
-from os.path import join, curdir, dirname
+from os import environ
 from shlex import split as shlex_split
 from textwrap import dedent
 from functools import partial
@@ -32,12 +30,12 @@ check_call = partial(subprocess.check_call, env=SUBPROCESS_ENV)
 check_output = partial(subprocess.check_output,  env=SUBPROCESS_ENV)
 
 xfail_if_no_git = pytest.mark.xfail(
-  call(["git", "help"]) != 0,
+  not py.path.local.sysfind("git"),
   reason="git is not installed"
 )
 
 xfail_if_no_hg = pytest.mark.xfail(
-  call(["hg", "help"]) != 0,
+  not py.path.local.sysfind("hg"),
   reason="hg is not installed"
 )
 
