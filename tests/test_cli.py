@@ -18,7 +18,7 @@ from functools import partial
 import bumpversion
 
 from bumpversion import main, DESCRIPTION, WorkingDirectoryIsDirtyException, \
-    split_args_in_optional_and_positional
+    split_args_in_optional_and_positional, UnkownPart
 
 SUBPROCESS_ENV = dict(
     list(environ.items()) + [(b'HGENCODING', b'utf-8')]
@@ -322,6 +322,19 @@ def test_bump_version(tmpdir):
     main(['patch', '--current-version', '1.0.0', 'file5'])
 
     assert '1.0.1' == tmpdir.join("file5").read()
+
+
+def test_bump_version_unkown_part(tmpdir):
+
+    tmpdir.join("file5").write("1.0.0")
+    tmpdir.chdir()
+    with pytest.raises(UnkownPart):
+        with mock.patch("bumpversion.logger") as logger:
+            main(['bugfix', '--current-version', '1.0.0', 'file5'])
+
+    actual_log ="\n".join(_mock_calls_to_string(logger)[4:])
+
+    assert 'Bumped part not found in parse parts' in actual_log
 
 
 def test_bump_version_custom_parse(tmpdir):

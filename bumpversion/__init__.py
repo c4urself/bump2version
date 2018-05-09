@@ -310,6 +310,10 @@ class MercurialDoesNotSupportSignedTagsException(Exception):
     def __init__(self, message):
         self.message = message
 
+class UnkownPart(Exception):
+    def __init__(self, message):
+        self.message = message
+
 def keyvaluestring(d):
     return ", ".join("{}={}".format(k, v) for k, v in sorted(d.items()))
 
@@ -351,7 +355,7 @@ class Version(object):
                     return True
                 else:
                     return False
-                    return False
+            return False
         except KeyError:
             raise TypeError("Versions use different parts, cant compare them.")
 
@@ -802,10 +806,16 @@ def main(original_args=None):
     if not 'new_version' in defaults and known_args.current_version:
         try:
             if current_version and len(positionals) > 0:
-                logger.info("Attempting to increment part '{}'".format(positionals[0]))
-                new_version = current_version.bump(positionals[0], vc.order())
-                logger.info("Values are now: " + keyvaluestring(new_version._values))
-                defaults['new_version'] = vc.serialize(new_version, context)
+                part = positionals[0]
+                logger.info("Attempting to increment part '{}'".format(part))
+                if part in vc.order():
+                    logger.info("Bumped part found in parse parts.")
+                    new_version = current_version.bump(part, vc.order())
+                    logger.info("Values are now: " + keyvaluestring(new_version._values))
+                    defaults['new_version'] = vc.serialize(new_version, context)
+                else:
+                    logger.info("Bumped part not found in parse parts.")
+                    raise UnkownPart("Bumped part not found in parse parts.")
         except MissingValueForSerializationException as e:
             logger.info("Opportunistic finding of new_version failed: " + e.message)
         except IncompleteVersionRepresenationException as e:
