@@ -68,7 +68,7 @@ class VersionPart(object):
 
     def _compare(self, other, method):
             if self.config.function_cls is not other.config.function_cls:
-                raise TypeError("Versions use different part specific configuration, cant comapre them.")
+                raise TypeError("Versions use different part specific configuration, cant compare them.")
             if self.config.function_cls is NumericFunction:
                 return method(self.value, other.value)
             else:

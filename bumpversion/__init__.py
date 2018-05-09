@@ -336,62 +336,46 @@ class Version(object):
     def __hash__(self):
         return hash(tuple((k, v) for k, v in self.items()))
 
-    def _compare(self, other, method):
+    def _compare_strict(self, other, method):
         """
-        For >=, <= and == we need to compare all parts
-        For > and < we use the opposite operator and flip the operands
-        :param other:
-        :param method:
+        For strict relations, if a part is equal we skip it
+        :param other: the other Version
+        :param method: the compare method
         :return:
         """
         try:
-            for vals in ((k, v, other[k]) for k, v in self.items()):
-                if not method(vals[1], vals[2]):
+            for vals in ((v, other[k]) for k, v in self.items()):
+                if vals[0] == vals[1]:
+                    continue
+                if method(vals[0], vals[1]):
+                    return True
+                else:
+                    return False
                     return False
         except KeyError:
             raise TypeError("Versions use different parts, cant compare them.")
-        return True
 
     def __eq__(self, other):
         if self is other:
             return True
         if not isinstance(other, Version):
             return False
-        return self._compare(other, lambda s, o: s == o)
+        try:
+            return all(v == other[k] for k, v in self.items())
+        except KeyError:
+            raise TypeError("Versions use different parts, cant compare them.")
 
     def __le__(self, other):
-        return self._compare(other, lambda s, o: s <= o)
+        return self._compare_strict(other, lambda s, o: o > s)  # Note the change of order in operands
 
     def __ge__(self, other):
-        return self._compare(other, lambda s, o: s >= o)
-
-    # def _compare_fast(self, other, method):
-    #     """
-    #     For >, < and != comparision can stop at first fail
-    #     :param other:
-    #     :param method:
-    #     :return:
-    #     """
-    #     try:
-    #         for vals in ((k, v, other[k]) for k, v in self.items()):
-    #             if method(vals[1], vals[2]):
-    #                 return True
-    #     except KeyError:
-    #         raise TypeError("Versions use different parts, cant compare them.")
-    #     return False
+        return self._compare_strict(other, lambda s, o: o < s)  # Note the change of order in operands
 
     def __lt__(self, other):
-        return self._compare_fast(other, lambda s, o: o >= s)   # s < o
+        return self._compare_strict(other, lambda s, o: s < o)
 
     def __gt__(self, other):
-        return self._compare(other, lambda s, o: o <= s)        # s > o
-
-    def __ne__(self, other):
-        if self is other:
-            return False
-        if not isinstance(other, Version):
-            return True
-        return not self._compare(other, lambda s, o: s == o)
+        return self._compare_strict(other, lambda s, o: s > o)
 
     def items(self):
         for k in self.config.order():
