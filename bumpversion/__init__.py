@@ -340,7 +340,7 @@ class Version(object):
     def __hash__(self):
         return hash(tuple((k, v) for k, v in self.items()))
 
-    def _compare_strict(self, other, method):
+    def _compare(self, other, method, strict=True):
         """
         For strict relations, if a part is equal we skip it
         :param other: the other Version
@@ -355,7 +355,7 @@ class Version(object):
                     return True
                 else:
                     return False
-            return False
+            return not strict
         except KeyError:
             raise TypeError("Versions use different parts, cant compare them.")
 
@@ -369,17 +369,20 @@ class Version(object):
         except KeyError:
             raise TypeError("Versions use different parts, cant compare them.")
 
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
     def __le__(self, other):
-        return self._compare_strict(other, lambda s, o: o > s)  # Note the change of order in operands
+        return self._compare(other, lambda s, o: o > s, False)  # Note the change of order in operands
 
     def __ge__(self, other):
-        return self._compare_strict(other, lambda s, o: o < s)  # Note the change of order in operands
+        return self._compare(other, lambda s, o: o < s, False)  # Note the change of order in operands
 
     def __lt__(self, other):
-        return self._compare_strict(other, lambda s, o: s < o)
+        return self._compare(other, lambda s, o: s < o)
 
     def __gt__(self, other):
-        return self._compare_strict(other, lambda s, o: s > o)
+        return self._compare(other, lambda s, o: s > o)
 
     def items(self):
         for k in self.config.order():
