@@ -1004,6 +1004,7 @@ def test_log_no_config_file_info_message(tmpdir, capsys):
         info|Parsing version '1.0.0' using regexp '(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)'|
         info|Parsed the following values: major=1, minor=0, patch=0|
         info|Attempting to increment part 'patch'|
+        info|Bumped part found in parse parts|
         info|Values are now: major=1, minor=0, patch=1|
         info|Parsing version '1.0.1' using regexp '(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)'|
         info|Parsed the following values: major=1, minor=0, patch=1|
@@ -1096,6 +1097,7 @@ def test_complex_info_logging(tmpdir, capsys):
         info|Parsing version '0.4' using regexp '(?P<major>\d+)\.(?P<minor>\d+)(\.(?P<patch>\d+))?'|
         info|Parsed the following values: major=0, minor=4, patch=0|
         info|Attempting to increment part 'patch'|
+        info|Bumped part found in parse parts|
         info|Values are now: major=0, minor=4, patch=1|
         info|Parsing version '0.4.1' using regexp '(?P<major>\d+)\.(?P<minor>\d+)(\.(?P<patch>\d+))?'|
         info|Parsed the following values: major=0, minor=4, patch=1|
@@ -1164,6 +1166,7 @@ def test_subjunctive_dry_run_logging(tmpdir, vcs):
         info|Parsing version '0.8' using regexp '(?P<major>\d+)\.(?P<minor>\d+)(\.(?P<patch>\d+))?'|
         info|Parsed the following values: major=0, minor=8, patch=0|
         info|Attempting to increment part 'patch'|
+        info|Bumped part found in parse parts|
         info|Values are now: major=0, minor=8, patch=1|
         info|Dry run active, won't touch any files.|
         info|Parsing version '0.8.1' using regexp '(?P<major>\d+)\.(?P<minor>\d+)(\.(?P<patch>\d+))?'|
@@ -1235,6 +1238,7 @@ def test_log_commitmessage_if_no_commit_tag_but_usable_vcs(tmpdir, vcs):
         info|Parsing version '0.3.3' using regexp '(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)'|
         info|Parsed the following values: major=0, minor=3, patch=3|
         info|Attempting to increment part 'patch'|
+        info|Bumped part found in parse parts|
         info|Values are now: major=0, minor=3, patch=4|
         info|Parsing version '0.3.4' using regexp '(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)'|
         info|Parsed the following values: major=0, minor=3, patch=4|
@@ -1574,6 +1578,7 @@ def test_search_replace_to_avoid_updating_unconcerned_lines(tmpdir, capsys):
         info|Parsing version '1.5.6' using regexp '(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)'|
         info|Parsed the following values: major=1, minor=5, patch=6|
         info|Attempting to increment part 'minor'|
+        info|Bumped part found in parse parts|
         info|Values are now: major=1, minor=6, patch=0|
         info|Parsing version '1.6.0' using regexp '(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)'|
         info|Parsed the following values: major=1, minor=6, patch=0|

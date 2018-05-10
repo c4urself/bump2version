@@ -820,12 +820,12 @@ def main(original_args=None):
                 part = positionals[0]
                 logger.info("Attempting to increment part '{}'".format(part))
                 if part in vc.order():
-                    logger.info("Bumped part found in parse parts.")
+                    logger.info("Bumped part found in parse parts")
                     new_version = current_version.bump(part, vc.order())
                     logger.info("Values are now: " + keyvaluestring(new_version._values))
                     defaults['new_version'] = vc.serialize(new_version, context)
                 else:
-                    logger.info("Bumped part not found in parse parts.")
+                    logger.info("Bumped part not found in parse parts")
                     raise UnkownPart("Bumped part not found in parse parts.")
         except MissingValueForSerializationException as e:
             logger.info("Opportunistic finding of new_version failed: " + e.message)

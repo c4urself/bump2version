@@ -131,3 +131,7 @@ Session.vim
 tags
 
 \.idea/
+
+\.pytest_cache/
+
+\.DS_Store

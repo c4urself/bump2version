@@ -3,6 +3,7 @@
 from __future__ import unicode_literals, print_function
 import pytest
 
+import bumpversion
 from bumpversion import VersionConfig
 from bumpversion.version_part import ConfiguredVersionPartConfiguration
 
