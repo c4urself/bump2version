@@ -2,6 +2,7 @@
 
 from __future__ import unicode_literals, print_function
 
+import os
 import pytest
 import sys
 import logging
@@ -20,9 +21,11 @@ import bumpversion
 from bumpversion import main, DESCRIPTION, WorkingDirectoryIsDirtyException, \
     split_args_in_optional_and_positional, UnkownPart
 
-SUBPROCESS_ENV = dict(
-    list(environ.items()) + [(b'HGENCODING', b'utf-8')]
-)
+def _get_subprocess_env():
+    env = os.environ.copy()
+    env['HGENCODING'] = 'utf-8'
+    return env
+SUBPROCESS_ENV = _get_subprocess_env()
 
 call = partial(subprocess.call, env=SUBPROCESS_ENV)
 check_call = partial(subprocess.check_call, env=SUBPROCESS_ENV)
@@ -911,6 +914,19 @@ def test_non_vcs_operations_if_vcs_is_not_installed(tmpdir, vcs, monkeypatch):
 
     assert '32.0.0' == tmpdir.join("VERSION").read()
 
+def test_serialize_newline(tmpdir):
+    tmpdir.join("filenewline").write("MAJOR=31\nMINOR=0\nPATCH=3\n")
+    tmpdir.chdir()
+    main([
+        '--current-version', 'MAJOR=31\nMINOR=0\nPATCH=3\n',
+        '--parse', 'MAJOR=(?P<major>\d+)\\nMINOR=(?P<minor>\d+)\\nPATCH=(?P<patch>\d+)\\n',
+        '--serialize', 'MAJOR={major}\nMINOR={minor}\nPATCH={patch}\n',
+        '--verbose',
+        'major',
+        'filenewline'
+        ])
+    assert 'MAJOR=32\nMINOR=0\nPATCH=0\n' == tmpdir.join("filenewline").read()
+
 def test_multiple_serialize_threepart(tmpdir):
     tmpdir.join("fileA").write("Version: 0.9")
     tmpdir.chdir()
@@ -1177,7 +1193,7 @@ def test_subjunctive_dry_run_logging(tmpdir, vcs):
         info|Would add changes in file 'dont_touch_me.txt' to Git|
         info|Would add changes in file '.bumpversion.cfg' to Git|
         info|Would commit to Git with message 'Bump version: 0.8 \u2192 0.8.1'|
-        info|Would tag 'v0.8.1' with message 'Bump version: 0.8 \u2192 0.8.1' in Git|
+        info|Would tag 'v0.8.1' with message 'Bump version: 0.8 \u2192 0.8.1' in Git and not signing|
         """).strip()
 
     if vcs == "hg":
@@ -1243,7 +1259,7 @@ def test_log_commitmessage_if_no_commit_tag_but_usable_vcs(tmpdir, vcs):
         info|Would add changes in file 'please_touch_me.txt' to Git|
         info|Would add changes in file '.bumpversion.cfg' to Git|
         info|Would commit to Git with message 'Bump version: 0.3.3 \u2192 0.3.4'|
-        info|Would tag 'v0.3.4' with message 'Bump version: 0.3.3 \u2192 0.3.4' in Git|
+        info|Would tag 'v0.3.4' with message 'Bump version: 0.3.3 \u2192 0.3.4' in Git and not signing|
         """).strip()
 
     if vcs == "hg":
@@ -1838,6 +1854,36 @@ def test_regression_tag_name_with_hyphens(tmpdir, capsys, vcs):
     """))
 
     main(['patch', 'somesource.txt'])
+
+
+@pytest.mark.parametrize(("vcs"), [xfail_if_no_git("git")])
+def test_unclean_repo_exception(tmpdir, vcs, caplog):
+    tmpdir.chdir()
+
+    config = """[bumpversion]
+current_version = 0.0.0
+tag = True
+commit = True
+message = XXX
+"""
+
+    tmpdir.join("file1").write("foo")
+
+    # If I have a repo with an initial commit
+    check_call([vcs, "init"])
+    check_call([vcs, "add", "file1"])
+    check_call([vcs, "commit", "-m", "initial commit"])
+
+    # If I add the bumpversion config, uncommitted
+    tmpdir.join(".bumpversion.cfg").write(config)
+
+    # I expect bumpversion patch to fail
+    with pytest.raises(subprocess.CalledProcessError):
+        main(['patch'])
+
+    # And return the output of the failing command
+    assert "Failed to run" in caplog.text
+
 
 def test_regression_characters_after_last_label_serialize_string(tmpdir, capsys):
     tmpdir.chdir()

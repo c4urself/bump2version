@@ -6,12 +6,12 @@ description = 'Version-bump your software with a single command!'
 long_description = re.sub(
   "\`(.*)\<#.*\>\`\_",
   r"\1",
-  str(open('README.rst', 'rb').read()).replace(description, '')
+  str(open('README.md', 'rb').read()).replace(description, '')
 )
 
 setup(
     name='bump2version',
-    version='0.5.7',
+    version='0.5.9-dev',
     url='https://github.com/c4urself/bump2version',
     author='Christian Verkerk',
     author_email='christianverkerk@ymail.com',
@@ -34,9 +34,9 @@ setup(
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.2',
-        'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: Implementation :: PyPy',
     ],
 )

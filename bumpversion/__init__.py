@@ -34,7 +34,7 @@ from bumpversion.functions import NumericFunction
 if sys.version_info[0] == 2:
     sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
 
-__VERSION__ = '0.5.7'
+__VERSION__ = '0.5.9-dev'
 
 DESCRIPTION = 'bumpversion: v{} (using Python v{})'.format(
     __VERSION__,
@@ -72,9 +72,17 @@ class BaseVCS(object):
         f = NamedTemporaryFile('wb', delete=False)
         f.write(message.encode('utf-8'))
         f.close()
-        subprocess.check_output(cls._COMMIT_COMMAND + [f.name], env=dict(
-            list(os.environ.items()) + [(b'HGENCODING', b'utf-8')]
-        ))
+        env = os.environ.copy()
+        env['HGENCODING'] = 'utf-8'
+        try:
+            subprocess.check_output(cls._COMMIT_COMMAND + [f.name], env=env)
+        except subprocess.CalledProcessError as exc:
+            err_msg = "Failed to run {}: return code {}, output: {}".format(
+                exc.cmd,
+                exc.returncode,
+                exc.output)
+            logger.exception(err_msg)
+            raise exc
         os.unlink(f.name)
 
     @classmethod
@@ -739,7 +747,7 @@ def main(original_args=None):
                 filename = section_value
 
                 if 'serialize' in section_config:
-                    section_config['serialize'] = list(filter(None, (x.strip() for x in section_config['serialize'].splitlines())))
+                    section_config['serialize'] = list(filter(None, (x.strip().replace("\\n", "\n") for x in section_config['serialize'].splitlines())))
 
                 section_config['part_configs'] = part_configs
 
@@ -891,7 +899,7 @@ def main(original_args=None):
 
     if args.dry_run:
         logger.info("Dry run active, won't touch any files.")
-    
+
     if args.new_version:
         new_version = vc.parse(args.new_version)
 
