@@ -359,10 +359,7 @@ class Version(object):
             for vals in ((v, other[k]) for k, v in self.items()):
                 if vals[0] == vals[1]:
                     continue
-                if method(vals[0], vals[1]):
-                    return True
-                else:
-                    return False
+                return method(vals[0], vals[1])
             return not strict
         except KeyError:
             raise TypeError("Versions use different parts, cant compare them.")

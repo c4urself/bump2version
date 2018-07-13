@@ -67,15 +67,15 @@ class VersionPart(object):
         return hash(self.value)
 
     def _compare(self, other, method):
-            if self.config.function_cls is not other.config.function_cls:
-                raise TypeError("Versions use different part specific configuration, cant compare them.")
-            if self.config.function_cls is NumericFunction:
-                return method(self.value, other.value)
-            else:
-                # Compare order
-                idx1 = self.config.function.index(self.value)
-                idx2 = other.config.function.index(other.value)
-                return method(idx1, idx2)
+        if self.config.function_cls is not other.config.function_cls:
+            raise TypeError("Versions use different part specific configuration, cant compare them.")
+        if self.config.function_cls is NumericFunction:
+            return method(self.value, other.value)
+        else:
+            # Compare order
+            idx1 = self.config.function.index(self.value)
+            idx2 = other.config.function.index(other.value)
+            return method(idx1, idx2)
 
     def __eq__(self, other):
         return self._compare(other, lambda s, o: s == o)
