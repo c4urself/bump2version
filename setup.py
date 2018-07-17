@@ -1,9 +1,8 @@
-import re
 from setuptools import setup
 
 description = 'Version-bump your software with a single command!'
 
-with open('README.md') as readme:
+with open('README.md', 'UTF-8') as readme:
   long_description = readme.read()
 
 setup(
