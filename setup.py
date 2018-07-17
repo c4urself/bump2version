@@ -3,11 +3,8 @@ from setuptools import setup
 
 description = 'Version-bump your software with a single command!'
 
-long_description = re.sub(
-  "\`(.*)\<#.*\>\`\_",
-  r"\1",
-  str(open('README.md', 'rb').read()).replace(description, '')
-)
+with open('README.md') as readme:
+  long_description = readme.read()
 
 setup(
     name='bump2version',
@@ -19,6 +16,7 @@ setup(
     packages=['bumpversion'],
     description=description,
     long_description=long_description,
+    long_description_content_type="text/markdown"
     entry_points={
         'console_scripts': [
             'bumpversion = bumpversion:main',
