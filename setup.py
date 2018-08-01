@@ -20,6 +20,7 @@ setup(
     packages=['bumpversion'],
     description=description,
     long_description=long_description,
+    long_description_content_type='text/markdown',
     entry_points={
         'console_scripts': [
             'bumpversion = bumpversion:main',
