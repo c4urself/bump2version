@@ -628,7 +628,7 @@ def _update_config_file(
         )
 
 
-def _commit_to_vcs(files, context, config_file, config_file_exists, vcs, args):
+def _commit_to_vcs(files, context, config_file, config_file_exists, vcs, args, current_version, new_version):
     commit_files = [f.path for f in files]
     if config_file_exists:
         commit_files.append(config_file)
@@ -652,9 +652,17 @@ def _commit_to_vcs(files, context, config_file, config_file_exists, vcs, args):
         if do_commit:
             vcs.add_path(path)
 
-    context["current_version"] = args.current_version
-    context["new_version"] = args.new_version
+    context = {
+        "current_version": current_version,
+        "new_version": new_version,
+    }
+    context.update(time_context)
+    context.update(prefixed_environ())
+    context.update({'current_' + part: current_version[part].value for part in current_version})
+    context.update({'new_' + part: new_version[part].value for part in new_version})
+
     commit_message = args.message.format(**context)
+
     logger.info(
         "%s to %s with message '%s'",
         "Would commit" if not do_commit else "Committing",
