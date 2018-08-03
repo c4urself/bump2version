@@ -503,7 +503,18 @@ def main(original_args=None):
         assert defaults["files"] is not None
         file_names = defaults["files"].split(" ")
 
-    parser3.add_argument("part", help="Part of the version to be bumped.")
+    # regarding positional arguments, accept [part] and file names
+    # but take into account that both are optional
+    part_required = '--new-version' not in remaining_argv and not defaults.get('new_version')
+    if not part_required and positionals and not os.path.exists(positionals[0]):
+        # the first positional argument is not a valid path
+        # treat it as a part for backwards compatibility reasons
+        part_required = True
+
+    if part_required:
+        parser3.add_argument('part', nargs=1, default=None,
+                             help='Part of the version to be bumped.')
+
     parser3.add_argument(
         "files", metavar="file", nargs="*", help="Files to change", default=file_names
     )
@@ -518,7 +529,7 @@ def main(original_args=None):
 
     logger.info("New version will be '{}'".format(args.new_version))
 
-    file_names = file_names or positionals[1:]
+    file_names = file_names or positionals[1 if part_required else 0:]
 
     for file_name in file_names:
         files.append(ConfiguredFile(file_name, vc))
