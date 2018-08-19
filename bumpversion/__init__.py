@@ -822,8 +822,13 @@ def main(original_args=None):
         assert defaults['files'] != None
         file_names = defaults['files'].split(' ')
 
-    parser3.add_argument('part',
-                         help='Part of the version to be bumped.')
+    if '--new-version' not in remaining_argv:
+        parser3.add_argument('part',
+                             help='Part of the version to be bumped.')
+        first_file_index = 1
+    else:
+        first_file_index = 0
+
     parser3.add_argument('files', metavar='file',
                          nargs='*',
                          help='Files to change', default=file_names)
@@ -838,7 +843,8 @@ def main(original_args=None):
 
     logger.info("New version will be '{}'".format(args.new_version))
 
-    file_names = file_names or positionals[1:]
+
+    file_names = file_names or positionals[first_file_index:]
 
     for file_name in file_names:
         files.append(ConfiguredFile(file_name, vc))

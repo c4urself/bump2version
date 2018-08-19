@@ -213,14 +213,14 @@ def test_missing_explicit_config_file(tmpdir):
 def test_simple_replacement(tmpdir):
     tmpdir.join("VERSION").write("1.2.0")
     tmpdir.chdir()
-    main(shlex_split("patch --current-version 1.2.0 --new-version 1.2.1 VERSION"))
+    main(shlex_split("--current-version 1.2.0 --new-version 1.2.1 VERSION"))
     assert "1.2.1" == tmpdir.join("VERSION").read()
 
 
 def test_simple_replacement_in_utf8_file(tmpdir):
     tmpdir.join("VERSION").write("Kröt1.3.0".encode('utf-8'), 'wb')
     tmpdir.chdir()
-    main(shlex_split("patch --current-version 1.3.0 --new-version 1.3.1 VERSION"))
+    main(shlex_split("--current-version 1.3.0 --new-version 1.3.1 VERSION"))
     out = tmpdir.join("VERSION").read('rb')
     assert "'Kr\\xc3\\xb6t1.3.1'" in repr(out)
 
@@ -672,7 +672,7 @@ def test_override_vcs_current_version(tmpdir, vcs):
 def test_nonexisting_file(tmpdir):
     tmpdir.chdir()
     with pytest.raises(IOError):
-        main(shlex_split("patch --current-version 1.2.0 --new-version 1.2.1 doesnotexist.txt"))
+        main(shlex_split("--current-version 1.2.0 --new-version 1.2.1 doesnotexist.txt"))
 
 
 def test_nonexisting_file(tmpdir):
@@ -1012,11 +1012,12 @@ def test_log_no_config_file_info_message(tmpdir, capsys):
 
     assert actual_log == EXPECTED_LOG
 
+
 def test_log_parse_doesnt_parse_current_version(tmpdir):
     tmpdir.chdir()
 
     with mock.patch("bumpversion.logger") as logger:
-        main(['--parse', 'xxx', '--current-version', '12', '--new-version', '13', 'patch'])
+        main(['--parse', 'xxx', '--current-version', '12', '--new-version', '13'])
 
     actual_log ="\n".join(_mock_calls_to_string(logger)[4:])
 
@@ -1042,7 +1043,7 @@ def test_log_invalid_regex_exit(tmpdir):
 
     with pytest.raises(SystemExit):
         with mock.patch("bumpversion.logger") as logger:
-            main(['--parse', '*kittens*', '--current-version', '12', '--new-version', '13', 'patch'])
+            main(['--parse', '*kittens*', '--current-version', '12', '--new-version', '13'])
 
     actual_log ="\n".join(_mock_calls_to_string(logger)[4:])
 
@@ -1931,7 +1932,7 @@ def test_regression_new_version_cli_in_files(tmpdir, capsys):
         commit = true
         """).strip())
 
-    main("patch --allow-dirty --verbose --new-version 0.9.3".split(" "))
+    main("--allow-dirty --verbose --new-version 0.9.3".split(" "))
 
     assert "__version__ = '0.9.3'" == tmpdir.join("myp___init__.py").read()
     assert "current_version = 0.9.3" in tmpdir.join(".bumpversion.cfg").read()
