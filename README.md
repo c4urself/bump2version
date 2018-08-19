@@ -383,6 +383,9 @@ bump2version is licensed under the MIT License - see the LICENSE.rst file for de
 ## Changes
 
 **unreleased**
+
+- If --new-version is specified, do not expect a `part` positional argument.
+
 **v0.5.9-dev**
 
 **v0.5.8**
