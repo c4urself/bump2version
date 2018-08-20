@@ -11,11 +11,12 @@ import pytest
 
 import six
 import subprocess
-from os import environ
+from datetime import datetime
+from os import curdir, makedirs, chdir, environ
+from os.path import join, curdir, dirname
 from shlex import split as shlex_split
 from textwrap import dedent
 from functools import partial
-
 
 from bumpversion import main, DESCRIPTION, WorkingDirectoryIsDirtyException, \
     split_args_in_optional_and_positional
@@ -1946,6 +1947,36 @@ def test_regression_new_version_cli_in_files(tmpdir, capsys):
 
     assert "__version__ = '0.9.3'" == tmpdir.join("myp___init__.py").read()
     assert "current_version = 0.9.3" in tmpdir.join(".bumpversion.cfg").read()
+
+def test_correct_interpolation_for_setup_cfg_files(tmpdir, configfile):
+    '''
+    Reported here: https://github.com/c4urself/bump2version/issues/21
+    '''
+    tmpdir.chdir()
+    tmpdir.join("file.py").write("XX-XX-XXXX v. X.X.X")
+    tmpdir.chdir()
+
+    if configfile == "setup.cfg":
+        tmpdir.join(configfile).write(dedent("""
+            [bumpversion]
+            current_version = 0.7.2
+            files = file.py
+            search = XX-XX-XXXX v. X.X.X
+            replace = {now:%%m-%%d-%%Y} v. {new_version}
+            """).strip())
+    else:
+        tmpdir.join(configfile).write(dedent("""
+            [bumpversion]
+            current_version = 0.7.2
+            files = file.py
+            search = XX-XX-XXXX v. X.X.X
+            replace = {now:%m-%d-%Y} v. {new_version}
+            """).strip())
+
+    main(["major"])
+
+    assert datetime.now().strftime('%m-%d-%Y') + ' v. 1.0.0' == tmpdir.join("file.py").read()
+    assert "current_version = 1.0.0" in tmpdir.join(configfile).read()
 
 
 class TestSplitArgsInOptionalAndPositional:
