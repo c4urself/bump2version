@@ -2,20 +2,24 @@
 
 from __future__ import unicode_literals, print_function
 
-import argparse
-import bumpversion
-import mock
 import os
 import pytest
-import six
+import sys
+import logging
+import mock
+
+import argparse
 import subprocess
+from os import curdir, makedirs, chdir, environ
+from os.path import join, curdir, dirname
+from shlex import split as shlex_split
+from textwrap import dedent
+from functools import partial
+
+import bumpversion
 
 from bumpversion import main, DESCRIPTION, WorkingDirectoryIsDirtyException, \
     split_args_in_optional_and_positional
-from functools import partial
-from os import environ
-from shlex import split as shlex_split
-from textwrap import dedent
 
 
 def _get_subprocess_env():
@@ -153,17 +157,16 @@ def test_usage_string(tmpdir, capsys):
 
 def test_usage_string_fork(tmpdir, capsys):
     tmpdir.chdir()
-    kwargs = {} if six.PY2 else {"encoding": "utf-8"}
 
     try:
-        out = check_output('bumpversion --help', shell=True, stderr=subprocess.STDOUT, **kwargs)
+        out = check_output('bumpversion --help', shell=True, stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as e:
         out = e.output
 
-    if not 'usage: bumpversion [-h]' in out:
+    if not b'usage: bumpversion [-h]' in out:
         print(out)
 
-    assert 'usage: bumpversion [-h]' in out
+    assert b'usage: bumpversion [-h]' in out
 
 
 @pytest.mark.parametrize(("vcs"), [xfail_if_no_git("git"), xfail_if_no_hg("hg")])
