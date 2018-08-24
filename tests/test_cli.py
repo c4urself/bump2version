@@ -2,21 +2,20 @@
 
 from __future__ import unicode_literals, print_function
 
-import os
-import pytest
-import sys
-import logging
-import mock
-
 import argparse
+import bumpversion
+import mock
+import os
+import platform
+import pytest
+
+import six
 import subprocess
-from os import curdir, makedirs, chdir, environ
-from os.path import join, curdir, dirname
+from os import environ
 from shlex import split as shlex_split
 from textwrap import dedent
 from functools import partial
 
-import bumpversion
 
 from bumpversion import main, DESCRIPTION, WorkingDirectoryIsDirtyException, \
     split_args_in_optional_and_positional
@@ -154,7 +153,8 @@ def test_usage_string(tmpdir, capsys):
 
     assert EXPECTED_USAGE in out
 
-
+@pytest.mark.xfail(platform.system() == "Windows" and six.PY3,
+                   reason="Windows encoding problems")
 def test_usage_string_fork(tmpdir, capsys):
     tmpdir.chdir()
 
