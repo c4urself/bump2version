@@ -154,19 +154,20 @@ def test_usage_string(tmpdir, capsys):
 
     assert EXPECTED_USAGE in out
 
+
 def test_usage_string_fork(tmpdir, capsys):
     tmpdir.chdir()
 
     try:
-        out = check_output('bumpversion --help', shell=True, stderr=subprocess.STDOUT).decode('utf-8')
+        out = check_output('bumpversion --help', shell=True, stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as e:
-        out = e.output.decode('utf-8')
+        out = e.output
 
-    if not 'usage: bumpversion [-h]' in out:
+    if not b'usage: bumpversion [-h]' in out:
         print(out)
 
-    assert 'usage: bumpversion [-h]' in out
-    assert False
+    assert b'usage: bumpversion [-h]' in out
+
 
 @pytest.mark.parametrize(("vcs"), [xfail_if_no_git("git"), xfail_if_no_hg("hg")])
 def test_regression_help_in_workdir(tmpdir, capsys, vcs):
