@@ -1,13 +1,14 @@
-import re
+import io
+import os
 from setuptools import setup
 
 description = 'Version-bump your software with a single command!'
 
-long_description = re.sub(
-  "\`(.*)\<#.*\>\`\_",
-  r"\1",
-  str(open('README.md', 'rb').read()).replace(description, '')
-)
+# Import the README and use it as the long-description.
+# This requires 'README.md' to be present in MANIFEST.in.
+here = os.path.abspath(os.path.dirname(__file__))
+with io.open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
+    long_description = '\n' + f.read()
 
 setup(
     name='bump2version',
@@ -19,6 +20,7 @@ setup(
     packages=['bumpversion'],
     description=description,
     long_description=long_description,
+    long_description_content_type='text/markdown',
     entry_points={
         'console_scripts': [
             'bumpversion = bumpversion:main',
