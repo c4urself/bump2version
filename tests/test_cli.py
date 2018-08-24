@@ -160,12 +160,13 @@ def test_usage_string_fork(tmpdir, capsys):
     try:
         out = check_output('bumpversion --help', shell=True, stderr=subprocess.STDOUT).decode('utf-8')
     except subprocess.CalledProcessError as e:
-        out = e.output
+        out = e.output.decode('utf-8')
 
     if not 'usage: bumpversion [-h]' in out:
         print(out)
 
     assert 'usage: bumpversion [-h]' in out
+    assert False
 
 @pytest.mark.parametrize(("vcs"), [xfail_if_no_git("git"), xfail_if_no_hg("hg")])
 def test_regression_help_in_workdir(tmpdir, capsys, vcs):
