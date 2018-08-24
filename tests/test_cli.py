@@ -1185,8 +1185,8 @@ def test_subjunctive_dry_run_logging(tmpdir, vcs):
         info|Would prepare Git commit|
         info|Would add changes in file 'dont_touch_me.txt' to Git|
         info|Would add changes in file '.bumpversion.cfg' to Git|
-        info|Would commit to Git with message 'Bump version: 0.8 to 0.8.1'|
-        info|Would tag 'v0.8.1' with message 'Bump version: 0.8 to 0.8.1' in Git and not signing|
+        info|Would commit to Git with message 'Bump version: 0.8 \u2192 0.8.1'|
+        info|Would tag 'v0.8.1' with message 'Bump version: 0.8 \u2192 0.8.1' in Git and not signing|
         """).strip()
 
     if vcs == "hg":
@@ -1251,8 +1251,8 @@ def test_log_commitmessage_if_no_commit_tag_but_usable_vcs(tmpdir, vcs):
         info|Would prepare Git commit|
         info|Would add changes in file 'please_touch_me.txt' to Git|
         info|Would add changes in file '.bumpversion.cfg' to Git|
-        info|Would commit to Git with message 'Bump version: 0.3.3 to 0.3.4'|
-        info|Would tag 'v0.3.4' with message 'Bump version: 0.3.3 to 0.3.4' in Git and not signing|
+        info|Would commit to Git with message 'Bump version: 0.3.3 \u2192 0.3.4'|
+        info|Would tag 'v0.3.4' with message 'Bump version: 0.3.3 \u2192 0.3.4' in Git and not signing|
         """).strip()
 
     if vcs == "hg":

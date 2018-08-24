@@ -811,11 +811,11 @@ def main(original_args=None):
                          default=defaults.get('tag_name', 'v{new_version}'))
 
     parser3.add_argument('--tag-message', metavar='TAG_MESSAGE', dest='tag_message',
-                         help='Tag message', default=defaults.get('tag_message', 'Bump version: {current_version} to {new_version}'))
+                         help='Tag message', default=defaults.get('tag_message', 'Bump version: {current_version} → {new_version}'))
 
     parser3.add_argument('--message', '-m', metavar='COMMIT_MSG',
                          help='Commit message',
-                         default=defaults.get('message', 'Bump version: {current_version} to {new_version}'))
+                         default=defaults.get('message', 'Bump version: {current_version} → {new_version}'))
 
     file_names = []
     if 'files' in defaults:
