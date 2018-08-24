@@ -21,10 +21,14 @@ import bumpversion
 from bumpversion import main, DESCRIPTION, WorkingDirectoryIsDirtyException, \
     split_args_in_optional_and_positional
 
+
 def _get_subprocess_env():
     env = os.environ.copy()
-    env['HGENCODING'] = 'utf-8'
+    # In python2 cast to str from unicode (note the future import).
+    # In python3 does nothing.
+    env['HGENCODING'] = str('utf-8')
     return env
+
 SUBPROCESS_ENV = _get_subprocess_env()
 
 call = partial(subprocess.call, env=SUBPROCESS_ENV)
