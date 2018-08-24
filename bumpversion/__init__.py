@@ -29,6 +29,7 @@ import sys
 import codecs
 
 from bumpversion.version_part import VersionPart, NumericVersionPartConfiguration, ConfiguredVersionPartConfiguration
+from bumpversion.functions import NumericFunction
 
 if sys.version_info[0] == 2:
     sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
@@ -317,13 +318,18 @@ class MercurialDoesNotSupportSignedTagsException(Exception):
     def __init__(self, message):
         self.message = message
 
+class UnkownPart(Exception):
+    def __init__(self, message):
+        self.message = message
+
 def keyvaluestring(d):
     return ", ".join("{}={}".format(k, v) for k, v in sorted(d.items()))
 
 class Version(object):
 
-    def __init__(self, values, original=None):
+    def __init__(self, values, config, original=None):
         self._values = dict(values)
+        self.config = config
         self.original = original
 
     def __getitem__(self, key):
@@ -336,7 +342,59 @@ class Version(object):
         return iter(self._values)
 
     def __repr__(self):
-        return '<bumpversion.Version:{}>'.format(keyvaluestring(self._values))
+        by_part = ", ".join("{}={}".format(k, v) for k, v in self.items())
+        return '<bumpversion.Version:{}>'.format(by_part)
+
+    def __hash__(self):
+        return hash(tuple((k, v) for k, v in self.items()))
+
+    def _compare(self, other, method, strict=True):
+        """
+        For strict relations, if a part is equal we skip it
+        :param other: the other Version
+        :param method: the compare method
+        :return:
+        """
+        try:
+            for vals in ((v, other[k]) for k, v in self.items()):
+                if vals[0] == vals[1]:
+                    continue
+                return method(vals[0], vals[1])
+            return not strict
+        except KeyError:
+            raise TypeError("Versions use different parts, cant compare them.")
+
+    def __eq__(self, other):
+        if self is other:
+            return True
+        if not isinstance(other, Version):
+            return False
+        try:
+            return all(v == other[k] for k, v in self.items())
+        except KeyError:
+            raise TypeError("Versions use different parts, cant compare them.")
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __le__(self, other):
+        return self._compare(other, lambda s, o: o > s, False)  # Note the change of order in operands
+
+    def __ge__(self, other):
+        return self._compare(other, lambda s, o: o < s, False)  # Note the change of order in operands
+
+    def __lt__(self, other):
+        return self._compare(other, lambda s, o: s < o)
+
+    def __gt__(self, other):
+        return self._compare(other, lambda s, o: s > o)
+
+    def items(self):
+        for k in self.config.order():
+            try:
+                yield k, self._values[k]
+            except KeyError:
+                raise StopIteration
 
     def bump(self, part_name, order):
         bumped = False
@@ -354,7 +412,7 @@ class Version(object):
             else:
                 new_values[label] = self._values[label].copy()
 
-        new_version = Version(new_values)
+        new_version = Version(new_values, self.config)
 
         return new_version
 
@@ -411,7 +469,7 @@ class VersionConfig(object):
             _parsed[key] = VersionPart(value, self.part_configs.get(key))
 
 
-        v = Version(_parsed, version_string)
+        v = Version(_parsed, self, version_string)
 
         logger.info("Parsed the following values: %s" % keyvaluestring(v._values))
 
@@ -756,10 +814,16 @@ def main(original_args=None):
     if not 'new_version' in defaults and known_args.current_version:
         try:
             if current_version and len(positionals) > 0:
-                logger.info("Attempting to increment part '{}'".format(positionals[0]))
-                new_version = current_version.bump(positionals[0], vc.order())
-                logger.info("Values are now: " + keyvaluestring(new_version._values))
-                defaults['new_version'] = vc.serialize(new_version, context)
+                part = positionals[0]
+                logger.info("Attempting to increment part '{}'".format(part))
+                if part in vc.order():
+                    logger.info("Bumped part found in parse parts")
+                    new_version = current_version.bump(part, vc.order())
+                    logger.info("Values are now: " + keyvaluestring(new_version._values))
+                    defaults['new_version'] = vc.serialize(new_version, context)
+                else:
+                    logger.info("Bumped part not found in parse parts")
+                    raise UnkownPart("Bumped part not found in parse parts.")
         except MissingValueForSerializationException as e:
             logger.info("Opportunistic finding of new_version failed: " + e.message)
         except IncompleteVersionRepresenationException as e:

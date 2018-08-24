@@ -47,6 +47,7 @@ pip-log.txt
 pip-delete-this-directory.txt
 
 # Unit test / coverage reports
+*/**/.pytest_cache/
 htmlcov/
 .tox/
 .coverage
@@ -129,3 +130,8 @@ Session.vim
 
 # Auto-generated tag files
 tags
+
+\.idea/
+
+\.DS_Store
+
