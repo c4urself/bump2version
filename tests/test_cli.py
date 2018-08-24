@@ -69,7 +69,6 @@ def _mock_calls_to_string(called_mock):
     ) for name, args, kwargs in called_mock.mock_calls]
 
 
-
 EXPECTED_OPTIONS = """
 [-h]
 [--config-file FILE]
@@ -133,10 +132,10 @@ optional arguments:
                         v{new_version})
   --tag-message TAG_MESSAGE
                         Tag message (default: Bump version: {current_version}
-                        → {new_version})
+                        to {new_version})
   --message COMMIT_MSG, -m COMMIT_MSG
                         Commit message (default: Bump version:
-                        {current_version} → {new_version})
+                        {current_version} to {new_version})
 """ % DESCRIPTION).lstrip()
 
 
@@ -435,7 +434,7 @@ def test_commit_and_tag(tmpdir, vcs):
 
     assert '-47.1.1' in log
     assert '+47.1.2' in log
-    assert 'Bump version: 47.1.1 → 47.1.2' in log
+    assert 'Bump version: 47.1.1 to 47.1.2' in log
 
     tag_out = check_output([vcs, {"git": "tag", "hg": "tags"}[vcs]])
 
@@ -471,7 +470,7 @@ def test_commit_and_tag_with_configfile(tmpdir, vcs):
 
     assert '-48.1.1' in log
     assert '+48.1.2' in log
-    assert 'Bump version: 48.1.1 → 48.1.2' in log
+    assert 'Bump version: 48.1.1 to 48.1.2' in log
 
     tag_out = check_output([vcs, {"git": "tag", "hg": "tags"}[vcs]])
 
@@ -512,7 +511,7 @@ def test_commit_and_not_tag_with_configfile(tmpdir, vcs, config):
 
     assert '-48.1.1' in log
     assert '+48.1.2' in log
-    assert 'Bump version: 48.1.1 → 48.1.2' in log
+    assert 'Bump version: 48.1.1 to 48.1.2' in log
 
     tag_out = check_output([vcs, {"git": "tag", "hg": "tags"}[vcs]])
 
