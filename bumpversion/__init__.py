@@ -3,8 +3,10 @@
 from __future__ import unicode_literals
 
 try:
+    # Python 3 or pip-installed "configparser" on Python 2
     from configparser import RawConfigParser, ConfigParser, NoOptionError
 except ImportError:
+    # On Py2, "SafeConfigParser" is the same as "ConfigParser" on Py3
     from ConfigParser import RawConfigParser, SafeConfigParser as ConfigParser, NoOptionError
 
 try:
