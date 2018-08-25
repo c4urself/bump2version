@@ -12,7 +12,7 @@ except ImportError:
 try:
     # Python 2
     from StringIO import StringIO
-except:
+except ImportError:
     # Python 3
     from io import StringIO
 
