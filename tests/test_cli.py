@@ -157,6 +157,12 @@ def test_usage_string(tmpdir, capsys):
 def test_usage_string_fork(tmpdir, capsys):
     tmpdir.chdir()
 
+    if platform.system() == "Windows" and six.PY3:
+        # There are encoding problems on Windows with the encoding of →
+        tmpdir.join(".bumpversion.cfg").write("""[bumpversion]
+    message: Bump version: {current_version} to {new_version}
+    tag_message: 'Bump version: {current_version} to {new_version}""")
+
     try:
         out = check_output('bumpversion --help', shell=True, stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as e:
