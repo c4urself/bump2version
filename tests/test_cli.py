@@ -31,7 +31,7 @@ def _get_subprocess_env():
 
 SUBPROCESS_ENV = _get_subprocess_env()
 
-call = partial(subprocess.call, env=SUBPROCESS_ENV)
+call = partial(subprocess.call, env=SUBPROCESS_ENV, shell=True)
 check_call = partial(subprocess.check_call, env=SUBPROCESS_ENV)
 check_output = partial(subprocess.check_output,  env=SUBPROCESS_ENV)
 
