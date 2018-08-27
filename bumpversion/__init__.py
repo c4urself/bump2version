@@ -72,7 +72,7 @@ class BaseVCS(object):
         f.write(message.encode('utf-8'))
         f.close()
         env = os.environ.copy()
-        env['HGENCODING'] = 'utf-8'
+        env[str('HGENCODING')] = str('utf-8')
         try:
             subprocess.check_output(cls._COMMIT_COMMAND + [f.name], env=env)
         except subprocess.CalledProcessError as exc:
