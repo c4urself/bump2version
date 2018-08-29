@@ -105,6 +105,8 @@ venv.bak/
 .spyderproject
 .spyproject
 
+.idea
+
 # Rope project settings
 .ropeproject
 
@@ -129,3 +131,4 @@ Session.vim
 
 # Auto-generated tag files
 tags
+.pytest_cache

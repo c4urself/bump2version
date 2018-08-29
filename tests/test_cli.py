@@ -2,32 +2,35 @@
 
 from __future__ import unicode_literals, print_function
 
-import os
-import pytest
-import sys
-import logging
-import mock
-
 import argparse
+import bumpversion
+import mock
+import os
+import platform
+import pytest
+
+import six
 import subprocess
-from os import curdir, makedirs, chdir, environ
-from os.path import join, curdir, dirname
+from os import environ
 from shlex import split as shlex_split
 from textwrap import dedent
 from functools import partial
 
-import bumpversion
 
 from bumpversion import main, DESCRIPTION, WorkingDirectoryIsDirtyException, \
     split_args_in_optional_and_positional
 
+
 def _get_subprocess_env():
     env = os.environ.copy()
-    env['HGENCODING'] = 'utf-8'
+    # In python2 cast to str from unicode (note the future import).
+    # In python3 does nothing.
+    env[str('HGENCODING')] = str('utf-8')
     return env
+
 SUBPROCESS_ENV = _get_subprocess_env()
 
-call = partial(subprocess.call, env=SUBPROCESS_ENV)
+call = partial(subprocess.call, env=SUBPROCESS_ENV, shell=True)
 check_call = partial(subprocess.check_call, env=SUBPROCESS_ENV)
 check_output = partial(subprocess.check_output,  env=SUBPROCESS_ENV)
 
@@ -150,18 +153,26 @@ def test_usage_string(tmpdir, capsys):
 
     assert EXPECTED_USAGE in out
 
+
 def test_usage_string_fork(tmpdir, capsys):
     tmpdir.chdir()
 
+    if platform.system() == "Windows" and six.PY3:
+        # There are encoding problems on Windows with the encoding of →
+        tmpdir.join(".bumpversion.cfg").write("""[bumpversion]
+    message: Bump version: {current_version} to {new_version}
+    tag_message: 'Bump version: {current_version} to {new_version}""")
+
     try:
-        out = check_output('bumpversion --help', shell=True, stderr=subprocess.STDOUT).decode('utf-8')
+        out = check_output('bumpversion --help', shell=True, stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as e:
         out = e.output
 
-    if not 'usage: bumpversion [-h]' in out:
+    if not b'usage: bumpversion [-h]' in out:
         print(out)
 
-    assert 'usage: bumpversion [-h]' in out
+    assert b'usage: bumpversion [-h]' in out
+
 
 @pytest.mark.parametrize(("vcs"), [xfail_if_no_git("git"), xfail_if_no_hg("hg")])
 def test_regression_help_in_workdir(tmpdir, capsys, vcs):

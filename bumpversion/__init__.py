@@ -12,23 +12,31 @@ try:
 except:
     from io import StringIO
 
-
 import argparse
+import codecs
+import io
 import os
+import platform
 import re
 import sre_constants
 import subprocess
+import sys
 import warnings
-import io
 from string import Formatter
 from datetime import datetime
 from difflib import unified_diff
 from tempfile import NamedTemporaryFile
 
-import sys
-import codecs
-
 from bumpversion.version_part import VersionPart, NumericVersionPartConfiguration, ConfiguredVersionPartConfiguration
+
+
+if platform.system() == 'Windows' and sys.version_info[0] == 2:
+    def _command_args(args):
+        return [a.encode("utf-8") for a in args]
+else:
+    def _command_args(args):
+        return args
+
 
 if sys.version_info[0] == 2:
     sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
@@ -64,6 +72,7 @@ time_context = {
     'utcnow': datetime.utcnow(),
 }
 
+
 class BaseVCS(object):
 
     @classmethod
@@ -72,7 +81,7 @@ class BaseVCS(object):
         f.write(message.encode('utf-8'))
         f.close()
         env = os.environ.copy()
-        env['HGENCODING'] = 'utf-8'
+        env[str('HGENCODING')] = str('utf-8')
         try:
             subprocess.check_output(cls._COMMIT_COMMAND + [f.name], env=env)
         except subprocess.CalledProcessError as exc:
@@ -153,7 +162,7 @@ class Git(BaseVCS):
 
     @classmethod
     def add_path(cls, path):
-        subprocess.check_output(["git", "add", "--update", path])
+        subprocess.check_output(_command_args(["git", "add", "--update", path]))
 
     @classmethod
     def tag(cls, sign, name, message):
@@ -162,7 +171,7 @@ class Git(BaseVCS):
             command += ['-s']
         if message:
             command += ['--message', message]
-        subprocess.check_output(command)
+        subprocess.check_output(_command_args(command))
 
 
 class Mercurial(BaseVCS):
@@ -201,7 +210,7 @@ class Mercurial(BaseVCS):
             )
         if message:
             command += ['--message', message]
-        subprocess.check_output(command)
+        subprocess.check_output(_command_args(command))
 
 VCS = [Git, Mercurial]
 
@@ -233,12 +242,12 @@ class ConfiguredFile(object):
         assert False, msg
 
     def contains(self, search):
-        with io.open(self.path, 'rb') as f:
+        with io.open(self.path, 'rt', encoding='utf-8') as f:
             search_lines = search.splitlines()
             lookbehind = []
 
             for lineno, line in enumerate(f.readlines()):
-                lookbehind.append(line.decode('utf-8').rstrip("\n"))
+                lookbehind.append(line.rstrip("\n"))
 
                 if len(lookbehind) > len(search_lines):
                     lookbehind = lookbehind[1:]
@@ -247,14 +256,14 @@ class ConfiguredFile(object):
                    search_lines[-1] in lookbehind[-1] and
                    search_lines[1:-1] == lookbehind[1:-1]):
                     logger.info("Found '{}' in {} at line {}: {}".format(
-                        search, self.path, lineno - (len(lookbehind) - 1), line.decode('utf-8').rstrip()))
+                        search, self.path, lineno - (len(lookbehind) - 1), line.rstrip()))
                     return True
         return False
 
     def replace(self, current_version, new_version, context, dry_run):
 
-        with io.open(self.path, 'rb') as f:
-            file_content_before = f.read().decode('utf-8')
+        with io.open(self.path, 'rt', encoding='utf-8') as f:
+            file_content_before = f.read()
 
         context['current_version'] = self._versionconfig.serialize(current_version, context)
         context['new_version'] = self._versionconfig.serialize(new_version, context)
@@ -292,8 +301,8 @@ class ConfiguredFile(object):
             ))
 
         if not dry_run:
-            with io.open(self.path, 'wb') as f:
-                f.write(file_content_after.encode('utf-8'))
+            with io.open(self.path, 'wt', encoding='utf-8') as f:
+                f.write(file_content_after)
 
     def __str__(self):
         return self.path
@@ -892,8 +901,8 @@ def main(original_args=None):
         logger.info(new_config.getvalue())
 
         if write_to_config_file:
-            with io.open(config_file, 'wb') as f:
-                f.write(new_config.getvalue().encode('utf-8'))
+            with io.open(config_file, 'wt', encoding='utf-8') as f:
+                f.write(new_config.getvalue())
 
     except UnicodeEncodeError:
         warnings.warn(
