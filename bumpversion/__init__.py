@@ -3,13 +3,17 @@
 from __future__ import unicode_literals
 
 try:
-    from configparser import RawConfigParser, NoOptionError
+    # Python 3 or pip-installed "configparser" on Python 2
+    from configparser import RawConfigParser, ConfigParser, NoOptionError
 except ImportError:
-    from ConfigParser import RawConfigParser, NoOptionError
+    # On Py2, "SafeConfigParser" is the same as "ConfigParser" on Py3
+    from ConfigParser import RawConfigParser, SafeConfigParser as ConfigParser, NoOptionError
 
 try:
+    # Python 2
     from StringIO import StringIO
-except:
+except ImportError:
+    # Python 3
     from io import StringIO
 
 import argparse
@@ -614,13 +618,6 @@ def main(original_args=None):
     if 'current_version' in vcs_info:
         defaults['current_version'] = vcs_info['current_version']
 
-    config = RawConfigParser('')
-
-    # don't transform keys to lowercase (which would be the default)
-    config.optionxform = lambda option: option
-
-    config.add_section('bumpversion')
-
     explicit_config = hasattr(known_args, 'config_file')
 
     if explicit_config:
@@ -630,6 +627,17 @@ def main(original_args=None):
         config_file = 'setup.cfg'
     else:
         config_file = '.bumpversion.cfg'
+
+    # setup.cfg supports interpolation - for compatibility we must do the same.
+    if os.path.basename(config_file) == 'setup.cfg':
+        config = ConfigParser('')
+    else:
+        config = RawConfigParser('')
+
+    # don't transform keys to lowercase (which would be the default)
+    config.optionxform = lambda option: option
+
+    config.add_section('bumpversion')
 
     config_file_exists = os.path.exists(config_file)
 
