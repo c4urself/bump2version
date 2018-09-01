@@ -385,11 +385,16 @@ bump2version is licensed under the MIT License - see the LICENSE.rst file for de
 **unreleased**
 **v0.5.9-dev**
 
+- Fixed windows appveyor-based testing, thanks: @jeremycarroll #33 and #34
+- Fixed interpolating correctly when using setup.cfg for config, thanks: @SethMMorton #32
+- Improve tox/travis testing, thanks: @ekohl #27
+- Fixed markdown formatting in setup.py for pypi.org documentation, thanks: @florisla, @Mattwmaster58 #26
+
 **v0.5.8**
 
 - Updated the readme to markdown for easier maintainability
 - Fixed travis testing, thanks: @sharksforarms #15
-- Added support for newlines, thanks; @sharksforarms #14
+- Added support for newlines, thanks: @sharksforarms #14
 - Fixed an issue with a TypeError on Windows, thanks: @lorengordon #12
 - Standardised the python versions, thanks: @ekohl #8
 - Fixed testing for pypy, #7
