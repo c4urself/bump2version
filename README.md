@@ -383,6 +383,7 @@ bump2version is licensed under the MIT License - see the LICENSE.rst file for de
 ## Changes
 
 **unreleased**
+**v0.5.9**
 **v0.5.9-dev**
 
 - Fixed windows appveyor-based testing, thanks: @jeremycarroll #33 and #34
