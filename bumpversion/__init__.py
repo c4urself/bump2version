@@ -45,7 +45,7 @@ else:
 if sys.version_info[0] == 2:
     sys.stdout = codecs.getwriter('utf-8')(sys.stdout)
 
-__VERSION__ = '0.5.9-dev'
+__VERSION__ = '0.5.9'
 
 DESCRIPTION = 'bumpversion: v{} (using Python v{})'.format(
     __VERSION__,
