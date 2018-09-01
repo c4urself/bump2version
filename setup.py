@@ -12,7 +12,7 @@ with io.open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='bump2version',
-    version='0.5.10-dev',
+    version='0.5.10',
     url='https://github.com/c4urself/bump2version',
     author='Christian Verkerk',
     author_email='christianverkerk@ymail.com',
