@@ -383,6 +383,9 @@ bump2version is licensed under the MIT License - see the LICENSE.rst file for de
 ## Changes
 
 **unreleased**
+
+- Housekeeping, use twine
+
 **v0.5.10-dev**
 
 **v0.5.9**
