@@ -5,15 +5,10 @@ from __future__ import unicode_literals
 try:
     # Python 3 or pip-installed "configparser" on Python 2
     from configparser import RawConfigParser, ConfigParser, NoOptionError
+    from io import StringIO
 except ImportError:
     # On Py2, "SafeConfigParser" is the same as "ConfigParser" on Py3
     from ConfigParser import RawConfigParser, SafeConfigParser as ConfigParser, NoOptionError
-
-try:
-    # Python 3
-    from io import StringIO
-except ImportError:
-    # Python 2
     from StringIO import StringIO
 
 import argparse
