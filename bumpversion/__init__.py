@@ -10,11 +10,11 @@ except ImportError:
     from ConfigParser import RawConfigParser, SafeConfigParser as ConfigParser, NoOptionError
 
 try:
-    # Python 2
-    from StringIO import StringIO
-except ImportError:
     # Python 3
     from io import StringIO
+except ImportError:
+    # Python 2
+    from StringIO import StringIO
 
 import argparse
 import codecs
