@@ -778,6 +778,44 @@ tag_name: from-{current_version}-to-{new_version}""")
     assert b'from-400.0.0-to-401.0.0' in tag_out
 
 
+def test_all_parts_in_message_and_serialize_and_tag_name_from_config_file(tmpdir, capsys, vcs):
+    """
+    Ensure that major/minor/patch *and* custom parts can be used  everywhere.
+
+    - As [part] in 'serialize'.
+    - As new_[part] and previous_[part] in 'message'.
+    - As new_[part] and previous_[part] in 'tag_name'.
+
+    In message and tag_name, also ensure that new_version and
+    current_version are correct.
+    """
+    tmpdir.chdir()
+    check_call([vcs, "init"])
+    tmpdir.join("VERSION").write("400.1.2.101")
+    check_call([vcs, "add", "VERSION"])
+    check_call([vcs, "commit", "-m", "initial commit"])
+
+    tmpdir.join(".bumpversion.cfg").write("""[bumpversion]
+current_version: 400.1.2.101
+new_version: 401.2.3.102
+parse = (?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+).(?P<custom>\d+)
+serialize = {major}.{minor}.{patch}.{custom}
+commit: True
+tag: True
+message: {current_version}/{current_major}.{current_minor}.{current_patch} custom {current_custom} becomes {new_version}/{new_major}.{new_minor}.{new_patch} custom {new_custom}
+tag_name: from-{current_version}-aka-{current_major}.{current_minor}.{current_patch}-custom-{current_custom}-to-{new_version}-aka-{new_major}.{new_minor}.{new_patch}-custom-{new_custom}
+
+[bumpversion:part:custom] """)
+
+    main(['major', 'VERSION'])
+
+    log = check_output([vcs, "log", "-p"])
+    assert b'400.1.2.101/400.1.2 custom 101 becomes 401.2.3.102/401.2.3 custom 102' in log
+
+    tag_out = check_output([vcs, {"git": "tag", "hg": "tags"}[vcs]])
+    assert b'from-400.1.2.101-aka-400.1.2-custom-101-to-401.2.3.102-aka-401.2.3-custom-102' in tag_out
+
+
 def test_unannotated_tag(tmpdir, vcs):
     tmpdir.chdir()
     check_call([vcs, "init"])
