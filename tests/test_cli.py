@@ -780,7 +780,7 @@ tag_name: from-{current_version}-to-{new_version}""")
 
 def test_all_parts_in_message_and_serialize_and_tag_name_from_config_file(tmpdir, capsys, vcs):
     """
-    Ensure that major/minor/patch *and* custom parts can be used  everywhere.
+    Ensure that major/minor/patch *and* custom parts can be used everywhere.
 
     - As [part] in 'serialize'.
     - As new_[part] and previous_[part] in 'message'.
@@ -805,7 +805,8 @@ tag: True
 message: {current_version}/{current_major}.{current_minor}.{current_patch} custom {current_custom} becomes {new_version}/{new_major}.{new_minor}.{new_patch} custom {new_custom}
 tag_name: from-{current_version}-aka-{current_major}.{current_minor}.{current_patch}-custom-{current_custom}-to-{new_version}-aka-{new_major}.{new_minor}.{new_patch}-custom-{new_custom}
 
-[bumpversion:part:custom] """)
+[bumpversion:part:custom]
+""")
 
     main(['major', 'VERSION'])
 
@@ -814,6 +815,35 @@ tag_name: from-{current_version}-aka-{current_major}.{current_minor}.{current_pa
 
     tag_out = check_output([vcs, {"git": "tag", "hg": "tags"}[vcs]])
     assert b'from-400.1.2.101-aka-400.1.2-custom-101-to-401.2.3.102-aka-401.2.3-custom-102' in tag_out
+
+
+def test_all_parts_in_replace_from_config_file(tmpdir, capsys, vcs):
+    """
+    Ensure that major/minor/patch *and* custom parts can be used in 'replace'.
+    """
+    tmpdir.chdir()
+    check_call([vcs, "init"])
+    tmpdir.join("VERSION").write("my version is 400.1.2.101\n")
+    check_call([vcs, "add", "VERSION"])
+    check_call([vcs, "commit", "-m", "initial commit"])
+
+    tmpdir.join(".bumpversion.cfg").write("""[bumpversion]
+current_version: 400.1.2.101
+new_version: 401.2.3.102
+parse = (?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+).(?P<custom>\d+)
+serialize = {major}.{minor}.{patch}.{custom}
+commit: True
+tag: False
+
+[bumpversion:part:custom]
+
+[bumpversion:VERSION]
+search = my version is {current_version}
+replace = my version is {new_major}.{new_minor}.{new_patch}.{new_custom}""")
+
+    main(['major', 'VERSION'])
+    log = check_output([vcs, "log", "-p"])
+    assert b'+my version is 401.2.3.102' in log
 
 
 def test_unannotated_tag(tmpdir, vcs):
