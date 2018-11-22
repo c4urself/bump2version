@@ -1702,7 +1702,9 @@ current_version = 3.2.1
 files = fileX fileY fileZ
 """)
 
-    bumpversion.__warningregistry__.clear()
+    warning_registry = getattr(bumpversion, '__warningregistry__', None)
+    if warning_registry:
+        warning_registry.clear()
     warnings.resetwarnings()
     warnings.simplefilter('always')
     with warnings.catch_warnings(record=True) as recwarn:
@@ -1710,7 +1712,7 @@ files = fileX fileY fileZ
 
     w = recwarn.pop()
     assert issubclass(w.category, PendingDeprecationWarning)
-    assert "'files =' configuration is will be deprecated, please use" in str(w.message)
+    assert "'files =' configuration will be deprecated, please use" in str(w.message)
 
 
 def test_deprecation_warning_multiple_files_cli(tmpdir):
