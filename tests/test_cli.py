@@ -35,13 +35,16 @@ call = partial(subprocess.call, env=SUBPROCESS_ENV, shell=True)
 check_call = partial(subprocess.check_call, env=SUBPROCESS_ENV)
 check_output = partial(subprocess.check_output,  env=SUBPROCESS_ENV)
 
+GIT_PRESENT = call(["git", "--version"]) == 0
+HG_PRESENT = call(["hg", "--version"]) == 0
+
 xfail_if_no_git = pytest.mark.xfail(
-  call(["git", "help"]) != 0,
+  not GIT_PRESENT,
   reason="git is not installed"
 )
 
 xfail_if_no_hg = pytest.mark.xfail(
-  call(["hg", "help"]) != 0,
+  not HG_PRESENT,
   reason="hg is not installed"
 )
 
