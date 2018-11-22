@@ -12,8 +12,7 @@ import pytest
 import six
 import subprocess
 from datetime import datetime
-from os import curdir, makedirs, chdir, environ
-from os.path import join, curdir, dirname
+from os import environ
 from shlex import split as shlex_split
 from textwrap import dedent
 from functools import partial
