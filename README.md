@@ -5,9 +5,11 @@
 ## NOTE
 
 This is an interim fork of the excellent project that can be found here: https://github.com/peritus/bumpversion
+
 Unfortunately it seems like development has been stuck for some time and no activity has been seen from the
 author, to that end this project is a drop-in replacement that merges in some of the more important fixes.
-Hopefully we can merged back into the original bumpversion and carry on development there.
+
+Hopefully we can merge back into the original bumpversion and carry on development there.
 
 ## Overview
 
@@ -26,11 +28,11 @@ commits and tags:
 
 ## Screencast
 
-<a href="https://asciinema.org/a/3828">Watch a screencast here</a>
+<a href="https://asciinema.org/a/3828">Watch a screencast here</a>.
 
 ## Installation
 
-You can download and install the latest version of this software from the Python package index (PyPI) as follows::
+You can download and install the latest version of this software from the Python package index (PyPI) as follows:
 
     pip install --upgrade bump2version
 
