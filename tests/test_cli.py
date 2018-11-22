@@ -1041,9 +1041,9 @@ def test_log_parse_doesnt_parse_current_version(tmpdir):
     EXPECTED_LOG = dedent("""
         info|Could not read config file at .bumpversion.cfg|
         info|Parsing version '12' using regexp 'xxx'|
-        warn|Evaluating 'parse' option: 'xxx' does not parse current version '12'|
+        warning|Evaluating 'parse' option: 'xxx' does not parse current version '12'|
         info|Parsing version '13' using regexp 'xxx'|
-        warn|Evaluating 'parse' option: 'xxx' does not parse current version '13'|
+        warning|Evaluating 'parse' option: 'xxx' does not parse current version '13'|
         info|New version will be '13'|
         info|Asserting files  contain the version string:|
         info|Would write to config file .bumpversion.cfg:|

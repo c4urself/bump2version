@@ -144,7 +144,7 @@ class Git(BaseVCS):
             ], stderr=subprocess.STDOUT
             ).decode().split("-")
         except subprocess.CalledProcessError:
-            # logger.warn("Error when running git describe")
+            # logger.warning("Error when running git describe")
             return {}
 
         info = {}
@@ -411,7 +411,7 @@ class VersionConfig(object):
 
         _parsed = {}
         if not match:
-            logger.warn("Evaluating 'parse' option: '{}' does not parse current version '{}'".format(
+            logger.warning("Evaluating 'parse' option: '{}' does not parse current version '{}'".format(
                 self.parse_regex.pattern, version_string))
             return
 
@@ -861,7 +861,7 @@ def main(original_args=None):
                 vcs.assert_nondirty()
             except WorkingDirectoryIsDirtyException as e:
                 if not defaults['allow_dirty']:
-                    logger.warn(
+                    logger.warning(
                         "{}\n\nUse --allow-dirty to override this if you know what you're doing.".format(e.message))
                     raise
             break
