@@ -77,7 +77,7 @@ def _mock_calls_to_string(called_mock):
 
 
 
-EXPECTED_OPTIONS = """
+EXPECTED_OPTIONS = r"""
 [-h]
 [--config-file FILE]
 [--verbose]
@@ -100,7 +100,7 @@ part
 [file [file ...]]
 """.strip().splitlines()
 
-EXPECTED_USAGE = ("""
+EXPECTED_USAGE = (r"""
 
 %s
 
@@ -352,7 +352,7 @@ def test_bump_version_custom_parse(tmpdir):
     tmpdir.chdir()
     main([
          '--current-version', 'XXX1;0;0',
-         '--parse', 'XXX(?P<spam>\d+);(?P<garlg>\d+);(?P<slurp>\d+)',
+         '--parse', r'XXX(?P<spam>\d+);(?P<garlg>\d+);(?P<slurp>\d+)',
          '--serialize', 'XXX{spam};{garlg};{slurp}',
          'garlg',
          'file6'
@@ -365,7 +365,7 @@ def test_bump_version_custom_parse_serialize_configfile(tmpdir):
     tmpdir.join("file12").write("ZZZ8;0;0")
     tmpdir.chdir()
 
-    tmpdir.join(".bumpversion.cfg").write("""[bumpversion]
+    tmpdir.join(".bumpversion.cfg").write(r"""[bumpversion]
 files = file12
 current_version = ZZZ8;0;0
 serialize = ZZZ{spam};{garlg};{slurp}
@@ -381,7 +381,7 @@ def test_bumpversion_custom_parse_semver(tmpdir):
     tmpdir.chdir()
     main([
          '--current-version', '1.1.7-master+allan1',
-         '--parse', '(?P<major>\d+).(?P<minor>\d+).(?P<patch>\d+)(-(?P<prerel>[^\+]+))?(\+(?P<meta>.*))?',
+         '--parse', r'(?P<major>\d+).(?P<minor>\d+).(?P<patch>\d+)(-(?P<prerel>[^\+]+))?(\+(?P<meta>.*))?',
          '--serialize', '{major}.{minor}.{patch}-{prerel}+{meta}',
          'meta',
          'file15'
@@ -588,7 +588,7 @@ def test_bump_version_ENV(tmpdir):
     main([
          '--verbose',
          '--current-version', '2.3.4',
-         '--parse', '(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+).*',
+         '--parse', r'(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+).*',
          '--serialize', '{major}.{minor}.{patch}.pre{$BUILD_NUMBER}',
          'patch',
          'on_jenkins',
@@ -655,7 +655,7 @@ def test_distance_to_latest_tag_as_part_of_new_version(tmpdir, vcs):
     # don't give current-version, that should come from tag
     main([
          'patch',
-         '--parse', '(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+).*',
+         '--parse', r'(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+).*',
          '--serialize', '{major}.{minor}.{patch}-pre{distance_to_latest_tag}',
          'mysourcefile',
          ])
@@ -924,7 +924,7 @@ def test_serialize_newline(tmpdir):
     tmpdir.chdir()
     main([
         '--current-version', 'MAJOR=31\nMINOR=0\nPATCH=3\n',
-        '--parse', 'MAJOR=(?P<major>\d+)\\nMINOR=(?P<minor>\d+)\\nPATCH=(?P<patch>\d+)\\n',
+        '--parse', 'MAJOR=(?P<major>\\d+)\\nMINOR=(?P<minor>\\d+)\\nPATCH=(?P<patch>\\d+)\\n',
         '--serialize', 'MAJOR={major}\nMINOR={minor}\nPATCH={patch}\n',
         '--verbose',
         'major',
@@ -937,7 +937,7 @@ def test_multiple_serialize_threepart(tmpdir):
     tmpdir.chdir()
     main([
          '--current-version', 'Version: 0.9',
-         '--parse', 'Version:\ (?P<major>\d+)(\.(?P<minor>\d+)(\.(?P<patch>\d+))?)?',
+         '--parse', r'Version:\ (?P<major>\d+)(\.(?P<minor>\d+)(\.(?P<patch>\d+))?)?',
          '--serialize', 'Version: {major}.{minor}.{patch}',
          '--serialize', 'Version: {major}.{minor}',
          '--serialize', 'Version: {major}',
@@ -953,7 +953,7 @@ def test_multiple_serialize_twopart(tmpdir):
     tmpdir.chdir()
     main([
          '--current-version', '0.9',
-         '--parse', '(?P<major>\d+)\.(?P<minor>\d+)(\.(?P<patch>\d+))?',
+         '--parse', r'(?P<major>\d+)\.(?P<minor>\d+)(\.(?P<patch>\d+))?',
          '--serialize', '{major}.{minor}.{patch}',
          '--serialize', '{major}.{minor}',
          'minor',
@@ -967,7 +967,7 @@ def test_multiple_serialize_twopart_patch(tmpdir):
     tmpdir.chdir()
     main([
          '--current-version', '0.7',
-         '--parse', '(?P<major>\d+)\.(?P<minor>\d+)(\.(?P<patch>\d+))?',
+         '--parse', r'(?P<major>\d+)\.(?P<minor>\d+)(\.(?P<patch>\d+))?',
          '--serialize', '{major}.{minor}.{patch}',
          '--serialize', '{major}.{minor}',
          'patch',
@@ -980,7 +980,7 @@ def test_multiple_serialize_twopart_patch_configfile(tmpdir):
     tmpdir.join("fileD").write("0.6")
     tmpdir.chdir()
 
-    tmpdir.join(".bumpversion.cfg").write("""[bumpversion]
+    tmpdir.join(".bumpversion.cfg").write(r"""[bumpversion]
 files = fileD
 current_version = 0.6
 serialize =
@@ -1004,7 +1004,7 @@ def test_log_no_config_file_info_message(tmpdir, capsys):
 
     actual_log ="\n".join(_mock_calls_to_string(logger)[4:])
 
-    EXPECTED_LOG = dedent("""
+    EXPECTED_LOG = dedent(r"""
         info|Could not read config file at .bumpversion.cfg|
         info|Parsing version '1.0.0' using regexp '(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)'|
         info|Parsed the following values: major=1, minor=0, patch=0|
@@ -1075,7 +1075,7 @@ def test_complex_info_logging(tmpdir, capsys):
     tmpdir.join("fileE").write("0.4")
     tmpdir.chdir()
 
-    tmpdir.join(".bumpversion.cfg").write(dedent("""
+    tmpdir.join(".bumpversion.cfg").write(dedent(r"""
         [bumpversion]
         files = fileE
         current_version = 0.4
@@ -1089,7 +1089,7 @@ def test_complex_info_logging(tmpdir, capsys):
         main(['patch'])
 
     # beware of the trailing space (" ") after "serialize =":
-    EXPECTED_LOG = dedent("""
+    EXPECTED_LOG = dedent(r"""
         info|Reading config file .bumpversion.cfg:|
         info|[bumpversion]
         files = fileE
@@ -1135,7 +1135,7 @@ def test_subjunctive_dry_run_logging(tmpdir, vcs):
     tmpdir.join("dont_touch_me.txt").write("0.8")
     tmpdir.chdir()
 
-    tmpdir.join(".bumpversion.cfg").write(dedent("""
+    tmpdir.join(".bumpversion.cfg").write(dedent(r"""
         [bumpversion]
         files = dont_touch_me.txt
         current_version = 0.8
@@ -1165,13 +1165,13 @@ def test_subjunctive_dry_run_logging(tmpdir, vcs):
         serialize =
           {major}.{minor}.{patch}
           {major}.{minor}
-        parse = (?P<major>\d+)\.(?P<minor>\d+)(\.(?P<patch>\d+))?|
-        info|Parsing version '0.8' using regexp '(?P<major>\d+)\.(?P<minor>\d+)(\.(?P<patch>\d+))?'|
+        parse = (?P<major>\\d+)\\.(?P<minor>\\d+)(\\.(?P<patch>\\d+))?|
+        info|Parsing version '0.8' using regexp '(?P<major>\\d+)\\.(?P<minor>\\d+)(\\.(?P<patch>\\d+))?'|
         info|Parsed the following values: major=0, minor=8, patch=0|
         info|Attempting to increment part 'patch'|
         info|Values are now: major=0, minor=8, patch=1|
         info|Dry run active, won't touch any files.|
-        info|Parsing version '0.8.1' using regexp '(?P<major>\d+)\.(?P<minor>\d+)(\.(?P<patch>\d+))?'|
+        info|Parsing version '0.8.1' using regexp '(?P<major>\\d+)\\.(?P<minor>\\d+)(\\.(?P<patch>\\d+))?'|
         info|Parsed the following values: major=0, minor=8, patch=1|
         info|New version will be '0.8.1'|
         info|Asserting files dont_touch_me.txt contain the version string:|
@@ -1191,7 +1191,7 @@ def test_subjunctive_dry_run_logging(tmpdir, vcs):
         serialize = 
         	{major}.{minor}.{patch}
         	{major}.{minor}
-        parse = (?P<major>\d+)\.(?P<minor>\d+)(\.(?P<patch>\d+))?
+        parse = (?P<major>\\d+)\\.(?P<minor>\\d+)(\\.(?P<patch>\\d+))?
 
         |
         info|Would prepare Git commit|
@@ -1237,11 +1237,11 @@ def test_log_commitmessage_if_no_commit_tag_but_usable_vcs(tmpdir, vcs):
         current_version = 0.3.3
         commit = False
         tag = False|
-        info|Parsing version '0.3.3' using regexp '(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)'|
+        info|Parsing version '0.3.3' using regexp '(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)'|
         info|Parsed the following values: major=0, minor=3, patch=3|
         info|Attempting to increment part 'patch'|
         info|Values are now: major=0, minor=3, patch=4|
-        info|Parsing version '0.3.4' using regexp '(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)'|
+        info|Parsing version '0.3.4' using regexp '(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)'|
         info|Parsed the following values: major=0, minor=3, patch=4|
         info|New version will be '0.3.4'|
         info|Asserting files please_touch_me.txt contain the version string:|
@@ -1339,7 +1339,7 @@ def test_bump_non_numeric_parts(tmpdir, capsys):
     tmpdir.join("with_prereleases.txt").write("1.5.dev")
     tmpdir.chdir()
 
-    tmpdir.join(".bumpversion.cfg").write(dedent("""
+    tmpdir.join(".bumpversion.cfg").write(dedent(r"""
         [bumpversion]
         files = with_prereleases.txt
         current_version = 1.5.dev
@@ -1368,7 +1368,7 @@ def test_optional_value_from_documentation(tmpdir):
     tmpdir.join("optional_value_fromdoc.txt").write("1.alpha")
     tmpdir.chdir()
 
-    tmpdir.join(".bumpversion.cfg").write(dedent("""
+    tmpdir.join(".bumpversion.cfg").write(dedent(r"""
       [bumpversion]
       current_version = 1.alpha
       parse = (?P<num>\d+)(\.(?P<release>.*))?(\.)?
@@ -1398,7 +1398,7 @@ def test_python_prerelease_release_postrelease(tmpdir, capsys):
     tmpdir.join("python386.txt").write("1.0a")
     tmpdir.chdir()
 
-    tmpdir.join(".bumpversion.cfg").write(dedent("""
+    tmpdir.join(".bumpversion.cfg").write(dedent(r"""
         [bumpversion]
         files = python386.txt
         current_version = 1.0a
@@ -1480,7 +1480,7 @@ def test_multi_file_configuration(tmpdir, capsys):
 
     tmpdir.chdir()
 
-    tmpdir.join(".bumpversion.cfg").write(dedent("""
+    tmpdir.join(".bumpversion.cfg").write(dedent(r"""
         [bumpversion]
         current_version = 1.0.3
 
@@ -1508,7 +1508,7 @@ def test_multi_file_configuration2(tmpdir, capsys):
 
     tmpdir.chdir()
 
-    tmpdir.join(".bumpversion.cfg").write(dedent("""
+    tmpdir.join(r".bumpversion.cfg").write(dedent(r"""
       [bumpversion]
       current_version = 1.6.6
 
@@ -1568,7 +1568,7 @@ def test_search_replace_to_avoid_updating_unconcerned_lines(tmpdir, capsys):
         main(['minor', '--verbose'])
 
     # beware of the trailing space (" ") after "serialize =":
-    EXPECTED_LOG = dedent("""
+    EXPECTED_LOG = dedent(r"""
         info|Reading config file .bumpversion.cfg:|
         info|[bumpversion]
         current_version = 1.5.6
@@ -1732,7 +1732,7 @@ def test_file_specific_config_inherits_parse_serialize(tmpdir):
     tmpdir.join("todays_icecream").write("14-chocolate")
     tmpdir.join("todays_cake").write("14-chocolate")
 
-    tmpdir.join(".bumpversion.cfg").write(dedent("""
+    tmpdir.join(".bumpversion.cfg").write(dedent(r"""
       [bumpversion]
       current_version = 14-chocolate
       parse = (?P<major>\d+)(\-(?P<flavor>[a-z]+))?
@@ -1899,7 +1899,7 @@ def test_regression_characters_after_last_label_serialize_string(tmpdir, capsys)
     }
     ''')
 
-    tmpdir.join(".bumpversion.cfg").write(dedent("""
+    tmpdir.join(".bumpversion.cfg").write(dedent(r"""
     [bumpversion]
     current_version = 1.0.0
 

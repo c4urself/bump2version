@@ -708,7 +708,7 @@ def main(original_args=None):
                 section_config['part_configs'] = part_configs
 
                 if not 'parse' in section_config:
-                    section_config['parse'] = defaults.get("parse", '(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)')
+                    section_config['parse'] = defaults.get("parse", r'(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)')
 
                 if not 'serialize' in section_config:
                     section_config['serialize'] = defaults.get('serialize', [str('{major}.{minor}.{patch}')])
@@ -735,7 +735,7 @@ def main(original_args=None):
                          help='Version that needs to be updated', required=False)
     parser2.add_argument('--parse', metavar='REGEX',
                          help='Regex parsing the version string',
-                         default=defaults.get("parse", '(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)'))
+                         default=defaults.get("parse", r'(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)'))
     parser2.add_argument('--serialize', metavar='FORMAT',
                          action=DiscardDefaultIfSpecifiedAppendAction,
                          help='How to format what is parsed back to a version',
