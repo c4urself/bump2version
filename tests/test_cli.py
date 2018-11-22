@@ -9,7 +9,6 @@ import os
 import platform
 import pytest
 
-import six
 import subprocess
 from datetime import datetime
 from os import environ
@@ -165,11 +164,13 @@ def test_usage_string(tmpdir, capsys):
 def test_usage_string_fork(tmpdir, capsys):
     tmpdir.chdir()
 
-    if platform.system() == "Windows" and six.PY3:
+    if platform.system() == "Windows":
         # There are encoding problems on Windows with the encoding of →
-        tmpdir.join(".bumpversion.cfg").write("""[bumpversion]
-    message: Bump version: {current_version} to {new_version}
-    tag_message: 'Bump version: {current_version} to {new_version}""")
+        tmpdir.join(".bumpversion.cfg").write(dedent("""
+             [bumpversion]
+             message: Bump version: {current_version} to {new_version}
+             tag_message: 'Bump version: {current_version} to {new_version}
+             """))
 
     try:
         out = check_output('bumpversion --help', shell=True, stderr=subprocess.STDOUT)
