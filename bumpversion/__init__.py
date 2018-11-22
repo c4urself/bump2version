@@ -645,7 +645,12 @@ def main(original_args=None):
         logger.info("Reading config file {}:".format(config_file))
         logger.info(io.open(config_file, 'rt', encoding='utf-8').read())
 
-        config.readfp(io.open(config_file, 'rt', encoding='utf-8'))
+        try:
+            config.read_file(io.open(config_file, 'rt', encoding='utf-8'))
+        except AttributeError:
+            # python 2 standard ConfigParser doesn't have read_file,
+            # only deprecated readfp
+            config.readfp(io.open(config_file, 'rt', encoding='utf-8'))
 
         log_config = StringIO()
         config.write(log_config)
