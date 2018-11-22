@@ -913,7 +913,7 @@ def test_commit_and_tag_from_below_vcs_root(tmpdir, vcs, monkeypatch):
 @pytest.mark.parametrize("vcs", (VCS_GIT, VCS_MERCURIAL))
 def test_non_vcs_operations_if_vcs_is_not_installed(tmpdir, vcs, monkeypatch):
 
-    monkeypatch.setenv("PATH", "")
+    monkeypatch.setenv(str("PATH"), str(""))
 
     tmpdir.chdir()
     tmpdir.join("VERSION").write("31.0.3")
