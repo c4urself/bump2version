@@ -31,21 +31,16 @@ def _get_subprocess_env():
 
 
 SUBPROCESS_ENV = _get_subprocess_env()
-
-call = partial(subprocess.call, env=SUBPROCESS_ENV, shell=True)
 check_call = partial(subprocess.check_call, env=SUBPROCESS_ENV)
 check_output = partial(subprocess.check_output,  env=SUBPROCESS_ENV)
 
-GIT_PRESENT = call(["git", "--version"]) == 0
-HG_PRESENT = call(["hg", "--version"]) == 0
-
 xfail_if_no_git = pytest.mark.xfail(
-  not GIT_PRESENT,
+  subprocess.call(["git", "version"]) != 0,
   reason="git is not installed"
 )
 
 xfail_if_no_hg = pytest.mark.xfail(
-  not HG_PRESENT,
+  subprocess.call(["hg", "version"]) != 0,
   reason="hg is not installed"
 )
 
@@ -53,6 +48,16 @@ VCS_GIT = pytest.param("git", marks=xfail_if_no_git())
 VCS_MERCURIAL = pytest.param("hg", marks=xfail_if_no_hg())
 COMMIT = "[bumpversion]\ncommit = True"
 COMMIT_NOT_TAG = "[bumpversion]\ncommit = True\ntag = False"
+
+
+@pytest.fixture(params=[VCS_GIT, VCS_MERCURIAL])
+def vcs(request):
+    return request.param
+
+
+@pytest.fixture(params=[VCS_GIT])
+def git(request):
+    return request.param
 
 
 @pytest.fixture(params=['.bumpversion.cfg', 'setup.cfg'])
@@ -187,7 +192,6 @@ def test_usage_string_fork(tmpdir, capsys):
     assert b'usage: bumpversion [-h]' in out
 
 
-@pytest.mark.parametrize("vcs", [VCS_GIT, VCS_MERCURIAL])
 def test_regression_help_in_work_dir(tmpdir, capsys, vcs):
     tmpdir.chdir()
     tmpdir.join("some_source.txt").write("1.7.2013")
@@ -312,7 +316,6 @@ current_version = 0.0.14
 """ == tmpdir.join(".bumpversion.cfg").read()
 
 
-@pytest.mark.parametrize("vcs", (VCS_GIT, VCS_MERCURIAL))
 def test_dry_run(tmpdir, vcs):
     tmpdir.chdir()
 
@@ -397,7 +400,6 @@ def test_bumpversion_custom_parse_semver(tmpdir):
     assert 'XXX1.1.7-master+allan2' == tmpdir.join("file15").read()
 
 
-@pytest.mark.parametrize("vcs", (VCS_GIT, VCS_MERCURIAL))
 def test_dirty_work_dir(tmpdir, vcs):
     tmpdir.chdir()
     check_call([vcs, "init"])
@@ -415,7 +417,6 @@ def test_dirty_work_dir(tmpdir, vcs):
     assert "Use --allow-dirty to override this if you know what you're doing." in actual_log
 
 
-@pytest.mark.parametrize("vcs", (VCS_GIT, VCS_MERCURIAL))
 def test_force_dirty_work_dir(tmpdir, vcs):
     tmpdir.chdir()
     check_call([vcs, "init"])
@@ -442,7 +443,6 @@ def test_bump_major(tmpdir):
     assert '5.0.0' == tmpdir.join("fileMAJORBUMP").read()
 
 
-@pytest.mark.parametrize("vcs", (VCS_GIT, VCS_MERCURIAL))
 def test_commit_and_tag(tmpdir, vcs):
     tmpdir.chdir()
     check_call([vcs, "init"])
@@ -475,7 +475,6 @@ def test_commit_and_tag(tmpdir, vcs):
     assert b'v47.1.3' in tag_out
 
 
-@pytest.mark.parametrize("vcs", (VCS_GIT, VCS_MERCURIAL))
 def test_commit_and_tag_with_configfile(tmpdir, vcs):
     tmpdir.chdir()
 
@@ -511,12 +510,7 @@ def test_commit_and_tag_with_configfile(tmpdir, vcs):
     assert b'v48.1.3' in tag_out
 
 
-@pytest.mark.parametrize("vcs, config", [
-    pytest.param("git", COMMIT, marks=xfail_if_no_git()),
-    pytest.param("hg", COMMIT, marks=xfail_if_no_git()),
-    pytest.param("git", COMMIT_NOT_TAG, marks=xfail_if_no_git()),
-    pytest.param("hg", COMMIT_NOT_TAG, marks=xfail_if_no_git()),
-])
+@pytest.mark.parametrize("config", [COMMIT, COMMIT_NOT_TAG])
 def test_commit_and_not_tag_with_configfile(tmpdir, vcs, config):
     tmpdir.chdir()
 
@@ -542,7 +536,6 @@ def test_commit_and_not_tag_with_configfile(tmpdir, vcs, config):
     assert b'v48.1.2' not in tag_out
 
 
-@pytest.mark.parametrize("vcs", (VCS_GIT, VCS_MERCURIAL))
 def test_commit_explicitly_false(tmpdir, vcs):
     tmpdir.chdir()
 
@@ -567,7 +560,6 @@ tag = False""")
     assert "10.0.1" in diff
 
 
-@pytest.mark.parametrize("vcs", (VCS_GIT, VCS_MERCURIAL))
 def test_commit_configfile_true_cli_false_override(tmpdir, vcs):
     tmpdir.chdir()
 
@@ -608,15 +600,14 @@ def test_bump_version_environment(tmpdir):
     assert '2.3.5.pre567' == tmpdir.join("on_jenkins").read()
 
 
-@pytest.mark.parametrize("vcs", [VCS_GIT])
-def test_current_version_from_tag(tmpdir, vcs):
+def test_current_version_from_tag(tmpdir, git):
     # prepare
     tmpdir.join("update_from_tag").write("26.6.0")
     tmpdir.chdir()
-    check_call(["git", "init"])
-    check_call(["git", "add", "update_from_tag"])
-    check_call(["git", "commit", "-m", "initial"])
-    check_call(["git", "tag", "v26.6.0"])
+    check_call([git, "init"])
+    check_call([git, "add", "update_from_tag"])
+    check_call([git, "commit", "-m", "initial"])
+    check_call([git, "tag", "v26.6.0"])
 
     # don't give current-version, that should come from tag
     main(['patch', 'update_from_tag'])
@@ -624,18 +615,17 @@ def test_current_version_from_tag(tmpdir, vcs):
     assert '26.6.1' == tmpdir.join("update_from_tag").read()
 
 
-@pytest.mark.parametrize("vcs", [VCS_GIT])
-def test_current_version_from_tag_written_to_config_file(tmpdir, vcs):
+def test_current_version_from_tag_written_to_config_file(tmpdir, git):
     # prepare
     tmpdir.join("updated_also_in_config_file").write("14.6.0")
     tmpdir.chdir()
 
     tmpdir.join(".bumpversion.cfg").write("""[bumpversion]""")
 
-    check_call(["git", "init"])
-    check_call(["git", "add", "updated_also_in_config_file"])
-    check_call(["git", "commit", "-m", "initial"])
-    check_call(["git", "tag", "v14.6.0"])
+    check_call([git, "init"])
+    check_call([git, "add", "updated_also_in_config_file"])
+    check_call([git, "commit", "-m", "initial"])
+    check_call([git, "tag", "v14.6.0"])
 
     # don't give current-version, that should come from tag
     main([
@@ -649,19 +639,18 @@ def test_current_version_from_tag_written_to_config_file(tmpdir, vcs):
     assert '14.6.1' in tmpdir.join(".bumpversion.cfg").read()
 
 
-@pytest.mark.parametrize("vcs", [VCS_GIT])
-def test_distance_to_latest_tag_as_part_of_new_version(tmpdir, vcs):
+def test_distance_to_latest_tag_as_part_of_new_version(tmpdir, git):
     # prepare
     tmpdir.join("my_source_file").write("19.6.0")
     tmpdir.chdir()
 
-    check_call(["git", "init"])
-    check_call(["git", "add", "my_source_file"])
-    check_call(["git", "commit", "-m", "initial"])
-    check_call(["git", "tag", "v19.6.0"])
-    check_call(["git", "commit", "--allow-empty", "-m", "Just a commit 1"])
-    check_call(["git", "commit", "--allow-empty", "-m", "Just a commit 2"])
-    check_call(["git", "commit", "--allow-empty", "-m", "Just a commit 3"])
+    check_call([git, "init"])
+    check_call([git, "add", "my_source_file"])
+    check_call([git, "commit", "-m", "initial"])
+    check_call([git, "tag", "v19.6.0"])
+    check_call([git, "commit", "--allow-empty", "-m", "Just a commit 1"])
+    check_call([git, "commit", "--allow-empty", "-m", "Just a commit 2"])
+    check_call([git, "commit", "--allow-empty", "-m", "Just a commit 3"])
 
     # don't give current-version, that should come from tag
     main([
@@ -674,22 +663,21 @@ def test_distance_to_latest_tag_as_part_of_new_version(tmpdir, vcs):
     assert '19.6.1-pre3' == tmpdir.join("my_source_file").read()
 
 
-@pytest.mark.parametrize("vcs", [VCS_GIT])
-def test_override_vcs_current_version(tmpdir, vcs):
+def test_override_vcs_current_version(tmpdir, git):
     # prepare
     tmpdir.join("contains_actual_version").write("6.7.8")
     tmpdir.chdir()
-    check_call(["git", "init"])
-    check_call(["git", "add", "contains_actual_version"])
-    check_call(["git", "commit", "-m", "initial"])
-    check_call(["git", "tag", "v6.7.8"])
+    check_call([git, "init"])
+    check_call([git, "add", "contains_actual_version"])
+    check_call([git, "commit", "-m", "initial"])
+    check_call([git, "tag", "v6.7.8"])
 
     # update file
     tmpdir.join("contains_actual_version").write("7.0.0")
-    check_call(["git", "add", "contains_actual_version"])
+    check_call([git, "add", "contains_actual_version"])
 
     # but forgot to tag or forgot to push --tags
-    check_call(["git", "commit", "-m", "major release"])
+    check_call([git, "commit", "-m", "major release"])
 
     # if we don't give current-version here we get
     # "AssertionError: Did not find string 6.7.8 in file contains_actual_version"
@@ -714,17 +702,16 @@ def test_non_existing_second_file(tmpdir):
     assert '1.2.3' == tmpdir.join("my_source_code.txt").read()
 
 
-@pytest.mark.parametrize("vcs", [VCS_GIT])
-def test_read_version_tags_only(tmpdir, vcs):
+def test_read_version_tags_only(tmpdir, git):
     # prepare
     tmpdir.join("update_from_tag").write("29.6.0")
     tmpdir.chdir()
-    check_call(["git", "init"])
-    check_call(["git", "add", "update_from_tag"])
-    check_call(["git", "commit", "-m", "initial"])
-    check_call(["git", "tag", "v29.6.0"])
-    check_call(["git", "commit", "--allow-empty", "-m", "a commit"])
-    check_call(["git", "tag", "jenkins-deploy-my-project-2"])
+    check_call([git, "init"])
+    check_call([git, "add", "update_from_tag"])
+    check_call([git, "commit", "-m", "initial"])
+    check_call([git, "tag", "v29.6.0"])
+    check_call([git, "commit", "--allow-empty", "-m", "a commit"])
+    check_call([git, "tag", "jenkins-deploy-my-project-2"])
 
     # don't give current-version, that should come from tag
     main(['patch', 'update_from_tag'])
@@ -732,7 +719,6 @@ def test_read_version_tags_only(tmpdir, vcs):
     assert '29.6.1' == tmpdir.join("update_from_tag").read()
 
 
-@pytest.mark.parametrize("vcs", (VCS_GIT, VCS_MERCURIAL))
 def test_tag_name(tmpdir, vcs):
     tmpdir.chdir()
     check_call([vcs, "init"])
@@ -750,7 +736,6 @@ def test_tag_name(tmpdir, vcs):
     assert b'ReleasedVersion-31.1.2' in tag_out
 
 
-@pytest.mark.parametrize("vcs", (VCS_GIT, VCS_MERCURIAL))
 def test_message_from_config_file(tmpdir, capsys, vcs):
     tmpdir.chdir()
     check_call([vcs, "init"])
@@ -777,7 +762,6 @@ tag_name: from-{current_version}-to-{new_version}""")
     assert b'from-400.0.0-to-401.0.0' in tag_out
 
 
-@pytest.mark.parametrize("vcs", (VCS_GIT, VCS_MERCURIAL))
 def test_unannotated_tag(tmpdir, vcs):
     tmpdir.chdir()
     check_call([vcs, "init"])
@@ -801,7 +785,6 @@ def test_unannotated_tag(tmpdir, vcs):
         assert describe_out.startswith(b'ReleasedVersion-42.3.2')
 
 
-@pytest.mark.parametrize("vcs", (VCS_GIT, VCS_MERCURIAL))
 def test_annotated_tag(tmpdir, vcs):
     tmpdir.chdir()
     check_call([vcs, "init"])
@@ -832,13 +815,12 @@ def test_annotated_tag(tmpdir, vcs):
         raise ValueError("Unknown VCS")
 
 
-@pytest.mark.parametrize("vcs", [VCS_GIT])
-def test_vcs_describe(tmpdir, vcs):
+def test_vcs_describe(tmpdir, git):
     tmpdir.chdir()
-    check_call([vcs, "init"])
+    check_call([git, "init"])
     tmpdir.join("VERSION").write("42.5.1")
-    check_call([vcs, "add", "VERSION"])
-    check_call([vcs, "commit", "-m", "initial commit"])
+    check_call([git, "add", "VERSION"])
+    check_call([git, "commit", "-m", "initial commit"])
 
     main([
         'patch', '--current-version', '42.5.1', '--commit', '--tag',
@@ -846,7 +828,7 @@ def test_vcs_describe(tmpdir, vcs):
     ])
     assert '42.5.2' == tmpdir.join("VERSION").read()
 
-    describe_out = subprocess.check_output([vcs, "describe"])
+    describe_out = subprocess.check_output([git, "describe"])
     assert b'v42.5.2\n' == describe_out
 
     main([
@@ -855,10 +837,10 @@ def test_vcs_describe(tmpdir, vcs):
     ])
     assert '42.5.3' == tmpdir.join("VERSION").read()
 
-    describe_only_annotated_out = subprocess.check_output([vcs, "describe"])
+    describe_only_annotated_out = subprocess.check_output([git, "describe"])
     assert describe_only_annotated_out.startswith(b'v42.5.2-1-g')
 
-    describe_all_out = subprocess.check_output([vcs, "describe", "--tags"])
+    describe_all_out = subprocess.check_output([git, "describe", "--tags"])
     assert b'ReleasedVersion-42.5.3\n' == describe_all_out
 
 
@@ -871,7 +853,6 @@ except ImportError:
 
 @pytest.mark.xfail(not config_parser_handles_utf8,
                    reason="old ConfigParser uses non-utf-8-strings internally")
-@pytest.mark.parametrize("vcs", (VCS_GIT, VCS_MERCURIAL))
 def test_utf8_message_from_config_file(tmpdir, capsys, vcs):
     tmpdir.chdir()
     check_call([vcs, "init"])
@@ -893,7 +874,6 @@ message = Nová verze: {current_version} ☃, {new_version} ☀
     assert expected_new_config.encode('utf-8') == tmpdir.join(".bumpversion.cfg").read(mode='rb')
 
 
-@pytest.mark.parametrize("vcs", (VCS_GIT, VCS_MERCURIAL))
 def test_utf8_message_from_config_file(tmpdir, capsys, vcs):
     tmpdir.chdir()
     check_call([vcs, "init"])
@@ -919,7 +899,6 @@ message = [{now}] [{utcnow} {utcnow:%YXX%mYY%d}]
     assert b'YY' in log
 
 
-@pytest.mark.parametrize("vcs", (VCS_GIT, VCS_MERCURIAL))
 def test_commit_and_tag_from_below_vcs_root(tmpdir, vcs, monkeypatch):
     tmpdir.chdir()
     check_call([vcs, "init"])
@@ -935,7 +914,6 @@ def test_commit_and_tag_from_below_vcs_root(tmpdir, vcs, monkeypatch):
     assert '31.0.0' == tmpdir.join("VERSION").read()
 
 
-@pytest.mark.parametrize("vcs", (VCS_GIT, VCS_MERCURIAL))
 def test_non_vcs_operations_if_vcs_is_not_installed(tmpdir, vcs, monkeypatch):
     monkeypatch.setenv(str("PATH"), str(""))
 
@@ -1166,7 +1144,6 @@ def test_complex_info_logging(tmpdir, capsys):
     assert actual_log == expected_log
 
 
-@pytest.mark.parametrize("vcs", (VCS_GIT, VCS_MERCURIAL))
 def test_subjunctive_dry_run_logging(tmpdir, vcs):
     tmpdir.join("dont_touch_me.txt").write("0.8")
     tmpdir.chdir()
@@ -1246,7 +1223,6 @@ def test_subjunctive_dry_run_logging(tmpdir, vcs):
     assert actual_log == expected_log
 
 
-@pytest.mark.parametrize("vcs", (VCS_GIT, VCS_MERCURIAL))
 def test_log_commit_message_if_no_commit_tag_but_usable_vcs(tmpdir, vcs):
     tmpdir.join("please_touch_me.txt").write("0.3.3")
     tmpdir.chdir()
@@ -1313,7 +1289,6 @@ def test_log_commit_message_if_no_commit_tag_but_usable_vcs(tmpdir, vcs):
     assert actual_log == expected_log
 
 
-@pytest.mark.parametrize("vcs", (VCS_GIT, VCS_MERCURIAL))
 def test_listing(tmpdir, vcs):
     tmpdir.join("please_list_me.txt").write("0.5.5")
     tmpdir.chdir()
@@ -1348,7 +1323,6 @@ def test_listing(tmpdir, vcs):
     assert actual_log == expected_log
 
 
-@pytest.mark.parametrize("vcs", (VCS_GIT, VCS_MERCURIAL))
 def test_no_list_no_stdout(tmpdir, vcs):
     tmpdir.join("please_dont_list_me.txt").write("0.5.5")
     tmpdir.chdir()
@@ -1886,14 +1860,13 @@ def test_configparser_empty_lines_in_values(tmpdir):
     """) == tmpdir.join("CHANGES.rst").read()
 
 
-@pytest.mark.parametrize("vcs", [VCS_GIT])
-def test_regression_tag_name_with_hyphens(tmpdir, capsys, vcs):
+def test_regression_tag_name_with_hyphens(tmpdir, capsys, git):
     tmpdir.chdir()
     tmpdir.join("some_source.txt").write("2014.10.22")
-    check_call([vcs, "init"])
-    check_call([vcs, "add", "some_source.txt"])
-    check_call([vcs, "commit", "-m", "initial commit"])
-    check_call([vcs, "tag", "very-unrelated-but-containing-lots-of-hyphens"])
+    check_call([git, "init"])
+    check_call([git, "add", "some_source.txt"])
+    check_call([git, "commit", "-m", "initial commit"])
+    check_call([git, "tag", "very-unrelated-but-containing-lots-of-hyphens"])
 
     tmpdir.join(".bumpversion.cfg").write(dedent("""
     [bumpversion]
@@ -1903,8 +1876,7 @@ def test_regression_tag_name_with_hyphens(tmpdir, capsys, vcs):
     main(['patch', 'some_source.txt'])
 
 
-@pytest.mark.parametrize("vcs", [VCS_GIT])
-def test_unclean_repo_exception(tmpdir, vcs, caplog):
+def test_unclean_repo_exception(tmpdir, git, caplog):
     tmpdir.chdir()
 
     config = """[bumpversion]
@@ -1917,9 +1889,9 @@ message = XXX
     tmpdir.join("file1").write("foo")
 
     # If I have a repo with an initial commit
-    check_call([vcs, "init"])
-    check_call([vcs, "add", "file1"])
-    check_call([vcs, "commit", "-m", "initial commit"])
+    check_call([git, "init"])
+    check_call([git, "add", "file1"])
+    check_call([git, "commit", "-m", "initial commit"])
 
     # If I add the bumpversion config, uncommitted
     tmpdir.join(".bumpversion.cfg").write(config)
