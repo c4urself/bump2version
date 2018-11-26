@@ -4,6 +4,7 @@ from bumpversion.version_part import *
 
 @pytest.fixture(params=[None, (('0', '1', '2'),), (('0', '3'),)])
 def confvpc(request):
+    """Return a three-part and a two-part version part configuration."""
     if request.param is None:
         return NumericVersionPartConfiguration()
     else:

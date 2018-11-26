@@ -52,16 +52,19 @@ COMMIT_NOT_TAG = "[bumpversion]\ncommit = True\ntag = False"
 
 @pytest.fixture(params=[VCS_GIT, VCS_MERCURIAL])
 def vcs(request):
+    """Return all supported VCS systems (git, hg)."""
     return request.param
 
 
 @pytest.fixture(params=[VCS_GIT])
 def git(request):
+    """Return git as VCS (not hg)."""
     return request.param
 
 
 @pytest.fixture(params=['.bumpversion.cfg', 'setup.cfg'])
 def configfile(request):
+    """Return both config-file styles ('.bumpversion.cfg', 'setup.cfg')."""
     return request.param
 
 
