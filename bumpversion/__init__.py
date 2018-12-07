@@ -14,12 +14,15 @@ except:
 
 
 import argparse
+from argparse import _AppendAction
 import os
 import re
 import sre_constants
 import subprocess
 import warnings
 import io
+import operator
+import logging
 from string import Formatter
 from datetime import datetime
 from difflib import unified_diff
@@ -41,11 +44,11 @@ DESCRIPTION = 'bumpversion: v{} (using Python v{})'.format(
     sys.version.split("\n")[0].split(" ")[0],
 )
 
-import logging
+
 logger = logging.getLogger("bumpversion.logger")
 logger_list = logging.getLogger("bumpversion.list")
 
-from argparse import _AppendAction
+
 class DiscardDefaultIfSpecifiedAppendAction(_AppendAction):
 
     '''
@@ -60,10 +63,12 @@ class DiscardDefaultIfSpecifiedAppendAction(_AppendAction):
         super(DiscardDefaultIfSpecifiedAppendAction, self).__call__(
                 parser, namespace, values, option_string=None)
 
+
 time_context = {
     'now': datetime.now(),
     'utcnow': datetime.utcnow(),
 }
+
 
 class BaseVCS(object):
 
@@ -204,11 +209,13 @@ class Mercurial(BaseVCS):
             command += ['--message', message]
         subprocess.check_output(command)
 
+
 VCS = [Git, Mercurial]
 
 
 def prefixed_environ():
     return dict((("${}".format(key), value) for key, value in os.environ.items()))
+
 
 class ConfiguredFile(object):
 
@@ -302,35 +309,41 @@ class ConfiguredFile(object):
     def __repr__(self):
         return '<bumpversion.ConfiguredFile:{}>'.format(self.path)
 
+
 class IncompleteVersionRepresenationException(Exception):
     def __init__(self, message):
         self.message = message
+
 
 class MissingValueForSerializationException(Exception):
     def __init__(self, message):
         self.message = message
 
+
 class WorkingDirectoryIsDirtyException(Exception):
     def __init__(self, message):
         self.message = message
+
 
 class MercurialDoesNotSupportSignedTagsException(Exception):
     def __init__(self, message):
         self.message = message
 
+
 class UnkownPart(Exception):
     def __init__(self, message):
         self.message = message
 
+
 def keyvaluestring(d):
     return ", ".join("{}={}".format(k, v) for k, v in sorted(d.items()))
 
+
 class Version(object):
 
-    def __init__(self, values, config, original=None):
+    def __init__(self, values, order):
         self._values = dict(values)
-        self.config = config
-        self.original = original
+        self.order = order
 
     def __getitem__(self, key):
         return self._values[key]
@@ -343,26 +356,38 @@ class Version(object):
 
     def __repr__(self):
         by_part = ", ".join("{}={}".format(k, v) for k, v in self.items())
-        return '<bumpversion.Version:{}>'.format(by_part)
+        return '<{}:{}>'.format(self.__class__, by_part)
 
     def __hash__(self):
         return hash(tuple((k, v) for k, v in self.items()))
 
     def _compare(self, other, method, strict=True):
         """
-        For strict relations, if a part is equal we skip it
+        When comparing versions we need to compare the three parts before we can decide if there is a difference.
+        Non-strict comparators need to be treated differently as they can not fail if the initial parts are equal
         :param other: the other Version
         :param method: the compare method
+        :param strict: if the comparsion is strict
         :return:
         """
-        try:
-            for vals in ((v, other[k]) for k, v in self.items()):
-                if vals[0] == vals[1]:
-                    continue
-                return method(vals[0], vals[1])
-            return not strict
-        except KeyError:
+        if set(self.order).difference(other.order):
             raise TypeError("Versions use different parts, cant compare them.")
+        for (x, y) in zip(self.values(), other.values()):
+            if x == y:
+                continue
+            else:
+                return method(x, y)
+        return not strict
+        # try:
+
+        #
+        #     for vals in ((v, other[k]) for k, v in self.items()):
+        #         if vals[0] == vals[1]:
+        #             continue
+        #         return method(vals[0], vals[1])
+        #     return not strict
+        # except KeyError:
+        #
 
     def __eq__(self, other):
         if self is other:
@@ -375,24 +400,31 @@ class Version(object):
             raise TypeError("Versions use different parts, cant compare them.")
 
     def __ne__(self, other):
-        return not self.__eq__(other)
+        return not self == other
 
     def __le__(self, other):
-        return self._compare(other, lambda s, o: o > s, False)  # Note the change of order in operands
+        return self._compare(other, operator.lt, False)
 
     def __ge__(self, other):
-        return self._compare(other, lambda s, o: o < s, False)  # Note the change of order in operands
+        return self._compare(other, operator.gt, False)
 
     def __lt__(self, other):
-        return self._compare(other, lambda s, o: s < o)
+        return self._compare(other, operator.lt)
 
     def __gt__(self, other):
-        return self._compare(other, lambda s, o: s > o)
+        return self._compare(other, operator.gt)
 
     def items(self):
-        for k in self.config.order():
+        for k in self.order:
             try:
                 yield k, self._values[k]
+            except KeyError:
+                raise StopIteration
+
+    def values(self):
+        for k in self.order:
+            try:
+                yield self._values[k]
             except KeyError:
                 raise StopIteration
 
@@ -412,9 +444,10 @@ class Version(object):
             else:
                 new_values[label] = self._values[label].copy()
 
-        new_version = Version(new_values, self.config)
+        new_version = Version(new_values, self.order)
 
         return new_version
+
 
 class VersionConfig(object):
 
@@ -468,8 +501,7 @@ class VersionConfig(object):
         for key, value in match.groupdict().items():
             _parsed[key] = VersionPart(value, self.part_configs.get(key))
 
-
-        v = Version(_parsed, self, version_string)
+        v = Version(_parsed, [o for o in self.order()])
 
         logger.info("Parsed the following values: %s" % keyvaluestring(v._values))
 
@@ -530,7 +562,6 @@ class VersionConfig(object):
 
         return serialized
 
-
     def _choose_serialize_format(self, version, context):
 
         chosen = None
@@ -561,6 +592,7 @@ class VersionConfig(object):
         serialized = self._serialize(version, self._choose_serialize_format(version, context), context)
         # logger.info("Serialized to '{}'".format(serialized))
         return serialized
+
 
 OPTIONAL_ARGUMENTS_THAT_TAKE_VALUES = [
     '--config-file',
@@ -597,6 +629,7 @@ def split_args_in_optional_and_positional(args):
     args = [arg for i, arg in enumerate(args) if i not in positions]
 
     return (positionals, args)
+
 
 def main(original_args=None):
 

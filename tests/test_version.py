@@ -3,7 +3,6 @@
 from __future__ import unicode_literals, print_function
 import pytest
 
-import bumpversion
 from bumpversion import VersionConfig
 from bumpversion.version_part import ConfiguredVersionPartConfiguration
 
@@ -82,6 +81,20 @@ def test_compare_versions_numeric():
     assert v2 > v1
     assert not (v2 <= v1)
     assert v2 >= v1
+    v1 = vc.parse(version_string="3.2.4")
+    v2 = vc.parse(version_string="2.3.1")
+    assert not (v1 == v2)
+    assert v1 != v2
+    assert not (v1 < v2)
+    assert v1 > v2
+    assert not (v1 <= v2)
+    assert v1 >= v2
+    assert not (v2 == v1)
+    assert v2 != v1
+    assert v2 < v1
+    assert not (v2 > v1)
+    assert v2 <= v1
+    assert not (v2 >= v1)
 
 
 def test_compare_versions_values():

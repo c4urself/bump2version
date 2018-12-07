@@ -1,4 +1,6 @@
 from bumpversion.functions import NumericFunction, ValuesFunction
+import operator
+
 
 class PartConfiguration(object):
     function_cls = NumericFunction
@@ -35,10 +37,8 @@ class VersionPart(object):
 
     def __init__(self, value, config=None):
         self._value = value
-
         if config is None:
             config = NumericVersionPartConfiguration()
-
         self.config = config
 
     @property
@@ -78,22 +78,22 @@ class VersionPart(object):
             return method(idx1, idx2)
 
     def __eq__(self, other):
-        return self._compare(other, lambda s, o: s == o)
+        return self._compare(other, operator.eq)
 
     def __lt__(self, other):
-        return self._compare(other, lambda s, o: s < o)
+        return self._compare(other, operator.lt)
 
     def __le__(self, other):
-        return self._compare(other, lambda s, o: s <= o)
+        return self._compare(other, operator.le)
 
     def __ge__(self, other):
-        return self._compare(other, lambda s, o: s >= o)
+        return self._compare(other, operator.ge)
 
     def __gt__(self, other):
-        return self._compare(other, lambda s, o: s > o)
+        return self._compare(other, operator.gt)
 
     def __ne__(self, other):
-        return self._compare(other, lambda s, o: s != o)
+        return not self == other
 
     def null(self):
         return VersionPart(self.config.first_value, self.config)
