@@ -13,7 +13,10 @@ except ImportError:
 
 import argparse
 import codecs
+import collections
+import contextlib
 import io
+import json
 import os
 import platform
 import re
@@ -308,6 +311,144 @@ class ConfiguredFile(object):
 
     def __repr__(self):
         return '<bumpversion.ConfiguredFile:{}>'.format(self.path)
+
+
+class PathEditor(object):
+    class Undefined:
+        pass
+
+    class Path(object):
+        def __init__(self, match):
+            self.match = match
+
+    class ArrayPath(Path):
+        MATCH = re.compile(r'^(?P<attr>[a-z0-9_]+)\[(?P<index>[0-9]+)\]$', re.IGNORECASE)
+
+        def get(self, obj):
+            prop, index = self.match.groups()
+            return obj[prop][int(index)]
+
+        def set(self, obj, value):
+            prop, index = self.match.groups()
+            obj[prop][int(index)] = value
+
+    class ObjectPath(Path):
+        MATCH = re.compile(r'^(?P<attr>[a-z0-9_]+)$', re.IGNORECASE)
+
+        def get(self, obj):
+            prop, = self.match.groups()
+            return obj[prop]
+
+        def set(self, obj, value):
+            prop, = self.match.groups()
+            obj[prop] = value
+
+    PATH_TYPES = (ArrayPath, ObjectPath)
+
+    def __init__(self, path):
+        self.path = path
+
+    @classmethod
+    @contextlib.contextmanager
+    def _matches(cls, path_type, value):
+        match = path_type.MATCH.match(value)
+        if match is not None:
+            yield path_type(match)
+        else:
+            yield None
+
+    @classmethod
+    def traverse(cls, obj, path, value=Undefined):
+        try:
+            key, remaining_path = path.split('.', 1)
+        except ValueError:
+            key, remaining_path = path, None
+
+        for path_type in cls.PATH_TYPES:
+            with cls._matches(path_type, key) as accessor:
+                if accessor is None:
+                    continue
+
+                if remaining_path is None and value is not cls.Undefined:
+                    return accessor.set(obj, value)
+
+                if remaining_path is None:
+                    return accessor.get(obj)
+                else:
+                    return cls.traverse(accessor.get(obj), remaining_path, value)
+
+    def get(self, obj):
+        return self.traverse(obj, self.path)
+
+    def set(self, obj, value):
+        return self.traverse(obj, self.path, value)
+
+
+class ConfiguredJSONFile(ConfiguredFile):
+    def __init__(self, path, version_key, versionconfig):
+        super(ConfiguredJSONFile, self).__init__(path, versionconfig)
+        self.version_editor = PathEditor(version_key)
+
+    def contains(self, search):
+        with io.open(self.path, 'rt', encoding='utf-8') as f:
+            data = json.load(f)
+        try:
+            return self.version_editor.get(data) == search
+        except LookupError as exc:
+            logger.error('invalid path expression: {}'.format(str(exc)), exc_info=exc)
+            return False
+
+    def replace(self, current_version, new_version, context, dry_run):
+        with io.open(self.path, 'rt', encoding='utf-8') as f:
+            file_content_before = f.read()
+            # the object_pairs_hook allows us to load the json in a way that
+            # key order is preserved and will keep the file diff to a minimum
+            data = json.loads(file_content_before, object_pairs_hook=collections.OrderedDict)
+
+        context['current_version'] = self._versionconfig.serialize(current_version, context)
+        context['new_version'] = self._versionconfig.serialize(new_version, context)
+
+        search_for = self._versionconfig.search.format(**context)
+        replace_with = self._versionconfig.replace.format(**context)
+
+        if self.version_editor.get(data) == search_for:
+            self.version_editor.set(data, replace_with)
+        # ensure_ascii: we're writing utf-8 files, so we don't need ascii support
+        # allow_nan: JSON does not have an understanding of infinity or nan, so it’s forbidden
+        # indent: indent of 2 spaces is common practise
+        #         TODO: maybe this should be configurable
+        # separators: the default separators leave a trailing space after every comma. when using
+        #             indentation, this results in awkward line-endings with a leading space
+        file_content_after = json.dumps(data, ensure_ascii=False, allow_nan=False,
+                                        indent=2, separators=(',', ': '))
+
+        if file_content_before != file_content_after:
+            logger.info('{} file {}:'.format(
+                'Would change' if dry_run else 'Changing',
+                self.path,
+            ))
+            logger.info(os.linesep.join(list(unified_diff(
+                file_content_before.splitlines(),
+                file_content_after.splitlines(),
+                lineterm='',
+                fromfile='a/' + self.path,
+                tofile='b/' + self.path
+            ))))
+        else:
+            logger.info('{} file {}'.format(
+                'Would not change' if dry_run else 'Not changing',
+                self.path,
+            ))
+
+        if not dry_run:
+            with io.open(self.path + '.2', 'wt', encoding='utf-8', newline='\n') as f:
+                f.write(file_content_after)
+
+    def __repr__(self):
+        # TODO: this is not how repr should be implemented, but it's
+        #       consistent with the implementation in ConfiguredFile
+        return '<bumpversion.ConfiguredJSONFile:{}>'.format(self.path)
+
 
 class IncompleteVersionRepresenationException(Exception):
     def __init__(self, message):
@@ -679,7 +820,7 @@ def main(original_args=None):
 
         for section_name in config.sections():
 
-            section_name_match = re.compile("^bumpversion:(file|part):(.+)").match(section_name)
+            section_name_match = re.compile("^bumpversion:(file|file\+json|part):(.+)").match(section_name)
 
             if not section_name_match:
                 continue
@@ -698,7 +839,7 @@ def main(original_args=None):
 
                 part_configs[section_value] = ThisVersionPartConfiguration(**section_config)
 
-            elif section_prefix == "file":
+            elif section_prefix in ('file', 'file+json'):
 
                 filename = section_value
 
@@ -707,19 +848,26 @@ def main(original_args=None):
 
                 section_config['part_configs'] = part_configs
 
-                if not 'parse' in section_config:
-                    section_config['parse'] = defaults.get("parse", r'(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)')
+                if 'parse' not in section_config:
+                    section_config['parse'] = defaults.get('parse', r'(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)')
 
-                if not 'serialize' in section_config:
+                if 'serialize' not in section_config:
                     section_config['serialize'] = defaults.get('serialize', [str('{major}.{minor}.{patch}')])
 
-                if not 'search' in section_config:
-                    section_config['search'] = defaults.get("search", '{current_version}')
+                if 'search' not in section_config:
+                    section_config['search'] = defaults.get('search', '{current_version}')
 
-                if not 'replace' in section_config:
-                    section_config['replace'] = defaults.get("replace", '{new_version}')
+                if 'replace' not in section_config:
+                    section_config['replace'] = defaults.get('replace', '{new_version}')
 
-                files.append(ConfiguredFile(filename, VersionConfig(**section_config)))
+                if section_prefix == 'file':
+                    version_cfg = VersionConfig(**section_config)
+                    files.append(ConfiguredFile(filename, version_cfg))
+                elif section_prefix == 'file+json':
+                    version_key = section_config.pop('version_key',
+                                                     defaults.get('version_key', 'version'))
+                    version_cfg = VersionConfig(**section_config)
+                    files.append(ConfiguredJSONFile(filename, version_key, version_cfg))
 
     else:
         message = "Could not read config file at {}".format(config_file)
