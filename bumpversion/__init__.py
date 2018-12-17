@@ -144,7 +144,7 @@ class Git(BaseVCS):
             ], stderr=subprocess.STDOUT
             ).decode().split("-")
         except subprocess.CalledProcessError:
-            # logger.warn("Error when running git describe")
+            # logger.warning("Error when running git describe")
             return {}
 
         info = {}
@@ -411,7 +411,7 @@ class VersionConfig(object):
 
         _parsed = {}
         if not match:
-            logger.warn("Evaluating 'parse' option: '{}' does not parse current version '{}'".format(
+            logger.warning("Evaluating 'parse' option: '{}' does not parse current version '{}'".format(
                 self.parse_regex.pattern, version_string))
             return
 
@@ -645,14 +645,19 @@ def main(original_args=None):
         logger.info("Reading config file {}:".format(config_file))
         logger.info(io.open(config_file, 'rt', encoding='utf-8').read())
 
-        config.readfp(io.open(config_file, 'rt', encoding='utf-8'))
+        try:
+            config.read_file(io.open(config_file, 'rt', encoding='utf-8'))
+        except AttributeError:
+            # python 2 standard ConfigParser doesn't have read_file,
+            # only deprecated readfp
+            config.readfp(io.open(config_file, 'rt', encoding='utf-8'))
 
         log_config = StringIO()
         config.write(log_config)
 
         if 'files' in dict(config.items("bumpversion")):
             warnings.warn(
-                "'files =' configuration is will be deprecated, please use [bumpversion:file:...]",
+                "'files =' configuration will be deprecated, please use [bumpversion:file:...]",
                 PendingDeprecationWarning
             )
 
@@ -703,7 +708,7 @@ def main(original_args=None):
                 section_config['part_configs'] = part_configs
 
                 if not 'parse' in section_config:
-                    section_config['parse'] = defaults.get("parse", '(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)')
+                    section_config['parse'] = defaults.get("parse", r'(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)')
 
                 if not 'serialize' in section_config:
                     section_config['serialize'] = defaults.get('serialize', [str('{major}.{minor}.{patch}')])
@@ -730,7 +735,7 @@ def main(original_args=None):
                          help='Version that needs to be updated', required=False)
     parser2.add_argument('--parse', metavar='REGEX',
                          help='Regex parsing the version string',
-                         default=defaults.get("parse", '(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)'))
+                         default=defaults.get("parse", r'(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)'))
     parser2.add_argument('--serialize', metavar='FORMAT',
                          action=DiscardDefaultIfSpecifiedAppendAction,
                          help='How to format what is parsed back to a version',
@@ -861,7 +866,7 @@ def main(original_args=None):
                 vcs.assert_nondirty()
             except WorkingDirectoryIsDirtyException as e:
                 if not defaults['allow_dirty']:
-                    logger.warn(
+                    logger.warning(
                         "{}\n\nUse --allow-dirty to override this if you know what you're doing.".format(e.message))
                     raise
             break
