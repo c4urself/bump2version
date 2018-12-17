@@ -69,6 +69,16 @@ def configfile(request):
     return request.param
 
 
+@pytest.fixture(params=["patch ", "nonexistant ", None])
+def optional_part(request):
+    """Return a real part, a bogus one, an no part at all."""
+    part = request.param
+    if not part:
+        return ""
+    # add extra space to separate from other main() arguments
+    return part + " "
+
+
 try:
     RawConfigParser(empty_lines_in_values=False)
     using_old_configparser = False
@@ -244,18 +254,18 @@ def test_missing_explicit_config_file(tmpdir):
         main(['--config-file', 'missing.cfg'])
 
 
-def test_simple_replacement(tmpdir):
+def test_simple_replacement(tmpdir, optional_part):
     tmpdir.join("VERSION").write("1.2.0")
     tmpdir.chdir()
-    main(shlex_split("patch --current-version 1.2.0 --new-version 1.2.1 VERSION"))
+    main(shlex_split(optional_part + "--current-version 1.2.0 --new-version 1.2.1 VERSION"))
     assert "1.2.1" == tmpdir.join("VERSION").read()
 
 
-def test_simple_replacement_in_utf8_file(tmpdir):
+def test_simple_replacement_in_utf8_file(tmpdir, optional_part):
     tmpdir.join("VERSION").write("Kröt1.3.0".encode('utf-8'), 'wb')
     tmpdir.chdir()
     out = tmpdir.join("VERSION").read('rb')
-    main(shlex_split("patch --verbose --current-version 1.3.0 --new-version 1.3.1 VERSION"))
+    main(shlex_split(optional_part + "--verbose --current-version 1.3.0 --new-version 1.3.1 VERSION"))
     out = tmpdir.join("VERSION").read('rb')
     assert "'Kr\\xc3\\xb6t1.3.1'" in repr(out)
 
