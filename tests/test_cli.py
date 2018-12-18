@@ -795,7 +795,7 @@ def test_all_parts_in_message_and_serialize_and_tag_name_from_config_file(tmpdir
     check_call([vcs, "add", "VERSION"])
     check_call([vcs, "commit", "-m", "initial commit"])
 
-    tmpdir.join(".bumpversion.cfg").write("""[bumpversion]
+    tmpdir.join(".bumpversion.cfg").write(r"""[bumpversion]
 current_version: 400.1.2.101
 new_version: 401.2.3.102
 parse = (?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+).(?P<custom>\d+)
@@ -827,7 +827,7 @@ def test_all_parts_in_replace_from_config_file(tmpdir, capsys, vcs):
     check_call([vcs, "add", "VERSION"])
     check_call([vcs, "commit", "-m", "initial commit"])
 
-    tmpdir.join(".bumpversion.cfg").write("""[bumpversion]
+    tmpdir.join(".bumpversion.cfg").write(r"""[bumpversion]
 current_version: 400.1.2.101
 new_version: 401.2.3.102
 parse = (?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+).(?P<custom>\d+)
