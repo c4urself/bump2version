@@ -1,5 +1,9 @@
-sudo: false
 language: python
+dist: xenial
+# require sudo to avoid Travis falling back to trusty; see
+# https://github.com/travis-ci/travis-ci/issues/10110 and also
+# https://github.com/travis-ci/travis-ci/issues/9069
+sudo: required
 
 python:
   - "2.7"
@@ -7,8 +11,17 @@ python:
   - "3.5"
   - "3.6"
   - "3.7"
-  - "pypy"
-  - "pypy3"
+
+# also test PyPy; do this on Trusty due to
+# https://travis-ci.community/t/pypy-2-7-on-xenial/889
+matrix:
+  include:
+    - python: "pypy"
+      dist: trusty
+      sudo: False
+    - python: "pypy3"
+      dist: trusty
+      sudo: False
 
 install:
   - git config --global user.email "bumpversion-test-git@travis.ci"
@@ -20,4 +33,3 @@ install:
   - pip install tox-travis
 
 script: tox
-
