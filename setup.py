@@ -23,8 +23,8 @@ setup(
     long_description_content_type='text/markdown',
     entry_points={
         'console_scripts': [
-            'bumpversion = bumpversion:main',
-            'bump2version = bumpversion:main',
+            'bumpversion = bumpversion.cli:main',
+            'bump2version = bumpversion.cli:main',
         ]
     },
     classifiers=[
