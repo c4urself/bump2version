@@ -26,9 +26,7 @@ class NumericFunction(object):
                 ).groups()
             except AttributeError:
                 raise ValueError(
-                    "The given first value {} does not contain any digit".format(
-                        first_value
-                    )
+                    "The given first value {} does not contain any digit".format(first_value)
                 )
         else:
             first_value = 0

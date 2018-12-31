@@ -17,9 +17,8 @@ logger = logging.getLogger(__name__)
 class BaseVCS(object):
     @classmethod
     def commit(cls, message):
-        f = NamedTemporaryFile("wb", delete=False)
-        f.write(message.encode("utf-8"))
-        f.close()
+        with NamedTemporaryFile("wb", delete=False) as f:
+            f.write(message.encode("utf-8"))
         env = os.environ.copy()
         env[str("HGENCODING")] = str("utf-8")
         try:
@@ -30,7 +29,8 @@ class BaseVCS(object):
             )
             logger.exception(err_msg)
             raise exc
-        os.unlink(f.name)
+        finally:
+            os.unlink(f.name)
 
     @classmethod
     def is_usable(cls):
@@ -94,7 +94,7 @@ class Git(BaseVCS):
                 .split("-")
             )
         except subprocess.CalledProcessError:
-            # logger.warning("Error when running git describe")
+            logger.debug("Error when running git describe")
             return {}
 
         info = {}

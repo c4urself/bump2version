@@ -145,11 +145,13 @@ def main(original_args=None):
         logger_list.addHandler(ch2)
 
     if known_args.list:
-        logger_list.setLevel(1)
+        logger_list.setLevel(logging.DEBUG)
 
-    log_level = {0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}.get(
-        known_args.verbose, logging.DEBUG
-    )
+    try:
+        log_level = [logging.WARNING, logging.INFO, logging.DEBUG][known_args.verbose]
+    except IndexError:
+        log_level = logging.DEBUG
+
     root_logger = logging.getLogger('')
     root_logger.setLevel(log_level)
 
@@ -194,9 +196,11 @@ def main(original_args=None):
     if config_file_exists:
 
         logger.info("Reading config file {}:".format(config_file))
+        # TODO: this is a DEBUG level log
         logger.info(io.open(config_file, "rt", encoding="utf-8").read())
 
         try:
+            # TODO: we're reading the config file twice.
             config.read_file(io.open(config_file, "rt", encoding="utf-8"))
         except AttributeError:
             # python 2 standard ConfigParser doesn't have read_file,
@@ -348,7 +352,7 @@ def main(original_args=None):
 
     defaults.update(vars(known_args))
 
-    assert type(known_args.serialize) == list
+    assert isinstance(known_args.serialize, list), "Argument `serialize` must be a list"
 
     context = dict(
         list(time_context.items())
@@ -365,6 +369,7 @@ def main(original_args=None):
             part_configs=part_configs,
         )
     except sre_constants.error as e:
+        # TODO: use re.error here mayhaps, also: should we log?
         sys.exit(1)
 
     current_version = (
@@ -595,8 +600,8 @@ def main(original_args=None):
         vcs.__name__
     )
 
-    do_commit = (not args.dry_run) and args.commit
-    do_tag = (not args.dry_run) and args.tag
+    do_commit = args.commit and not args.dry_run
+    do_tag = args.tag and not args.dry_run
 
     logger.info(
         "{} {} commit".format(
@@ -641,9 +646,7 @@ def main(original_args=None):
         "{} '{}' {} in {} and {}".format(
             "Would tag" if not do_tag else "Tagging",
             tag_name,
-            "with message '{}'".format(tag_message)
-            if tag_message
-            else "without message",
+            "with message '{}'".format(tag_message) if tag_message else "without message",
             vcs.__name__,
             "signing" if sign_tags else "not signing",
         )

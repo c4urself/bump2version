@@ -33,7 +33,7 @@ def keyvaluestring(d):
 
 
 def prefixed_environ():
-    return dict((("${}".format(key), value) for key, value in os.environ.items()))
+    return {"${}".format(key): value for key, value in os.environ.items()}
 
 
 class ConfiguredFile(object):

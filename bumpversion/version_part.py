@@ -136,6 +136,7 @@ class VersionConfig(object):
         try:
             self.parse_regex = re.compile(parse, re.VERBOSE)
         except sre_constants.error as e:
+            # TODO: use re.error here mayhaps
             logger.error("--parse '{}' is not a valid regex".format(parse))
             raise e
 
@@ -207,7 +208,7 @@ class VersionConfig(object):
             serialized = serialize_format.format(**values)
 
         except KeyError as e:
-            missing_key = getattr(e, "message", e.args[0])  # Python 2  # Python 3
+            missing_key = getattr(e, "message", e.args[0])
             raise MissingValueForSerializationException(
                 "Did not find key {} in {} when serializing version number".format(
                     repr(missing_key), repr(version)
