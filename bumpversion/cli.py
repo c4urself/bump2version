@@ -306,8 +306,7 @@ def main(original_args=None):
         message = "Could not read config file at {}".format(config_file)
         if explicit_config:
             raise argparse.ArgumentTypeError(message)
-        else:
-            logger.info(message)
+        logger.info(message)
 
     parser2 = argparse.ArgumentParser(
         prog="bumpversion", add_help=False, parents=[parser1]
