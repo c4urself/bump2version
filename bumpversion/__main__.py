@@ -1,1 +1,4 @@
-__import__('bumpversion').main()
+from bumpversion.cli import main
+
+
+main()

@@ -3,23 +3,24 @@
 from __future__ import unicode_literals, print_function
 
 import argparse
-import bumpversion
+import logging
 import os
 import platform
 import warnings
 import subprocess
 from datetime import datetime
-from os import environ
 from shlex import split as shlex_split
 from textwrap import dedent
 from functools import partial
 
 import mock
 import pytest
+from testfixtures import LogCapture
 
-
-from bumpversion import main, DESCRIPTION, WorkingDirectoryIsDirtyException, \
-    split_args_in_optional_and_positional
+import bumpversion
+from bumpversion.compat import RawConfigParser
+from bumpversion.exceptions import WorkingDirectoryIsDirtyException
+from bumpversion.cli import DESCRIPTION, main, split_args_in_optional_and_positional
 
 
 def _get_subprocess_env():
@@ -69,7 +70,7 @@ def configfile(request):
 
 
 try:
-    bumpversion.RawConfigParser(empty_lines_in_values=False)
+    RawConfigParser(empty_lines_in_values=False)
     using_old_configparser = False
 except TypeError:
     using_old_configparser = True
@@ -253,7 +254,8 @@ def test_simple_replacement(tmpdir):
 def test_simple_replacement_in_utf8_file(tmpdir):
     tmpdir.join("VERSION").write("Kröt1.3.0".encode('utf-8'), 'wb')
     tmpdir.chdir()
-    main(shlex_split("patch --current-version 1.3.0 --new-version 1.3.1 VERSION"))
+    out = tmpdir.join("VERSION").read('rb')
+    main(shlex_split("patch --verbose --current-version 1.3.0 --new-version 1.3.1 VERSION"))
     out = tmpdir.join("VERSION").read('rb')
     assert "'Kr\\xc3\\xb6t1.3.1'" in repr(out)
 
@@ -359,7 +361,7 @@ def test_bump_version(tmpdir):
     assert '1.0.1' == tmpdir.join("file5").read()
 
 
-def test_bump_version_custom_parse(tmpdir):
+def test_bump_version_custom_main(tmpdir):
     tmpdir.join("file6").write("XXX1;0;0")
     tmpdir.chdir()
     main([
@@ -411,10 +413,14 @@ def test_dirty_work_dir(tmpdir, vcs):
     check_call([vcs, "add", "dirty"])
 
     with pytest.raises(WorkingDirectoryIsDirtyException):
-        with mock.patch("bumpversion.logger") as logger:
-            main(['patch', '--current-version', '1', '--new-version', '2', 'file7'])
+        with mock.patch("bumpversion.cli.logger") as parser_logger:
+            with mock.patch("bumpversion.vcs.logger") as vcs_logger:
+                main(['patch', '--current-version', '1', '--new-version', '2', 'file7'])
 
-    actual_log = "\n".join(_mock_calls_to_string(logger)[4:])
+    actual_log = "\n".join(
+        _mock_calls_to_string(parser_logger) +
+        _mock_calls_to_string(vcs_logger)
+    )
 
     assert 'working directory is not clean' in actual_log
     assert "Use --allow-dirty to override this if you know what you're doing." in actual_log
@@ -589,7 +595,7 @@ commit = True""")
 def test_bump_version_environment(tmpdir):
     tmpdir.join("on_jenkins").write("2.3.4")
     tmpdir.chdir()
-    environ['BUILD_NUMBER'] = "567"
+    os.environ['BUILD_NUMBER'] = "567"
     main([
          '--verbose',
          '--current-version', '2.3.4',
@@ -598,7 +604,7 @@ def test_bump_version_environment(tmpdir):
          'patch',
          'on_jenkins',
          ])
-    del environ['BUILD_NUMBER']
+    del os.environ['BUILD_NUMBER']
 
     assert '2.3.5.pre567' == tmpdir.join("on_jenkins").read()
 
@@ -1012,72 +1018,58 @@ def test_log_no_config_file_info_message(tmpdir, capsys):
 
     tmpdir.join("a_file.txt").write("1.0.0")
 
-    with mock.patch("bumpversion.logger") as logger:
+    with LogCapture(level=logging.INFO) as log_capture:
         main(['--verbose', '--verbose', '--current-version', '1.0.0', 'patch', 'a_file.txt'])
 
-    actual_log = "\n".join(_mock_calls_to_string(logger)[4:])
-
-    expected_log = dedent(r"""
-        info|Could not read config file at .bumpversion.cfg|
-        info|Parsing version '1.0.0' using regexp '(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)'|
-        info|Parsed the following values: major=1, minor=0, patch=0|
-        info|Attempting to increment part 'patch'|
-        info|Values are now: major=1, minor=0, patch=1|
-        info|Parsing version '1.0.1' using regexp '(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)'|
-        info|Parsed the following values: major=1, minor=0, patch=1|
-        info|New version will be '1.0.1'|
-        info|Asserting files a_file.txt contain the version string:|
-        info|Found '1.0.0' in a_file.txt at line 0: 1.0.0|
-        info|Changing file a_file.txt:|
-        info|--- a/a_file.txt
-        +++ b/a_file.txt
-        @@ -1 +1 @@
-        -1.0.0
-        +1.0.1|
-        info|Would write to config file .bumpversion.cfg:|
-        info|[bumpversion]
-        current_version = 1.0.1
-
-        |
-    """).strip()
-
-    assert actual_log == expected_log
+    log_capture.check_present(
+        ('bumpversion.cli', 'INFO', 'Could not read config file at .bumpversion.cfg'),
+        ('bumpversion.version_part', 'INFO', "Parsing version '1.0.0' using regexp '(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)'"),
+        ('bumpversion.version_part', 'INFO', 'Parsed the following values: major=1, minor=0, patch=0'),
+        ('bumpversion.cli', 'INFO', "Attempting to increment part 'patch'"),
+        ('bumpversion.cli', 'INFO', 'Values are now: major=1, minor=0, patch=1'),
+        ('bumpversion.version_part', 'INFO', "Parsing version '1.0.1' using regexp '(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)'"),
+        ('bumpversion.version_part', 'INFO', 'Parsed the following values: major=1, minor=0, patch=1'),
+        ('bumpversion.cli', 'INFO', "New version will be '1.0.1'"),
+        ('bumpversion.cli', 'INFO', 'Asserting files a_file.txt contain the version string:'),
+        ('bumpversion.utils', 'INFO', "Found '1.0.0' in a_file.txt at line 0: 1.0.0"),
+        ('bumpversion.utils', 'INFO', 'Changing file a_file.txt:'),
+        ('bumpversion.utils', 'INFO', '--- a/a_file.txt\n+++ b/a_file.txt\n@@ -1 +1 @@\n-1.0.0\n+1.0.1'),
+        ('bumpversion.cli', 'INFO', 'Would write to config file .bumpversion.cfg:'),
+        ('bumpversion.cli', 'INFO', '[bumpversion]\ncurrent_version = 1.0.1\n\n'),
+        order_matters=True
+    )
 
 
 def test_log_parse_doesnt_parse_current_version(tmpdir):
     tmpdir.chdir()
 
-    with mock.patch("bumpversion.logger") as logger:
-        main(['--parse', 'xxx', '--current-version', '12', '--new-version', '13', 'patch'])
+    with LogCapture() as log_capture:
+        main(['--verbose', '--parse', 'xxx', '--current-version', '12', '--new-version', '13', 'patch'])
 
-    actual_log = "\n".join(_mock_calls_to_string(logger)[4:])
-
-    expected_log = dedent("""
-        info|Could not read config file at .bumpversion.cfg|
-        info|Parsing version '12' using regexp 'xxx'|
-        warning|Evaluating 'parse' option: 'xxx' does not parse current version '12'|
-        info|Parsing version '13' using regexp 'xxx'|
-        warning|Evaluating 'parse' option: 'xxx' does not parse current version '13'|
-        info|New version will be '13'|
-        info|Asserting files  contain the version string:|
-        info|Would write to config file .bumpversion.cfg:|
-        info|[bumpversion]
-        current_version = 13
-
-        |
-    """).strip()
-
-    assert actual_log == expected_log
-
+    log_capture.check_present(
+        ('bumpversion.cli', 'INFO', "Could not read config file at .bumpversion.cfg"),
+        ('bumpversion.version_part', 'INFO', "Parsing version '12' using regexp 'xxx'"),
+        ('bumpversion.version_part', 'WARNING', "Evaluating 'parse' option: 'xxx' does not parse current version '12'"),
+        ('bumpversion.version_part', 'INFO', "Parsing version '13' using regexp 'xxx'"),
+        ('bumpversion.version_part', 'WARNING', "Evaluating 'parse' option: 'xxx' does not parse current version '13'"),
+        ('bumpversion.cli', 'INFO', "New version will be '13'"),
+        ('bumpversion.cli', 'INFO', "Asserting files  contain the version string:"),
+        ('bumpversion.cli', 'INFO', "Would write to config file .bumpversion.cfg:"),
+        ('bumpversion.cli', 'INFO', '[bumpversion]\ncurrent_version = 13\n\n'),
+    )
 
 def test_log_invalid_regex_exit(tmpdir):
     tmpdir.chdir()
 
     with pytest.raises(SystemExit):
-        with mock.patch("bumpversion.logger") as logger:
-            main(['--parse', '*kittens*', '--current-version', '12', '--new-version', '13', 'patch'])
+        with mock.patch("bumpversion.cli.logger") as logger:
+            with mock.patch("bumpversion.version_part.logger") as version_part_logger:
+                main(['--parse', '*kittens*', '--current-version', '12', '--new-version', '13', 'patch'])
 
-    actual_log = "\n".join(_mock_calls_to_string(logger)[4:])
+    actual_log = "\n".join(
+        _mock_calls_to_string(logger)[1:] +
+        _mock_calls_to_string(version_part_logger)
+    )
 
     expected_log = dedent("""
         info|Could not read config file at .bumpversion.cfg|
@@ -1101,50 +1093,30 @@ def test_complex_info_logging(tmpdir, capsys):
         [bumpversion:file:fileE]
         """).strip())
 
-    with mock.patch("bumpversion.logger") as logger:
-        main(['patch'])
+    with LogCapture() as log_capture:
+        main(['patch', '--verbose'])
 
-    # beware of the trailing space (" ") after "serialize =":
-    expected_log = dedent(r"""
-        info|Reading config file .bumpversion.cfg:|
-        info|[bumpversion]
-        current_version = 0.4
-        serialize =
-          {major}.{minor}.{patch}
-          {major}.{minor}
-        parse = (?P<major>\d+)\.(?P<minor>\d+)(\.(?P<patch>\d+))?
-        [bumpversion:file:fileE]|
-        info|Parsing version '0.4' using regexp '(?P<major>\d+)\.(?P<minor>\d+)(\.(?P<patch>\d+))?'|
-        info|Parsed the following values: major=0, minor=4, patch=0|
-        info|Attempting to increment part 'patch'|
-        info|Values are now: major=0, minor=4, patch=1|
-        info|Parsing version '0.4.1' using regexp '(?P<major>\d+)\.(?P<minor>\d+)(\.(?P<patch>\d+))?'|
-        info|Parsed the following values: major=0, minor=4, patch=1|
-        info|New version will be '0.4.1'|
-        info|Asserting files fileE contain the version string:|
-        info|Found '0.4' in fileE at line 0: 0.4|
-        info|Changing file fileE:|
-        info|--- a/fileE
-        +++ b/fileE
-        @@ -1 +1 @@
-        -0.4
-        +0.4.1|
-        info|Writing to config file .bumpversion.cfg:|
-        info|[bumpversion]
-        current_version = 0.4.1
-        serialize = 
-        	{major}.{minor}.{patch}
-        	{major}.{minor}
-        parse = (?P<major>\d+)\.(?P<minor>\d+)(\.(?P<patch>\d+))?
-        
-        [bumpversion:file:fileE]
-        
-        |
-        """).strip()
-
-    actual_log = "\n".join(_mock_calls_to_string(logger)[4:])
-
-    assert actual_log == expected_log
+    log_capture.check(
+        ('bumpversion.cli', 'INFO', 'Reading config file .bumpversion.cfg:'),
+        ('bumpversion.cli', 'INFO', '[bumpversion]\ncurrent_version = 0.4\nserialize =\n  {major}.{minor}.{patch}\n  {major}.{minor}\nparse = (?P<major>\\d+)\\.(?P<minor>\\d+)(\\.(?P<patch>\\d+))?\n[bumpversion:file:fileE]'),
+        ('bumpversion.version_part', 'INFO', "Parsing version '0.4' using regexp '(?P<major>\\d+)\\.(?P<minor>\\d+)(\\.(?P<patch>\\d+))?'"),
+        ('bumpversion.version_part', 'INFO', 'Parsed the following values: major=0, minor=4, patch=0'),
+        ('bumpversion.cli', 'INFO', "Attempting to increment part 'patch'"),
+        ('bumpversion.cli', 'INFO', 'Values are now: major=0, minor=4, patch=1'),
+        ('bumpversion.version_part', 'INFO', "Parsing version '0.4.1' using regexp '(?P<major>\\d+)\\.(?P<minor>\\d+)(\\.(?P<patch>\\d+))?'"),
+        ('bumpversion.version_part', 'INFO', 'Parsed the following values: major=0, minor=4, patch=1'),
+        ('bumpversion.cli', 'INFO', "New version will be '0.4.1'"),
+        ('bumpversion.cli', 'INFO', 'Asserting files fileE contain the version string:'),
+        ('bumpversion.utils', 'INFO', "Found '0.4' in fileE at line 0: 0.4"),
+        ('bumpversion.utils', 'INFO', 'Changing file fileE:'),
+        ('bumpversion.utils', 'INFO', '--- a/fileE\n+++ b/fileE\n@@ -1 +1 @@\n-0.4\n+0.4.1'),
+        ('bumpversion.list', 'INFO', 'current_version=0.4'),
+        ('bumpversion.list', 'INFO', 'serialize=\n{major}.{minor}.{patch}\n{major}.{minor}'),
+        ('bumpversion.list', 'INFO', 'parse=(?P<major>\\d+)\\.(?P<minor>\\d+)(\\.(?P<patch>\\d+))?'),
+        ('bumpversion.list', 'INFO', 'new_version=0.4.1'),
+        ('bumpversion.cli', 'INFO', 'Writing to config file .bumpversion.cfg:'),
+        ('bumpversion.cli', 'INFO', '[bumpversion]\ncurrent_version = 0.4.1\nserialize = \n\t{major}.{minor}.{patch}\n\t{major}.{minor}\nparse = (?P<major>\\d+)\\.(?P<minor>\\d+)(\\.(?P<patch>\\d+))?\n\n[bumpversion:file:fileE]\n\n')
+    )
 
 
 def test_subjunctive_dry_run_logging(tmpdir, vcs):
@@ -1167,63 +1139,40 @@ def test_subjunctive_dry_run_logging(tmpdir, vcs):
     check_call([vcs, "add", "dont_touch_me.txt"])
     check_call([vcs, "commit", "-m", "initial commit"])
 
-    with mock.patch("bumpversion.logger") as logger:
-        main(['patch', '--dry-run'])
+    vcs_name = 'Mercurial' if vcs == 'hg' else 'Git'
 
-    # beware of the trailing space (" ") after "serialize =":
-    expected_log = dedent("""
-        info|Reading config file .bumpversion.cfg:|
-        info|[bumpversion]
-        current_version = 0.8
-        commit = True
-        tag = True
-        serialize =
-        	{major}.{minor}.{patch}
-        	{major}.{minor}
-        parse = (?P<major>\\d+)\\.(?P<minor>\\d+)(\\.(?P<patch>\\d+))?
-        [bumpversion:file:dont_touch_me.txt]|
-        info|Parsing version '0.8' using regexp '(?P<major>\\d+)\\.(?P<minor>\\d+)(\\.(?P<patch>\\d+))?'|
-        info|Parsed the following values: major=0, minor=8, patch=0|
-        info|Attempting to increment part 'patch'|
-        info|Values are now: major=0, minor=8, patch=1|
-        info|Dry run active, won't touch any files.|
-        info|Parsing version '0.8.1' using regexp '(?P<major>\\d+)\\.(?P<minor>\\d+)(\\.(?P<patch>\\d+))?'|
-        info|Parsed the following values: major=0, minor=8, patch=1|
-        info|New version will be '0.8.1'|
-        info|Asserting files dont_touch_me.txt contain the version string:|
-        info|Found '0.8' in dont_touch_me.txt at line 0: 0.8|
-        info|Would change file dont_touch_me.txt:|
-        info|--- a/dont_touch_me.txt
-        +++ b/dont_touch_me.txt
-        @@ -1 +1 @@
-        -0.8
-        +0.8.1|
-        info|Would write to config file .bumpversion.cfg:|
-        info|[bumpversion]
-        current_version = 0.8.1
-        commit = True
-        tag = True
-        serialize = 
-        	{major}.{minor}.{patch}
-        	{major}.{minor}
-        parse = (?P<major>\\d+)\\.(?P<minor>\\d+)(\\.(?P<patch>\\d+))?
-        
-        [bumpversion:file:dont_touch_me.txt]
+    with LogCapture() as log_capture:
+        main(['patch', '--verbose', '--dry-run'])
 
-        |
-        info|Would prepare Git commit|
-        info|Would add changes in file 'dont_touch_me.txt' to Git|
-        info|Would add changes in file '.bumpversion.cfg' to Git|
-        info|Would commit to Git with message 'Bump version: 0.8 \u2192 0.8.1'|
-        info|Would tag 'v0.8.1' with message 'Bump version: 0.8 \u2192 0.8.1' in Git and not signing|
-        """).strip()
-
-    if vcs == "hg":
-        expected_log = expected_log.replace("Git", "Mercurial")
-
-    actual_log = "\n".join(_mock_calls_to_string(logger)[4:])
-
-    assert actual_log == expected_log
+    log_capture.check(
+        ('bumpversion.cli', 'INFO', 'Reading config file .bumpversion.cfg:'),
+        ('bumpversion.cli', 'INFO', '[bumpversion]\ncurrent_version = 0.8\ncommit = True\ntag = True\nserialize =\n\t{major}.{minor}.{patch}\n\t{major}.{minor}\nparse = (?P<major>\\d+)\\.(?P<minor>\\d+)(\\.(?P<patch>\\d+))?\n[bumpversion:file:dont_touch_me.txt]'),
+        ('bumpversion.version_part', 'INFO', "Parsing version '0.8' using regexp '(?P<major>\\d+)\\.(?P<minor>\\d+)(\\.(?P<patch>\\d+))?'"),
+        ('bumpversion.version_part', 'INFO', 'Parsed the following values: major=0, minor=8, patch=0'),
+        ('bumpversion.cli', 'INFO', "Attempting to increment part 'patch'"),
+        ('bumpversion.cli', 'INFO', 'Values are now: major=0, minor=8, patch=1'),
+        ('bumpversion.cli', 'INFO', "Dry run active, won't touch any files."),
+        ('bumpversion.version_part', 'INFO', "Parsing version '0.8.1' using regexp '(?P<major>\\d+)\\.(?P<minor>\\d+)(\\.(?P<patch>\\d+))?'"),
+        ('bumpversion.version_part', 'INFO', 'Parsed the following values: major=0, minor=8, patch=1'),
+        ('bumpversion.cli', 'INFO', "New version will be '0.8.1'"),
+        ('bumpversion.cli', 'INFO', 'Asserting files dont_touch_me.txt contain the version string:'),
+        ('bumpversion.utils', 'INFO', "Found '0.8' in dont_touch_me.txt at line 0: 0.8"),
+        ('bumpversion.utils', 'INFO', 'Would change file dont_touch_me.txt:'),
+        ('bumpversion.utils', 'INFO', '--- a/dont_touch_me.txt\n+++ b/dont_touch_me.txt\n@@ -1 +1 @@\n-0.8\n+0.8.1'),
+        ('bumpversion.list', 'INFO', 'current_version=0.8'),
+        ('bumpversion.list', 'INFO', 'commit=True'),
+        ('bumpversion.list', 'INFO', 'tag=True'),
+        ('bumpversion.list', 'INFO', 'serialize=\n{major}.{minor}.{patch}\n{major}.{minor}'),
+        ('bumpversion.list', 'INFO', 'parse=(?P<major>\\d+)\\.(?P<minor>\\d+)(\\.(?P<patch>\\d+))?'),
+        ('bumpversion.list', 'INFO', 'new_version=0.8.1'),
+        ('bumpversion.cli', 'INFO', 'Would write to config file .bumpversion.cfg:'),
+        ('bumpversion.cli', 'INFO', '[bumpversion]\ncurrent_version = 0.8.1\ncommit = True\ntag = True\nserialize = \n\t{major}.{minor}.{patch}\n\t{major}.{minor}\nparse = (?P<major>\\d+)\\.(?P<minor>\\d+)(\\.(?P<patch>\\d+))?\n\n[bumpversion:file:dont_touch_me.txt]\n\n'),
+        ('bumpversion.cli', 'INFO', 'Would prepare {vcs} commit'.format(vcs=vcs_name)),
+        ('bumpversion.cli', 'INFO', "Would add changes in file 'dont_touch_me.txt' to {vcs}".format(vcs=vcs_name)),
+        ('bumpversion.cli', 'INFO', "Would add changes in file '.bumpversion.cfg' to {vcs}".format(vcs=vcs_name)),
+        ('bumpversion.cli', 'INFO', "Would commit to {vcs} with message 'Bump version: 0.8 \u2192 0.8.1'".format(vcs=vcs_name)),
+        ('bumpversion.cli', 'INFO', "Would tag 'v0.8.1' with message 'Bump version: 0.8 \u2192 0.8.1' in {vcs} and not signing".format(vcs=vcs_name))
+    )
 
 
 def test_log_commit_message_if_no_commit_tag_but_usable_vcs(tmpdir, vcs):
@@ -1242,54 +1191,37 @@ def test_log_commit_message_if_no_commit_tag_but_usable_vcs(tmpdir, vcs):
     check_call([vcs, "add", "please_touch_me.txt"])
     check_call([vcs, "commit", "-m", "initial commit"])
 
-    with mock.patch("bumpversion.logger") as logger:
-        main(['patch'])
+    vcs_name = 'Mercurial' if vcs == 'hg' else 'Git'
 
-    # beware of the trailing space (" ") after "serialize =":
-    expected_log = dedent("""
-        info|Reading config file .bumpversion.cfg:|
-        info|[bumpversion]
-        current_version = 0.3.3
-        commit = False
-        tag = False
-        [bumpversion:file:please_touch_me.txt]|
-        info|Parsing version '0.3.3' using regexp '(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)'|
-        info|Parsed the following values: major=0, minor=3, patch=3|
-        info|Attempting to increment part 'patch'|
-        info|Values are now: major=0, minor=3, patch=4|
-        info|Parsing version '0.3.4' using regexp '(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)'|
-        info|Parsed the following values: major=0, minor=3, patch=4|
-        info|New version will be '0.3.4'|
-        info|Asserting files please_touch_me.txt contain the version string:|
-        info|Found '0.3.3' in please_touch_me.txt at line 0: 0.3.3|
-        info|Changing file please_touch_me.txt:|
-        info|--- a/please_touch_me.txt
-        +++ b/please_touch_me.txt
-        @@ -1 +1 @@
-        -0.3.3
-        +0.3.4|
-        info|Writing to config file .bumpversion.cfg:|
-        info|[bumpversion]
-        current_version = 0.3.4
-        commit = False
-        tag = False
-        
-        [bumpversion:file:please_touch_me.txt]
-        
-        |
-        info|Would prepare Git commit|
-        info|Would add changes in file 'please_touch_me.txt' to Git|
-        info|Would add changes in file '.bumpversion.cfg' to Git|
-        info|Would commit to Git with message 'Bump version: 0.3.3 \u2192 0.3.4'|
-        info|Would tag 'v0.3.4' with message 'Bump version: 0.3.3 \u2192 0.3.4' in Git and not signing|
-        """).strip()
+    with LogCapture() as log_capture:
+        main(['patch', '--verbose'])
 
-    if vcs == "hg":
-        expected_log = expected_log.replace("Git", "Mercurial")
-
-    actual_log = "\n".join(_mock_calls_to_string(logger)[4:])
-
-    assert actual_log == expected_log
+    log_capture.check(
+        ('bumpversion.cli', 'INFO', 'Reading config file .bumpversion.cfg:'),
+        ('bumpversion.cli', 'INFO', '[bumpversion]\ncurrent_version = 0.3.3\ncommit = False\ntag = False\n[bumpversion:file:please_touch_me.txt]'),
+        ('bumpversion.version_part', 'INFO', "Parsing version '0.3.3' using regexp '(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)'"),
+        ('bumpversion.version_part', 'INFO', 'Parsed the following values: major=0, minor=3, patch=3'),
+        ('bumpversion.cli', 'INFO', "Attempting to increment part 'patch'"),
+        ('bumpversion.cli', 'INFO', 'Values are now: major=0, minor=3, patch=4'),
+        ('bumpversion.version_part', 'INFO', "Parsing version '0.3.4' using regexp '(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)'"),
+        ('bumpversion.version_part', 'INFO', 'Parsed the following values: major=0, minor=3, patch=4'),
+        ('bumpversion.cli', 'INFO', "New version will be '0.3.4'"),
+        ('bumpversion.cli', 'INFO', 'Asserting files please_touch_me.txt contain the version string:'),
+        ('bumpversion.utils', 'INFO', "Found '0.3.3' in please_touch_me.txt at line 0: 0.3.3"),
+        ('bumpversion.utils', 'INFO', 'Changing file please_touch_me.txt:'),
+        ('bumpversion.utils', 'INFO', '--- a/please_touch_me.txt\n+++ b/please_touch_me.txt\n@@ -1 +1 @@\n-0.3.3\n+0.3.4'),
+        ('bumpversion.list', 'INFO', 'current_version=0.3.3'),
+        ('bumpversion.list', 'INFO', 'commit=False'),
+        ('bumpversion.list', 'INFO', 'tag=False'),
+        ('bumpversion.list', 'INFO', 'new_version=0.3.4'),
+        ('bumpversion.cli', 'INFO', 'Writing to config file .bumpversion.cfg:'),
+        ('bumpversion.cli', 'INFO', '[bumpversion]\ncurrent_version = 0.3.4\ncommit = False\ntag = False\n\n[bumpversion:file:please_touch_me.txt]\n\n'),
+        ('bumpversion.cli', 'INFO', 'Would prepare {vcs} commit'.format(vcs=vcs_name)),
+        ('bumpversion.cli', 'INFO', "Would add changes in file 'please_touch_me.txt' to {vcs}".format(vcs=vcs_name)),
+        ('bumpversion.cli', 'INFO', "Would add changes in file '.bumpversion.cfg' to {vcs}".format(vcs=vcs_name)),
+        ('bumpversion.cli', 'INFO', "Would commit to {vcs} with message 'Bump version: 0.3.3 \u2192 0.3.4'".format(vcs=vcs_name)),
+        ('bumpversion.cli', 'INFO', "Would tag 'v0.3.4' with message 'Bump version: 0.3.3 \u2192 0.3.4' in {vcs} and not signing".format(vcs=vcs_name)),
+    )
 
 
 def test_listing(tmpdir, vcs):
@@ -1308,7 +1240,7 @@ def test_listing(tmpdir, vcs):
     check_call([vcs, "add", "please_list_me.txt"])
     check_call([vcs, "commit", "-m", "initial commit"])
 
-    with mock.patch("bumpversion.logger_list") as logger:
+    with mock.patch("bumpversion.cli.logger_list") as logger:
         main(['--list', 'patch'])
 
     expected_log = dedent("""
@@ -1391,7 +1323,7 @@ def test_optional_value_from_documentation(tmpdir):
       serialize =
         {num}.{release}
         {num}
-  
+
       [bumpversion:part:release]
       optional_value = gamma
       values =
@@ -1484,7 +1416,7 @@ def test_part_first_value(tmpdir):
 
         [bumpversion:part:minor]
         first_value = 1
-        
+
         [bumpversion:file:the_version.txt]
         """))
 
@@ -1548,21 +1480,21 @@ def test_multi_file_configuration2(tmpdir, capsys):
 
       """))
 
-    environ['BUILD_NUMBER'] = "38944"
-    environ['USER'] = "bob"
+    os.environ['BUILD_NUMBER'] = "38944"
+    os.environ['USER'] = "bob"
     main(['minor', '--verbose'])
-    del environ['BUILD_NUMBER']
-    del environ['USER']
+    del os.environ['BUILD_NUMBER']
+    del os.environ['USER']
 
     assert '1.7.0' in tmpdir.join("setup.cfg").read()
     assert 'MyAwesomeSoftware(TM) v1.7' in tmpdir.join("README.txt").read()
     assert '1.7.0+bob+38944' in tmpdir.join("BUILD_NUMBER").read()
 
-    environ['BUILD_NUMBER'] = "38945"
-    environ['USER'] = "bob"
+    os.environ['BUILD_NUMBER'] = "38945"
+    os.environ['USER'] = "bob"
     main(['patch', '--verbose'])
-    del environ['BUILD_NUMBER']
-    del environ['USER']
+    del os.environ['BUILD_NUMBER']
+    del os.environ['USER']
 
     assert '1.7.1' in tmpdir.join("setup.cfg").read()
     assert 'MyAwesomeSoftware(TM) v1.7' in tmpdir.join("README.txt").read()
@@ -1583,48 +1515,28 @@ def test_search_replace_to_avoid_updating_unconcerned_lines(tmpdir, capsys):
       replace = MyProject=={new_version}
       """).strip())
 
-    with mock.patch("bumpversion.logger") as logger:
+    with LogCapture() as log_capture:
         main(['minor', '--verbose'])
 
-    # beware of the trailing space (" ") after "serialize =":
-    expected_log = dedent(r"""
-        info|Reading config file .bumpversion.cfg:|
-        info|[bumpversion]
-        current_version = 1.5.6
-
-        [bumpversion:file:requirements.txt]
-        search = MyProject=={current_version}
-        replace = MyProject=={new_version}|
-        info|Parsing version '1.5.6' using regexp '(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)'|
-        info|Parsed the following values: major=1, minor=5, patch=6|
-        info|Attempting to increment part 'minor'|
-        info|Values are now: major=1, minor=6, patch=0|
-        info|Parsing version '1.6.0' using regexp '(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)'|
-        info|Parsed the following values: major=1, minor=6, patch=0|
-        info|New version will be '1.6.0'|
-        info|Asserting files requirements.txt contain the version string:|
-        info|Found 'MyProject==1.5.6' in requirements.txt at line 1: MyProject==1.5.6|
-        info|Changing file requirements.txt:|
-        info|--- a/requirements.txt
-        +++ b/requirements.txt
-        @@ -1,2 +1,2 @@
-         Django>=1.5.6,<1.6
-        -MyProject==1.5.6
-        +MyProject==1.6.0|
-        info|Writing to config file .bumpversion.cfg:|
-        info|[bumpversion]
-        current_version = 1.6.0
-
-        [bumpversion:file:requirements.txt]
-        search = MyProject=={current_version}
-        replace = MyProject=={new_version}
-
-        |
-        """).strip()
-
-    actual_log = "\n".join(_mock_calls_to_string(logger)[4:])
-
-    assert actual_log == expected_log
+    log_capture.check(
+        ('bumpversion.cli', 'INFO', 'Reading config file .bumpversion.cfg:'),
+        ('bumpversion.cli', 'INFO', '[bumpversion]\ncurrent_version = 1.5.6\n\n[bumpversion:file:requirements.txt]\nsearch = MyProject=={current_version}\nreplace = MyProject=={new_version}'),
+        ('bumpversion.version_part', 'INFO', "Parsing version '1.5.6' using regexp '(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)'"),
+        ('bumpversion.version_part', 'INFO', 'Parsed the following values: major=1, minor=5, patch=6'),
+        ('bumpversion.cli', 'INFO', "Attempting to increment part 'minor'"),
+        ('bumpversion.cli', 'INFO', 'Values are now: major=1, minor=6, patch=0'),
+        ('bumpversion.version_part', 'INFO', "Parsing version '1.6.0' using regexp '(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)'"),
+        ('bumpversion.version_part', 'INFO', 'Parsed the following values: major=1, minor=6, patch=0'),
+        ('bumpversion.cli', 'INFO', "New version will be '1.6.0'"),
+        ('bumpversion.cli', 'INFO', 'Asserting files requirements.txt contain the version string:'),
+        ('bumpversion.utils', 'INFO', "Found 'MyProject==1.5.6' in requirements.txt at line 1: MyProject==1.5.6"),
+        ('bumpversion.utils', 'INFO', 'Changing file requirements.txt:'),
+        ('bumpversion.utils', 'INFO', '--- a/requirements.txt\n+++ b/requirements.txt\n@@ -1,2 +1,2 @@\n Django>=1.5.6,<1.6\n-MyProject==1.5.6\n+MyProject==1.6.0'),
+        ('bumpversion.list', 'INFO', 'current_version=1.5.6'),
+        ('bumpversion.list', 'INFO', 'new_version=1.6.0'),
+        ('bumpversion.cli', 'INFO', 'Writing to config file .bumpversion.cfg:'),
+        ('bumpversion.cli', 'INFO', '[bumpversion]\ncurrent_version = 1.6.0\n\n[bumpversion:file:requirements.txt]\nsearch = MyProject=={current_version}\nreplace = MyProject=={new_version}\n\n')
+    )
 
     assert 'MyProject==1.6.0' in tmpdir.join("requirements.txt").read()
     assert 'Django>=1.5.6' in tmpdir.join("requirements.txt").read()
@@ -1649,7 +1561,7 @@ def test_search_replace_expanding_changelog(tmpdir, capsys):
     * Another old nice feature
 
     """))
-    
+
     config_content = dedent("""
       [bumpversion]
       current_version = 8.1.1
@@ -1667,7 +1579,7 @@ def test_search_replace_expanding_changelog(tmpdir, capsys):
 
     tmpdir.join(".bumpversion.cfg").write(config_content)
 
-    with mock.patch("bumpversion.logger"):
+    with mock.patch("bumpversion.cli.logger"):
         main(['minor', '--verbose'])
 
     predate = dedent('''
@@ -1757,18 +1669,18 @@ def test_file_specific_config_inherits_parse_serialize(tmpdir):
       [bumpversion]
       current_version = 14-chocolate
       parse = (?P<major>\d+)(\-(?P<flavor>[a-z]+))?
-      serialize = 
+      serialize =
           {major}-{flavor}
           {major}
 
       [bumpversion:file:todays_ice_cream]
-      serialize = 
+      serialize =
           {major}-{flavor}
 
       [bumpversion:file:todays_cake]
 
       [bumpversion:part:flavor]
-      values = 
+      values =
           vanilla
           chocolate
           strawberry
