@@ -254,6 +254,7 @@ def test_missing_explicit_config_file(tmpdir):
         main(['--config-file', 'missing.cfg'])
 
 
+@pytest.mark.filterwarnings("ignore:.*part is not required.*deprecated.*:DeprecationWarning")
 def test_simple_replacement(tmpdir, optional_part):
     tmpdir.join("VERSION").write("1.2.0")
     tmpdir.chdir()
@@ -261,6 +262,7 @@ def test_simple_replacement(tmpdir, optional_part):
     assert "1.2.1" == tmpdir.join("VERSION").read()
 
 
+@pytest.mark.filterwarnings("ignore:.*part is not required.*deprecated.*:DeprecationWarning")
 def test_simple_replacement_in_utf8_file(tmpdir, optional_part):
     tmpdir.join("VERSION").write("Kröt1.3.0".encode('utf-8'), 'wb')
     tmpdir.chdir()
@@ -268,6 +270,15 @@ def test_simple_replacement_in_utf8_file(tmpdir, optional_part):
     main(shlex_split(optional_part + "--verbose --current-version 1.3.0 --new-version 1.3.1 VERSION"))
     out = tmpdir.join("VERSION").read('rb')
     assert "'Kr\\xc3\\xb6t1.3.1'" in repr(out)
+
+
+def test_unnecessary_part_argument_shows_deprecationwarning(tmpdir):
+    tmpdir.join("VERSION").write("1.2.0")
+    tmpdir.chdir()
+    pytest.deprecated_call(
+        main,
+        shlex_split("bogus-part --current-version 1.2.0 --new-version 1.2.1 VERSION"),
+    )
 
 
 def test_config_file(tmpdir):

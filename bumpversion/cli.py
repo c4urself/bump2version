@@ -509,6 +509,11 @@ def main(original_args=None):
     if not part_required and positionals and not os.path.exists(positionals[0]):
         # the first positional argument is not a valid path
         # treat it as a part for backwards compatibility reasons
+        warnings.warn(
+            "You have supplied an argument that's not a file while a part is not required. " +
+            "This will be deprecated.  Argument: '{0}'.".format(positionals[0]),
+            category=DeprecationWarning,
+        )
         part_required = True
 
     if part_required:
