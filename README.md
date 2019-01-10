@@ -146,8 +146,10 @@ General configuration is grouped in a `[bumpversion]` section.
 
   This is templated using the [Python Format String Syntax](http://docs.python.org/2/library/string.html#format-string-syntax)
   Available in the template context are `current_version` and `new_version`
-  as well as all environment variables (prefixed with `$`). You can also use
-  the variables `now` or `utcnow` to get a current timestamp. Both accept
+  as well as `current_[part]` and `new_[part]` (e.g. '`current_major`'
+  or '`new_patch`').
+  In addtion, all environment variables are exposed, prefixed with `$`.  
+  You can also use the variables `now` or `utcnow` to get a current timestamp. Both accept
   datetime formatting (when used like as in `{now:%d.%m.%Y}`).
 
   Also available as a command line flag, `--tag-name` (e.g. `bump2version --message 'Jenkins Build
@@ -178,8 +180,10 @@ General configuration is grouped in a `[bumpversion]` section.
 
   This is templated using the [Python Format String Syntax](http://docs.python.org/2/library/string.html#format-string-syntax)
   Available in the template context are `current_version` and `new_version`
-  as well as all environment variables (prefixed with `$`). You can also use
-  the variables `now` or `utcnow` to get a current timestamp. Both accept
+  as well as `current_[part]` and `new_[part]` (e.g. '`current_major`'
+  or '`new_patch`').
+  In addition, all environment variables are exposed, prefixed with `$`.  
+  You can also use the variables `now` or `utcnow` to get a current timestamp. Both accept
   datetime formatting (when used like as in `{now:%d.%m.%Y}`).
 
   Also available as `--message` (e.g.: `bump2version --message
