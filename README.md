@@ -41,10 +41,11 @@ You can download and install the latest version of this software from the Python
 There are two modes of operation: On the command line for single-file operation
 and using a configuration file (`bumpversion.cfg`) for more complex multi-file operations.
 
-    bump2version [options] part [file]
+    bump2version [options] [part] [file]
 
 #### `part`
-  _**required**_<br />
+  _**[optional]**_<br />
+  **default**: none
 
   The part of the version to increase, e.g. `minor`.
 
@@ -110,9 +111,11 @@ General configuration is grouped in a `[bumpversion]` section.
 
   The version of the software package after the increment. If not given will be
   automatically determined.
+  
+  When `new_version` is defined, it's not necessary to supply `part`.
 
   Also available as `--new-version` (e.g. `to go from 0.5.1 directly to
-  0.6.1`: `bump2version --current-version 0.5.1 --new-version 0.6.1 patch
+  0.6.1`: `bump2version --current-version 0.5.1 --new-version 0.6.1
   setup.py`).
 
 #### `tag = (True | False)`
