@@ -376,8 +376,9 @@ def main(original_args=None):
     )
 
     new_version = None
+    new_version_was_in_defaults = "new_version" in defaults
 
-    if "new_version" not in defaults and known_args.current_version:
+    if not new_version_was_in_defaults and known_args.current_version:
         try:
             if current_version and len(positionals) > 0:
                 logger.info("Attempting to increment part '{}'".format(positionals[0]))
@@ -505,16 +506,27 @@ def main(original_args=None):
 
     # regarding positional arguments, accept [part] and file names
     # but take into account that both are optional
-    part_required = '--new-version' not in remaining_argv and not defaults.get('new_version')
-    if not part_required and positionals and not os.path.exists(positionals[0]):
-        # the first positional argument is not a valid path
-        # treat it as a part for backwards compatibility reasons
-        warnings.warn(
-            "You have supplied an argument that's not a file while a part is not required. " +
-            "This will be deprecated.  Argument: '{0}'.".format(positionals[0]),
-            category=DeprecationWarning,
-        )
-        part_required = True
+    part_required = '--new-version' not in remaining_argv and not new_version_was_in_defaults
+    if not part_required and positionals:
+        # it looks like a part is supplied where we don't need one
+
+        # first, verify if it's not a file path
+        bogus_part = positionals[0]
+        is_a_part = bogus_part in ['major', 'minor', 'patch'] or bogus_part in part_configs
+        is_not_a_file = not os.path.exists(positionals[0])
+        looks_like_a_file_path = any(path_char in bogus_part for path_char in r".\/")
+        looks_like_a_part = not looks_like_a_file_path
+
+        if is_a_part or (is_not_a_file and looks_like_a_part):
+            # it definitely is a part or it seems to be one
+            # so we got a part but we don't need it ->
+            # treat it as a part for backwards compatibility reasons
+            warnings.warn(
+                "You have supplied an argument that's not a file while a part is not required. " +
+                "This will be deprecated.  Argument: '{0}'.".format(positionals[0]),
+                category=DeprecationWarning,
+            )
+            part_required = True
 
     if part_required:
         parser3.add_argument('part', nargs=1, default=None,

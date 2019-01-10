@@ -716,10 +716,18 @@ def test_override_vcs_current_version(tmpdir, git):
     assert '7.0.1' == tmpdir.join("contains_actual_version").read()
 
 
-def test_non_existing_file(tmpdir):
+@pytest.mark.parametrize(
+    "non_existing_file",
+    ["with/slash", "with\\backslash", "with_dot.txt", "all/of\\it.txt"],
+)
+def test_non_existing_file(tmpdir, non_existing_file):
     tmpdir.chdir()
     with pytest.raises(IOError):
-        main(shlex_split("patch --current-version 1.2.0 --new-version 1.2.1 does_not_exist.txt"))
+        main(shlex_split(
+            '--current-version 1.2.0 --new-version 1.2.1 "{}"'.format(
+                non_existing_file
+            )
+        ))
 
 
 def test_non_existing_second_file(tmpdir):
