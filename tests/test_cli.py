@@ -289,7 +289,7 @@ new_version: 0.9.35
 [bumpversion:file:file1]""")
 
     tmpdir.chdir()
-    main(shlex_split("patch --config-file my_bump_config.cfg"))
+    main(shlex_split("--config-file my_bump_config.cfg"))
 
     assert "0.9.35" == tmpdir.join("file1").read()
 
@@ -302,7 +302,7 @@ new_version: 0.10.3
 [bumpversion:file:file2]""")
 
     tmpdir.chdir()
-    main(['patch'])
+    main([])
 
     assert "0.10.3" == tmpdir.join("file2").read()
 
@@ -319,7 +319,7 @@ new_version: 0.10.4
 [bumpversion:file:file2]""")
 
     tmpdir.chdir()
-    main(['patch'])
+    main([])
 
     assert "0.10.4" == tmpdir.join("file2").read()
 
@@ -332,7 +332,7 @@ new_version: 0.0.14
 [bumpversion:file:file3]""")
 
     tmpdir.chdir()
-    main(['patch', '--verbose'])
+    main(['--verbose'])
 
     assert """[bumpversion]
 current_version = 0.0.14
@@ -436,7 +436,7 @@ def test_dirty_work_dir(tmpdir, vcs):
     with pytest.raises(WorkingDirectoryIsDirtyException):
         with mock.patch("bumpversion.cli.logger") as parser_logger:
             with mock.patch("bumpversion.vcs.logger") as vcs_logger:
-                main(['patch', '--current-version', '1', '--new-version', '2', 'file7'])
+                main(['--current-version', '1', '--new-version', '2', 'dirty'])
 
     actual_log = "\n".join(
         _mock_calls_to_string(parser_logger) +
@@ -789,7 +789,7 @@ tag: True
 message: {current_version} was old, {new_version} is new
 tag_name: from-{current_version}-to-{new_version}""")
 
-    main(['major', 'VERSION'])
+    main(['VERSION'])
 
     log = check_output([vcs, "log", "-p"])
 
@@ -1073,7 +1073,7 @@ def test_log_parse_doesnt_parse_current_version(tmpdir):
     tmpdir.chdir()
 
     with LogCapture() as log_capture:
-        main(['--verbose', '--parse', 'xxx', '--current-version', '12', '--new-version', '13', 'patch'])
+        main(['--verbose', '--parse', 'xxx', '--current-version', '12', '--new-version', '13'])
 
     log_capture.check_present(
         ('bumpversion.cli', 'INFO', "Could not read config file at .bumpversion.cfg"),
@@ -1908,7 +1908,7 @@ def test_regression_new_version_cli_in_files(tmpdir, capsys):
         [bumpversion:file:myp___init__.py]
         """).strip())
 
-    main("patch --allow-dirty --verbose --new-version 0.9.3".split(" "))
+    main("--allow-dirty --verbose --new-version 0.9.3".split(" "))
 
     assert "__version__ = '0.9.3'" == tmpdir.join("myp___init__.py").read()
     assert "current_version = 0.9.3" in tmpdir.join(".bumpversion.cfg").read()
