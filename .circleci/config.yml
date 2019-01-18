@@ -2,13 +2,41 @@
 version: 2.1
 
 jobs:
-    build:
-        docker:
-            - image: themattrix/tox-base
+  build:
+    docker:
+      - image: themattrix/tox-base
 
-        steps:
-            - checkout
-            - run: apt-get update && apt-get install -y git-core mercurial
-            - run: cd /.pyenv && git fetch && git checkout v1.2.8
-            - run: git --version
-            - run: hg --version
+    environment:
+      PYPY_VERSION: pypy2.7-5.10.0
+      PYPY3_VERSION: pypy3.5-5.10.1
+      # prevent *.pyc files
+      PYTHONDONTWRITEBYTECODE: 1
+
+    steps:
+      - checkout
+      - run:
+          name: Install git and mercurial
+          command: |
+            apt-get update
+            apt-get install -y git-core
+            apt-get install -y mercurial
+            git config --global user.email "bumpversion_test@example.org"
+            git config --global user.name "Bumpversion Test"
+      - run:
+          name: Update pyenv
+          # to access newer Python releases.
+          command: |
+            cd /.pyenv
+            git fetch
+            git checkout v1.2.8
+      - run:
+          name: Install python interpreters
+          command: |
+            pyenv install "$PYPY_VERSION"
+            pyenv install "$PYPY3_VERSION"
+            pyenv versions
+            pyenv global system 2.7.15 3.4.9 3.5.6 3.6.6 3.7.0 "$PYPY_VERSION" "$PYPY3_VERSION"
+
+      - run:
+          name: Run tests
+          command: tox
