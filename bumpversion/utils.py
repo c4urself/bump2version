@@ -91,6 +91,7 @@ class ConfiguredFile(object):
 
         with io.open(self.path, "rt", encoding="utf-8") as f:
             file_content_before = f.read()
+            file_new_lines = f.newlines
 
         context["current_version"] = self._versionconfig.serialize(
             current_version, context
@@ -135,7 +136,7 @@ class ConfiguredFile(object):
             )
 
         if not dry_run:
-            with io.open(self.path, "wt", encoding="utf-8") as f:
+            with io.open(self.path, "wt", encoding="utf-8", newline=file_new_lines) as f:
                 f.write(file_content_after)
 
     def __str__(self):

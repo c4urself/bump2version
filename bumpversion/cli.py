@@ -197,7 +197,9 @@ def main(original_args=None):
 
         logger.info("Reading config file {}:".format(config_file))
         # TODO: this is a DEBUG level log
-        logger.info(io.open(config_file, "rt", encoding="utf-8").read())
+        with io.open(config_file, "rt", encoding="utf-8") as f:
+            logger.info(f.read())
+            config_new_lines = f.newlines
 
         try:
             # TODO: we're reading the config file twice.
@@ -580,7 +582,7 @@ def main(original_args=None):
         logger.info(new_config.getvalue())
 
         if write_to_config_file:
-            with io.open(config_file, "wt", encoding="utf-8") as f:
+            with io.open(config_file, "wt", encoding="utf-8", newline=config_new_lines) as f:
                 f.write(new_config.getvalue())
 
     except UnicodeEncodeError:

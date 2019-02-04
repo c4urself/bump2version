@@ -1916,6 +1916,28 @@ def test_correct_interpolation_for_setup_cfg_files(tmpdir, configfile):
     assert "current_version = 1.0.0" in tmpdir.join(configfile).read()
 
 
+@pytest.mark.parametrize("newline", [b'\n', b'\r\n'])
+def test_retain_newline(tmpdir, configfile, newline):
+    tmpdir.join("file.py").write_binary(dedent("""
+        0.7.2
+        Some Content
+        """).strip().encode(encoding='UTF-8').replace(b'\n', newline))
+    tmpdir.chdir()
+
+    tmpdir.join(configfile).write_binary(dedent("""
+        [bumpversion]
+        current_version = 0.7.2
+        search = {current_version}
+        replace = {new_version}
+        [bumpversion:file:file.py]
+        """).strip().encode(encoding='UTF-8').replace(b'\n', newline))
+
+    main(["major"])
+
+    assert newline in tmpdir.join("file.py").read_binary()
+    assert newline in tmpdir.join(configfile).read_binary()
+
+
 class TestSplitArgsInOptionalAndPositional:
 
     def test_all_optional(self):
