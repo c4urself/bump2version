@@ -1,0 +1,58 @@
+[REPORTS]
+output-format=text
+
+
+[BASIC]
+#missing-docstring=no
+
+
+[FORMAT]
+max-line-length=100
+ignore-long-lines=^\s*(# )?<?https?://\S+>?$
+
+
+[MESSAGES CONTROL]
+disable=
+  fixme,
+  too-many-locals,
+  missing-docstring,
+  trailing-newlines,
+  invalid-name,
+  bad-continuation,
+  too-few-public-methods,
+  too-many-branches,
+  too-many-statements,
+  deprecated-method,
+  wrong-import-order,
+  ungrouped-imports,
+  unused-import,
+  useless-object-inheritance,  # doesn't like class Foo(object) but required for py2
+  super-init-not-called,
+  protected-access,
+
+
+[DESIGN]
+#too-few-public-methods=no
+#too-many-branches=no
+#too-many-statements=no
+max-args=10
+
+
+[CLASSES]
+#useless-object-inheritance=no
+#super-init-not-called=no
+valid-classmethod-first-arg=cls
+
+
+[IMPORTS]
+#wrong-import-order=no
+#ungrouped-imports=no
+#unused-import=no
+
+
+[STDLIB]
+#deprecated-method=no
+
+
+[MISCELLANEOUS]
+notes=FIXME,FIX,XXX,TODO

@@ -15,13 +15,13 @@ class NumericFunction(object):
     considered (e.g. 'r3-001' --> 'r4-001').
     """
 
-    FIRST_NUMERIC = re.compile("([^\d]*)(\d+)(.*)")
+    FIRST_NUMERIC = re.compile(r"([^\d]*)(\d+)(.*)")
 
     def __init__(self, first_value=None):
 
         if first_value is not None:
             try:
-                part_prefix, part_numeric, part_suffix = self.FIRST_NUMERIC.search(
+                _, _, _ = self.FIRST_NUMERIC.search(
                     first_value
                 ).groups()
             except AttributeError:
@@ -59,7 +59,7 @@ class ValuesFunction(object):
 
     def __init__(self, values, optional_value=None, first_value=None):
 
-        if len(values) == 0:
+        if not values:
             raise ValueError("Version part values cannot be empty")
 
         self._values = values

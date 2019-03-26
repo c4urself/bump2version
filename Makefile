@@ -2,6 +2,10 @@ test:
 	docker-compose build test
 	docker-compose run test
 
+lint:
+	pip install pylint
+	pylint bumpversion
+
 debug_test:
 	docker-compose build test
 	docker-compose run test /bin/bash

@@ -7,7 +7,10 @@ import os
 import subprocess
 from tempfile import NamedTemporaryFile
 
-from bumpversion.exceptions import WorkingDirectoryIsDirtyException, MercurialDoesNotSupportSignedTagsException
+from bumpversion.exceptions import (
+    WorkingDirectoryIsDirtyException,
+    MercurialDoesNotSupportSignedTagsException
+)
 from bumpversion.compat import _command_args
 
 
@@ -15,6 +18,10 @@ logger = logging.getLogger(__name__)
 
 
 class BaseVCS(object):
+
+    _TEST_USABLE_COMMAND = None
+    _COMMIT_COMMAND = None
+
     @classmethod
     def commit(cls, message):
         with NamedTemporaryFile("wb", delete=False) as f:

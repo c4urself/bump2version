@@ -97,7 +97,8 @@ def main(original_args=None):
 
     if len(positionals[1:]) > 2:
         warnings.warn(
-            "Giving multiple files on the command line will be deprecated, please use [bumpversion:file:...] in a config file.",
+            "Giving multiple files on the command line will be deprecated,"
+            " please use [bumpversion:file:...] in a config file.",
             PendingDeprecationWarning,
         )
 
@@ -139,7 +140,7 @@ def main(original_args=None):
 
     logformatter = logging.Formatter("%(message)s")
 
-    if len(logger_list.handlers) == 0:
+    if not logger_list.handlers:
         ch2 = logging.StreamHandler(sys.stdout)
         ch2.setFormatter(logformatter)
         logger_list.addHandler(ch2)
@@ -155,7 +156,7 @@ def main(original_args=None):
     root_logger = logging.getLogger('')
     root_logger.setLevel(log_level)
 
-    logger.debug("Starting {}".format(DESCRIPTION))
+    logger.debug("Starting %s", DESCRIPTION)
 
     defaults = {}
     vcs_info = {}
@@ -195,7 +196,7 @@ def main(original_args=None):
 
     if config_file_exists:
 
-        logger.info("Reading config file {}:".format(config_file))
+        logger.info("Reading config file %s:", config_file)
         # TODO: this is a DEBUG level log
         with io.open(config_file, "rt", encoding="utf-8") as f:
             logger.info(f.read())
@@ -381,15 +382,15 @@ def main(original_args=None):
 
     if "new_version" not in defaults and known_args.current_version:
         try:
-            if current_version and len(positionals) > 0:
-                logger.info("Attempting to increment part '{}'".format(positionals[0]))
+            if current_version and positionals:
+                logger.info("Attempting to increment part '%s'", positionals[0])
                 new_version = current_version.bump(positionals[0], vc.order())
-                logger.info("Values are now: " + keyvaluestring(new_version._values))
+                logger.info("Values are now: %s", keyvaluestring(new_version._values))
                 defaults["new_version"] = vc.serialize(new_version, context)
         except MissingValueForSerializationException as e:
-            logger.info("Opportunistic finding of new_version failed: " + e.message)
+            logger.info("Opportunistic finding of new_version failed: %s", e.message)
         except IncompleteVersionRepresentationException as e:
-            logger.info("Opportunistic finding of new_version failed: " + e.message)
+            logger.info("Opportunistic finding of new_version failed: %s", e.message)
         except KeyError as e:
             logger.info("Opportunistic finding of new_version failed")
 
@@ -518,7 +519,7 @@ def main(original_args=None):
     if args.new_version:
         new_version = vc.parse(args.new_version)
 
-    logger.info("New version will be '{}'".format(args.new_version))
+    logger.info("New version will be '%s'", args.new_version)
 
     file_names = file_names or positionals[1:]
 
@@ -532,9 +533,8 @@ def main(original_args=None):
             except WorkingDirectoryIsDirtyException as e:
                 if not defaults["allow_dirty"]:
                     logger.warning(
-                        "{}\n\nUse --allow-dirty to override this if you know what you're doing.".format(
-                            e.message
-                        )
+                        "%s\n\nUse --allow-dirty to override this if you know what you're doing.",
+                        e.message
                     )
                     raise
             break
@@ -544,9 +544,8 @@ def main(original_args=None):
     # make sure files exist and contain version string
 
     logger.info(
-        "Asserting files {} contain the version string:".format(
-            ", ".join([str(f) for f in files])
-        )
+        "Asserting files %s contain the version string...",
+        ", ".join([str(f) for f in files])
     )
 
     for f in files:
@@ -561,7 +560,7 @@ def main(original_args=None):
     config.set("bumpversion", "new_version", args.new_version)
 
     for key, value in config.items("bumpversion"):
-        logger_list.info("{}={}".format(key, value))
+        logger_list.info("%s=%s", key, value)
 
     config.remove_option("bumpversion", "new_version")
 
@@ -573,9 +572,9 @@ def main(original_args=None):
         write_to_config_file = (not args.dry_run) and config_file_exists
 
         logger.info(
-            "{} to config file {}:".format(
-                "Would write" if not write_to_config_file else "Writing", config_file
-            )
+            "%s to config file %s:",
+            "Would write" if not write_to_config_file else "Writing",
+            config_file
         )
 
         config.write(new_config)
@@ -605,16 +604,17 @@ def main(original_args=None):
     do_tag = args.tag and not args.dry_run
 
     logger.info(
-        "{} {} commit".format(
-            "Would prepare" if not do_commit else "Preparing", vcs.__name__
-        )
+        "%s %s commit",
+        "Would prepare" if not do_commit else "Preparing",
+        vcs.__name__,
     )
 
     for path in commit_files:
         logger.info(
-            "{} changes in file '{}' to {}".format(
-                "Would add" if not do_commit else "Adding", path, vcs.__name__
-            )
+            "%s changes in file '%s' to %s",
+            "Would add" if not do_commit else "Adding",
+            path,
+            vcs.__name__,
         )
 
         if do_commit:
@@ -630,11 +630,10 @@ def main(original_args=None):
     commit_message = args.message.format(**vcs_context)
 
     logger.info(
-        "{} to {} with message '{}'".format(
-            "Would commit" if not do_commit else "Committing",
-            vcs.__name__,
-            commit_message,
-        )
+        "%s to %s with message '%s'",
+        "Would commit" if not do_commit else "Committing",
+        vcs.__name__,
+        commit_message,
     )
 
     if do_commit:
@@ -644,13 +643,12 @@ def main(original_args=None):
     tag_name = args.tag_name.format(**vcs_context)
     tag_message = args.tag_message.format(**vcs_context)
     logger.info(
-        "{} '{}' {} in {} and {}".format(
-            "Would tag" if not do_tag else "Tagging",
-            tag_name,
-            "with message '{}'".format(tag_message) if tag_message else "without message",
-            vcs.__name__,
-            "signing" if sign_tags else "not signing",
-        )
+        "%s '%s' %s in %s and %s",
+        "Would tag" if not do_tag else "Tagging",
+        tag_name,
+        "with message '{}'".format(tag_message) if tag_message else "without message",
+        vcs.__name__,
+        "signing" if sign_tags else "not signing",
     )
 
     if do_tag:

@@ -5,7 +5,7 @@ from __future__ import unicode_literals, print_function
 import logging
 import re
 import sre_constants
-from string import Formatter
+import string
 
 from bumpversion.exceptions import (
     MissingValueForSerializationException,
@@ -125,6 +125,12 @@ class Version(object):
         return new_version
 
 
+def labels_for_format(serialize_format):
+    return (
+        label for _, label, _, _ in string.Formatter().parse(serialize_format) if label
+    )
+
+
 class VersionConfig(object):
 
     """
@@ -137,7 +143,7 @@ class VersionConfig(object):
             self.parse_regex = re.compile(parse, re.VERBOSE)
         except sre_constants.error as e:
             # TODO: use re.error here mayhaps
-            logger.error("--parse '{}' is not a valid regex".format(parse))
+            logger.error("--parse '%s' is not a valid regex", parse)
             raise e
 
         self.serialize_formats = serialize
@@ -149,15 +155,11 @@ class VersionConfig(object):
         self.search = search
         self.replace = replace
 
-    def _labels_for_format(self, serialize_format):
-        return (
-            label for _, label, _, _ in Formatter().parse(serialize_format) if label
-        )
 
     def order(self):
         # currently, order depends on the first given serialization format
         # this seems like a good idea because this should be the most complete format
-        return self._labels_for_format(self.serialize_formats[0])
+        return labels_for_format(self.serialize_formats[0])
 
     def parse(self, version_string):
 
@@ -166,9 +168,9 @@ class VersionConfig(object):
         )
 
         logger.info(
-            "Parsing version '{}' using regexp '{}'".format(
-                version_string, regexp_one_line
-            )
+            "Parsing version '%s' using regexp '%s'",
+            version_string,
+            regexp_one_line,
         )
 
         match = self.parse_regex.search(version_string)
@@ -176,18 +178,18 @@ class VersionConfig(object):
         _parsed = {}
         if not match:
             logger.warning(
-                "Evaluating 'parse' option: '{}' does not parse current version '{}'".format(
-                    self.parse_regex.pattern, version_string
-                )
+                "Evaluating 'parse' option: '%s' does not parse current version '%s'",
+                self.parse_regex.pattern,
+                version_string,
             )
-            return
+            return None
 
         for key, value in match.groupdict().items():
             _parsed[key] = VersionPart(value, self.part_configs.get(key))
 
         v = Version(_parsed, version_string)
 
-        logger.info("Parsed the following values: %s" % keyvaluestring(v._values))
+        logger.info("Parsed the following values: %s", keyvaluestring(v._values))
 
         return v
 
@@ -232,11 +234,11 @@ class VersionConfig(object):
             elif not found_required:
                 keys_needing_representation.add(k)
 
-        required_by_format = set(self._labels_for_format(serialize_format))
+        required_by_format = set(labels_for_format(serialize_format))
 
         # try whether all parsed keys are represented
         if raise_if_incomplete:
-            if not (keys_needing_representation <= required_by_format):
+            if not keys_needing_representation <= required_by_format:
                 raise IncompleteVersionRepresentationException(
                     "Could not represent '{}' in format '{}'".format(
                         "', '".join(keys_needing_representation ^ required_by_format),
@@ -250,7 +252,7 @@ class VersionConfig(object):
 
         chosen = None
 
-        # logger.info("Available serialization formats: '{}'".format("', '".join(self.serialize_formats)))
+        logger.debug("Available serialization formats: '%s'", "', '".join(self.serialize_formats))
 
         for serialize_format in self.serialize_formats:
             try:
@@ -258,9 +260,8 @@ class VersionConfig(object):
                     version, serialize_format, context, raise_if_incomplete=True
                 )
                 chosen = serialize_format
-                # logger.info("Found '{}' to be a usable serialization format".format(chosen))
+                logger.debug("Found '%s' to be a usable serialization format", chosen)
             except IncompleteVersionRepresentationException as e:
-                # logger.info(e.message)
                 if not chosen:
                     chosen = serialize_format
             except MissingValueForSerializationException as e:
@@ -270,7 +271,7 @@ class VersionConfig(object):
         if not chosen:
             raise KeyError("Did not find suitable serialization format")
 
-        # logger.info("Selected serialization format '{}'".format(chosen))
+        logger.debug("Selected serialization format '%s'", chosen)
 
         return chosen
 
@@ -278,5 +279,5 @@ class VersionConfig(object):
         serialized = self._serialize(
             version, self._choose_serialize_format(version, context), context
         )
-        # logger.info("Serialized to '{}'".format(serialized))
+        logger.debug("Serialized to '%s'", serialized)
         return serialized
