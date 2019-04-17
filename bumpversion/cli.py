@@ -109,11 +109,7 @@ def main(original_args=None):
     new_version = _assemble_new_version(context, current_version, defaults, known_args, new_version, positionals, vc)
     args, file_names = _parse_phase_3(args, defaults, parser2, positionals, remaining_argv)
     new_version = _parse_new_version(args, new_version, vc)
-
-    file_names = file_names or positionals[1:]
-
-    for file_name in file_names:
-        files.append(ConfiguredFile(file_name, vc))
+    _determine_files(file_names, files, positionals, vc)
 
     for vcs in VCS:
         if vcs.is_usable():
@@ -667,3 +663,9 @@ def _parse_new_version(args, new_version, vc):
         new_version = vc.parse(args.new_version)
     logger.info("New version will be '{}'".format(args.new_version))
     return new_version
+
+
+def _determine_files(file_names, files, positionals, vc):
+    file_names = file_names or positionals[1:]
+    for file_name in file_names:
+        files.append(ConfiguredFile(file_name, vc))
