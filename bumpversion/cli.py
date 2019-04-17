@@ -90,15 +90,12 @@ def split_args_in_optional_and_positional(args):
 
 
 def main(original_args=None):
-    args, known_args, root_parser, positionals = _parse_phase_1(original_args)
-    _setup_logging(known_args)
-
     defaults = {}
     vcs_info = {}
 
-    for vcs in VCS:
-        if vcs.is_usable():
-            vcs_info.update(vcs.latest_tag_info())
+    args, known_args, root_parser, positionals = _parse_phase_1(original_args)
+    _setup_logging(known_args)
+    vcs = _determine_vcs_is_usable(vcs_info)
 
     if "current_version" in vcs_info:
         defaults["current_version"] = vcs_info["current_version"]
@@ -588,6 +585,13 @@ def main(original_args=None):
 
     if do_tag:
         vcs.tag(sign_tags, tag_name, tag_message)
+
+
+def _determine_vcs_is_usable(vcs_info):
+    for vcs in VCS:
+        if vcs.is_usable():
+            vcs_info.update(vcs.latest_tag_info())
+    return vcs
 
 
 def _parse_phase_1(original_args):
