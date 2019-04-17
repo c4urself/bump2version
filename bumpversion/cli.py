@@ -81,12 +81,18 @@ def main(original_args=None):
     if hasattr(known_args, "config_file"):
         explicit_config = known_args.config_file
     config_file = _determine_config_file(explicit_config)
-    config, config_file_exists = _load_configuration(config_file, explicit_config, files, defaults, part_configs)
-    known_args, parser2, remaining_argv = _parse_arguments_phase_2(args, known_args, defaults, root_parser)
+    config, config_file_exists = _load_configuration(
+        config_file, explicit_config, files, defaults, part_configs
+    )
+    known_args, parser2, remaining_argv = _parse_arguments_phase_2(
+        args, known_args, defaults, root_parser
+    )
     vc = _setup_versionconfig(known_args, part_configs)
     current_version = _parse_current_version(known_args.current_version, vc)
     context = _assemble_context(vcs_info)
-    new_version = _assemble_new_version(context, current_version, defaults, known_args.current_version, new_version, positionals, vc)
+    new_version = _assemble_new_version(
+        context, current_version, defaults, known_args.current_version, new_version, positionals, vc
+    )
     args, file_names = _parse_arguments_phase_3(remaining_argv, positionals, defaults, parser2)
     new_version = _parse_new_version(args, new_version, vc)
     _determine_files(file_names, files, positionals, vc)
@@ -129,7 +135,8 @@ def _parse_arguments_phase_1(original_args):
     )
     if len(positionals[1:]) > 2:
         warnings.warn(
-            "Giving multiple files on the command line will be deprecated, please use [bumpversion:file:...] in a config file.",
+            "Giving multiple files on the command line will be deprecated, "
+            "please use [bumpversion:file:...] in a config file.",
             PendingDeprecationWarning,
         )
     root_parser = argparse.ArgumentParser(add_help=False)
@@ -161,13 +168,13 @@ def _parse_arguments_phase_1(original_args):
         help="Don't abort if working directory is dirty",
         required=False,
     )
-    known_args, remaining_argv = root_parser.parse_known_args(args)
+    known_args, _ = root_parser.parse_known_args(args)
     return args, known_args, root_parser, positionals
 
 
 def _setup_logging(show_list, verbose):
     logformatter = logging.Formatter("%(message)s")
-    if len(logger_list.handlers) == 0:
+    if not logger_list.handlers:
         ch2 = logging.StreamHandler(sys.stdout)
         ch2.setFormatter(logformatter)
         logger_list.addHandler(ch2)
@@ -179,7 +186,7 @@ def _setup_logging(show_list, verbose):
         log_level = logging.DEBUG
     root_logger = logging.getLogger('')
     root_logger.setLevel(log_level)
-    logger.debug("Starting {}".format(DESCRIPTION))
+    logger.debug("Starting %s", DESCRIPTION)
 
 
 def _determine_vcs_usability(possible_vcses, vcs_info):
@@ -219,7 +226,7 @@ def _load_configuration(config_file, explicit_config, files, defaults, part_conf
         logger.info(message)
         return config, config_file_exists
 
-    logger.info("Reading config file {}:".format(config_file))
+    logger.info("Reading config file %s:", config_file)
     # TODO: this is a DEBUG level log
     logger.info(io.open(config_file, "rt", encoding="utf-8").read())
 
@@ -382,7 +389,7 @@ def _setup_versionconfig(known_args, part_configs):
             replace=known_args.replace,
             part_configs=part_configs,
         )
-    except sre_constants.error as e:
+    except sre_constants.error:
         # TODO: use re.error here mayhaps, also: should we log?
         sys.exit(1)
     return vc
@@ -390,11 +397,9 @@ def _setup_versionconfig(known_args, part_configs):
 
 def _parse_current_version(current_version, vc):
     if not current_version:
-        return (None)
+        return None
 
-    return (
-        vc.parse(current_version)
-    )
+    return vc.parse(current_version)
 
 
 def _assemble_context(vcs_info):
@@ -406,18 +411,20 @@ def _assemble_context(vcs_info):
     return context
 
 
-def _assemble_new_version(context, current_version, defaults, arg_current_version, new_version, positionals, vc):
+def _assemble_new_version(
+    context, current_version, defaults, arg_current_version, new_version, positionals, vc
+):
     if "new_version" not in defaults and arg_current_version:
         try:
-            if current_version and len(positionals) > 0:
-                logger.info("Attempting to increment part '{}'".format(positionals[0]))
+            if current_version and positionals:
+                logger.info("Attempting to increment part '%s'", positionals[0])
                 new_version = current_version.bump(positionals[0], vc.order())
-                logger.info("Values are now: " + keyvaluestring(new_version._values))
+                logger.info("Values are now: %s", keyvaluestring(new_version._values))
                 defaults["new_version"] = vc.serialize(new_version, context)
         except MissingValueForSerializationException as e:
-            logger.info("Opportunistic finding of new_version failed: " + e.message)
+            logger.info("Opportunistic finding of new_version failed: %s", e.message)
         except IncompleteVersionRepresentationException as e:
-            logger.info("Opportunistic finding of new_version failed: " + e.message)
+            logger.info("Opportunistic finding of new_version failed: %s", e.message)
         except KeyError as e:
             logger.info("Opportunistic finding of new_version failed")
     return new_version
@@ -539,7 +546,7 @@ def _parse_arguments_phase_3(remaining_argv, positionals, defaults, parser2):
 def _parse_new_version(args, new_version, vc):
     if args.new_version:
         new_version = vc.parse(args.new_version)
-    logger.info("New version will be '{}'".format(args.new_version))
+    logger.info("New version will be '%s'", args.new_version)
     return new_version
 
 
@@ -559,9 +566,8 @@ def _determine_vcs_dirty(possible_vcses, defaults):
         except WorkingDirectoryIsDirtyException as e:
             if not defaults["allow_dirty"]:
                 logger.warning(
-                    "{}\n\nUse --allow-dirty to override this if you know what you're doing.".format(
-                        e.message
-                    )
+                    "%s\n\nUse --allow-dirty to override this if you know what you're doing.",
+                    e.message,
                 )
                 raise
 
@@ -589,7 +595,7 @@ def _replace_version_in_files(files, current_version, new_version, dry_run, cont
 def _log_list(config, new_version):
     config.set("bumpversion", "new_version", new_version)
     for key, value in config.items("bumpversion"):
-        logger_list.info("{}={}".format(key, value))
+        logger_list.info("%s=%s", key, value)
     config.remove_option("bumpversion", "new_version")
 
 
@@ -600,9 +606,9 @@ def _update_config_file(config, config_file, config_file_exists, new_version, dr
         write_to_config_file = (not dry_run) and config_file_exists
 
         logger.info(
-            "{} to config file {}:".format(
-                "Would write" if not write_to_config_file else "Writing", config_file
-            )
+            "%s to config file %s:",
+            "Would write" if not write_to_config_file else "Writing",
+            config_file,
         )
 
         config.write(new_config)
@@ -628,15 +634,16 @@ def _commit_to_vcs(files, config_file, config_file_exists, vcs, args):
     )
     do_commit = args.commit and not args.dry_run
     logger.info(
-        "{} {} commit".format(
-            "Would prepare" if not do_commit else "Preparing", vcs.__name__
-        )
+        "%s %s commit",
+        "Would prepare" if not do_commit else "Preparing",
+        vcs.__name__,
     )
     for path in commit_files:
         logger.info(
-            "{} changes in file '{}' to {}".format(
-                "Would add" if not do_commit else "Adding", path, vcs.__name__
-            )
+            "%s changes in file '%s' to %s",
+            "Would add" if not do_commit else "Adding",
+            path,
+            vcs.__name__,
         )
 
         if do_commit:
@@ -649,11 +656,10 @@ def _commit_to_vcs(files, config_file, config_file_exists, vcs, args):
     vcs_context.update(prefixed_environ())
     commit_message = args.message.format(**vcs_context)
     logger.info(
-        "{} to {} with message '{}'".format(
-            "Would commit" if not do_commit else "Committing",
-            vcs.__name__,
-            commit_message,
-        )
+        "%s to %s with message '%s'",
+        "Would commit" if not do_commit else "Committing",
+        vcs.__name__,
+        commit_message,
     )
     if do_commit:
         vcs.commit(message=commit_message)
@@ -666,13 +672,12 @@ def _tag_in_vcs(vcs, vcs_context, args):
     tag_message = args.tag_message.format(**vcs_context)
     do_tag = args.tag and not args.dry_run
     logger.info(
-        "{} '{}' {} in {} and {}".format(
-            "Would tag" if not do_tag else "Tagging",
-            tag_name,
-            "with message '{}'".format(tag_message) if tag_message else "without message",
-            vcs.__name__,
-            "signing" if sign_tags else "not signing",
-        )
+        "%s '%s' %s in %s and %s",
+        "Would tag" if not do_tag else "Tagging",
+        tag_name,
+        "with message '{}'".format(tag_message) if tag_message else "without message",
+        vcs.__name__,
+        "signing" if sign_tags else "not signing",
     )
     if do_tag:
         vcs.tag(sign_tags, tag_name, tag_message)
