@@ -115,11 +115,9 @@ def main(original_args=None):
     _replace_version_in_files(args, context, current_version, files, new_version)
     _log_list(args, config)
     _update_config_file(args, config, config_file, config_file_exists)
-    if not vcs:
-        return
-
-    vcs_context = _commit_to_vcs(args, config_file, config_file_exists, files, vcs)
-    _tag_in_vcs(args, vcs, vcs_context)
+    if vcs:
+        vcs_context = _commit_to_vcs(args, config_file, config_file_exists, files, vcs)
+        _tag_in_vcs(args, vcs, vcs_context)
 
 
 def _parse_phase_1(original_args):
