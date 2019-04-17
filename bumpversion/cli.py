@@ -110,21 +110,7 @@ def main(original_args=None):
     args, file_names = _parse_phase_3(args, defaults, parser2, positionals, remaining_argv)
     new_version = _parse_new_version(args, new_version, vc)
     _determine_files(file_names, files, positionals, vc)
-
-    for vcs in VCS:
-        if vcs.is_usable():
-            try:
-                vcs.assert_nondirty()
-            except WorkingDirectoryIsDirtyException as e:
-                if not defaults["allow_dirty"]:
-                    logger.warning(
-                        "%s\n\nUse --allow-dirty to override this if you know what you're doing.",
-                        e.message
-                    )
-                    raise
-            break
-        else:
-            vcs = None
+    vcs = _determine_vcs_dirty(defaults, vcs)
 
     # make sure files exist and contain version string
 
@@ -669,3 +655,22 @@ def _determine_files(file_names, files, positionals, vc):
     file_names = file_names or positionals[1:]
     for file_name in file_names:
         files.append(ConfiguredFile(file_name, vc))
+
+
+def _determine_vcs_dirty(defaults, vcs):
+    for vcs in VCS:
+        if vcs.is_usable():
+            try:
+                vcs.assert_nondirty()
+            except WorkingDirectoryIsDirtyException as e:
+                if not defaults["allow_dirty"]:
+                    logger.warning(
+                        "{}\n\nUse --allow-dirty to override this if you know what you're doing.".format(
+                            e.message
+                        )
+                    )
+                    raise
+            break
+        else:
+            vcs = None
+    return vcs
