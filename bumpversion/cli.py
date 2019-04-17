@@ -115,60 +115,15 @@ def main(original_args=None):
     _replace_version_in_files(args, context, current_version, files, new_version)
     _log_list(args, config)
     _update_config_file(args, config, config_file, config_file_exists)
-
-    commit_files = [f.path for f in files]
-    if config_file_exists:
-        commit_files.append(config_file)
-
     if not vcs:
         return
 
-    assert vcs.is_usable(), "Did find '{}' unusable, unable to commit.".format(
-        vcs.__name__
-    )
-
-    do_commit = args.commit and not args.dry_run
-    do_tag = args.tag and not args.dry_run
-
-    logger.info(
-        "%s %s commit",
-        "Would prepare" if not do_commit else "Preparing",
-        vcs.__name__,
-    )
-
-    for path in commit_files:
-        logger.info(
-            "%s changes in file '%s' to %s",
-            "Would add" if not do_commit else "Adding",
-            path,
-            vcs.__name__,
-        )
-
-        if do_commit:
-            vcs.add_path(path)
-
-    vcs_context = {
-        "current_version": args.current_version,
-        "new_version": args.new_version,
-    }
-    vcs_context.update(time_context)
-    vcs_context.update(prefixed_environ())
-
-    commit_message = args.message.format(**vcs_context)
-
-    logger.info(
-        "%s to %s with message '%s'",
-        "Would commit" if not do_commit else "Committing",
-        vcs.__name__,
-        commit_message,
-    )
-
-    if do_commit:
-        vcs.commit(message=commit_message)
+    vcs_context = _commit_to_vcs(args, config_file, config_file_exists, files, vcs)
 
     sign_tags = args.sign_tags
     tag_name = args.tag_name.format(**vcs_context)
     tag_message = args.tag_message.format(**vcs_context)
+    do_tag = args.tag and not args.dry_run
     logger.info(
         "%s '%s' %s in %s and %s",
         "Would tag" if not do_tag else "Tagging",
@@ -680,3 +635,44 @@ def _update_config_file(args, config, config_file, config_file_exists):
             "Unable to write UTF-8 to config file, because of an old configparser version. "
             "Update with `pip install --upgrade configparser`."
         )
+
+
+def _commit_to_vcs(args, config_file, config_file_exists, files, vcs):
+    commit_files = [f.path for f in files]
+    if config_file_exists:
+        commit_files.append(config_file)
+    assert vcs.is_usable(), "Did find '{}' unusable, unable to commit.".format(
+        vcs.__name__
+    )
+    do_commit = args.commit and not args.dry_run
+    logger.info(
+        "{} {} commit".format(
+            "Would prepare" if not do_commit else "Preparing", vcs.__name__
+        )
+    )
+    for path in commit_files:
+        logger.info(
+            "{} changes in file '{}' to {}".format(
+                "Would add" if not do_commit else "Adding", path, vcs.__name__
+            )
+        )
+
+        if do_commit:
+            vcs.add_path(path)
+    vcs_context = {
+        "current_version": args.current_version,
+        "new_version": args.new_version,
+    }
+    vcs_context.update(time_context)
+    vcs_context.update(prefixed_environ())
+    commit_message = args.message.format(**vcs_context)
+    logger.info(
+        "{} to {} with message '{}'".format(
+            "Would commit" if not do_commit else "Committing",
+            vcs.__name__,
+            commit_message,
+        )
+    )
+    if do_commit:
+        vcs.commit(message=commit_message)
+    return vcs_context
