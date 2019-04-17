@@ -588,8 +588,8 @@ def _replace_version_in_files(files, current_version, new_version, dry_run, cont
         f.replace(current_version, new_version, context, dry_run)
 
 
-def _log_list(args, config):
-    config.set("bumpversion", "new_version", args.new_version)
+def _log_list(config, new_version):
+    config.set("bumpversion", "new_version", new_version)
     for key, value in config.items("bumpversion"):
         logger_list.info("{}={}".format(key, value))
     config.remove_option("bumpversion", "new_version")
