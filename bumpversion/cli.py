@@ -111,16 +111,7 @@ def main(original_args=None):
     new_version = _parse_new_version(args, new_version, vc)
     _determine_files(file_names, files, positionals, vc)
     vcs = _determine_vcs_dirty(defaults, vcs)
-
-    # make sure files exist and contain version string
-
-    logger.info(
-        "Asserting files %s contain the version string...",
-        ", ".join([str(f) for f in files])
-    )
-
-    for f in files:
-        f.should_contain_version(current_version, context)
+    _check_files_contain_version(context, current_version, files)
 
     # change version string in files
     for f in files:
@@ -674,3 +665,14 @@ def _determine_vcs_dirty(defaults, vcs):
         else:
             vcs = None
     return vcs
+
+
+def _check_files_contain_version(context, current_version, files):
+    # make sure files exist and contain version string
+    logger.info(
+        "Asserting files {} contain the version string:".format(
+            ", ".join([str(f) for f in files])
+        )
+    )
+    for f in files:
+        f.should_contain_version(current_version, context)
