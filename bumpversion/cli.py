@@ -100,7 +100,10 @@ def main(original_args=None):
     _setup_logging(known_args.list, known_args.verbose)
     _determine_vcs_usability(VCS, vcs_info)
     _determine_current_version(defaults, vcs_info)
-    config_file, explicit_config = _determine_config_file(known_args)
+    explicit_config = None
+    if hasattr(known_args, "config_file"):
+        explicit_config = known_args.config_file
+    config_file = _determine_config_file(explicit_config)
     config, config_file_exists = _load_configuration(config_file, defaults, explicit_config, files, part_configs)
     known_args, parser2, remaining_argv = _parse_phase_2(args, defaults, known_args, root_parser)
     vc = _setup_versionconfig(known_args, part_configs)
@@ -190,15 +193,12 @@ def _determine_current_version(defaults, vcs_info):
         defaults["current_version"] = vcs_info["current_version"]
 
 
-def _determine_config_file(known_args):
-    explicit_config = hasattr(known_args, "config_file")
+def _determine_config_file(explicit_config):
     if explicit_config:
-        config_file = known_args.config_file
-    elif not os.path.exists(".bumpversion.cfg") and os.path.exists("setup.cfg"):
-        config_file = "setup.cfg"
-    else:
-        config_file = ".bumpversion.cfg"
-    return config_file, explicit_config
+        return explicit_config
+    if not os.path.exists(".bumpversion.cfg") and os.path.exists("setup.cfg"):
+        return "setup.cfg"
+    return ".bumpversion.cfg"
 
 
 def _load_configuration(config_file, defaults, explicit_config, files, part_configs):
