@@ -97,15 +97,7 @@ def main(original_args=None):
     _setup_logging(known_args)
     vcs = _determine_vcs_is_usable(vcs_info)
     _determine_current_version(defaults, vcs_info)
-
-    explicit_config = hasattr(known_args, "config_file")
-
-    if explicit_config:
-        config_file = known_args.config_file
-    elif not os.path.exists(".bumpversion.cfg") and os.path.exists("setup.cfg"):
-        config_file = "setup.cfg"
-    else:
-        config_file = ".bumpversion.cfg"
+    config_file, explicit_config = _determine_config_file(known_args)
 
     # setup.cfg supports interpolation - for compatibility we must do the same.
     if os.path.basename(config_file) == "setup.cfg":
@@ -654,3 +646,14 @@ def _determine_vcs_is_usable(vcs_info):
 def _determine_current_version(defaults, vcs_info):
     if "current_version" in vcs_info:
         defaults["current_version"] = vcs_info["current_version"]
+
+
+def _determine_config_file(known_args):
+    explicit_config = hasattr(known_args, "config_file")
+    if explicit_config:
+        config_file = known_args.config_file
+    elif not os.path.exists(".bumpversion.cfg") and os.path.exists("setup.cfg"):
+        config_file = "setup.cfg"
+    else:
+        config_file = ".bumpversion.cfg"
+    return config_file, explicit_config
