@@ -107,7 +107,7 @@ def main(original_args=None):
     config, config_file_exists = _load_configuration(config_file, defaults, explicit_config, files, part_configs)
     known_args, parser2, remaining_argv = _parse_phase_2(args, defaults, known_args, root_parser)
     vc = _setup_versionconfig(known_args, part_configs)
-    current_version = _update_current_version(known_args, vc)
+    current_version = _parse_current_version(known_args.current_version, vc)
     context = _assemble_context(vcs_info)
     new_version = _assemble_new_version(context, current_version, defaults, known_args, new_version, positionals, vc)
     args, file_names = _parse_phase_3(args, defaults, parser2, positionals, remaining_argv)
@@ -388,11 +388,13 @@ def _setup_versionconfig(known_args, part_configs):
     return vc
 
 
-def _update_current_version(known_args, vc):
-    current_version = (
-        vc.parse(known_args.current_version) if known_args.current_version else None
+def _parse_current_version(current_version, vc):
+    if not current_version:
+        return (None)
+
+    return (
+        vc.parse(current_version)
     )
-    return current_version
 
 
 def _assemble_context(vcs_info):
