@@ -90,53 +90,7 @@ def split_args_in_optional_and_positional(args):
 
 
 def main(original_args=None):
-
-    positionals, args = split_args_in_optional_and_positional(
-        sys.argv[1:] if original_args is None else original_args
-    )
-
-    if len(positionals[1:]) > 2:
-        warnings.warn(
-            "Giving multiple files on the command line will be deprecated,"
-            " please use [bumpversion:file:...] in a config file.",
-            PendingDeprecationWarning,
-        )
-
-    parser1 = argparse.ArgumentParser(add_help=False)
-
-    parser1.add_argument(
-        "--config-file",
-        metavar="FILE",
-        default=argparse.SUPPRESS,
-        required=False,
-        help="Config file to read most of the variables from (default: .bumpversion.cfg)",
-    )
-
-    parser1.add_argument(
-        "--verbose",
-        action="count",
-        default=0,
-        help="Print verbose logging to stderr",
-        required=False,
-    )
-
-    parser1.add_argument(
-        "--list",
-        action="store_true",
-        default=False,
-        help="List machine readable information",
-        required=False,
-    )
-
-    parser1.add_argument(
-        "--allow-dirty",
-        action="store_true",
-        default=False,
-        help="Don't abort if working directory is dirty",
-        required=False,
-    )
-
-    known_args, remaining_argv = parser1.parse_known_args(args)
+    args, known_args, parser1, positionals = _parse_phase_1(original_args)
 
     logformatter = logging.Formatter("%(message)s")
 
@@ -653,3 +607,45 @@ def main(original_args=None):
 
     if do_tag:
         vcs.tag(sign_tags, tag_name, tag_message)
+
+
+def _parse_phase_1(original_args):
+    positionals, args = split_args_in_optional_and_positional(
+        sys.argv[1:] if original_args is None else original_args
+    )
+    if len(positionals[1:]) > 2:
+        warnings.warn(
+            "Giving multiple files on the command line will be deprecated, please use [bumpversion:file:...] in a config file.",
+            PendingDeprecationWarning,
+        )
+    parser1 = argparse.ArgumentParser(add_help=False)
+    parser1.add_argument(
+        "--config-file",
+        metavar="FILE",
+        default=argparse.SUPPRESS,
+        required=False,
+        help="Config file to read most of the variables from (default: .bumpversion.cfg)",
+    )
+    parser1.add_argument(
+        "--verbose",
+        action="count",
+        default=0,
+        help="Print verbose logging to stderr",
+        required=False,
+    )
+    parser1.add_argument(
+        "--list",
+        action="store_true",
+        default=False,
+        help="List machine readable information",
+        required=False,
+    )
+    parser1.add_argument(
+        "--allow-dirty",
+        action="store_true",
+        default=False,
+        help="Don't abort if working directory is dirty",
+        required=False,
+    )
+    known_args, remaining_argv = parser1.parse_known_args(args)
+    return args, known_args, parser1, positionals
