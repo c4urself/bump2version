@@ -101,51 +101,7 @@ def main(original_args=None):
     _determine_current_version(defaults, vcs_info)
     config_file, explicit_config = _determine_config_file(known_args)
     config, config_file_exists = _load_configuration(config_file, defaults, explicit_config, files, part_configs)
-
-    parser2 = argparse.ArgumentParser(
-        prog="bumpversion", add_help=False, parents=[root_parser]
-    )
-    parser2.set_defaults(**defaults)
-
-    parser2.add_argument(
-        "--current-version",
-        metavar="VERSION",
-        help="Version that needs to be updated",
-        required=False,
-    )
-    parser2.add_argument(
-        "--parse",
-        metavar="REGEX",
-        help="Regex parsing the version string",
-        default=defaults.get(
-            "parse", r"(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)"
-        ),
-    )
-    parser2.add_argument(
-        "--serialize",
-        metavar="FORMAT",
-        action=DiscardDefaultIfSpecifiedAppendAction,
-        help="How to format what is parsed back to a version",
-        default=defaults.get("serialize", [str("{major}.{minor}.{patch}")]),
-    )
-    parser2.add_argument(
-        "--search",
-        metavar="SEARCH",
-        help="Template for complete string to search",
-        default=defaults.get("search", "{current_version}"),
-    )
-    parser2.add_argument(
-        "--replace",
-        metavar="REPLACE",
-        help="Template for complete string to replace",
-        default=defaults.get("replace", "{new_version}"),
-    )
-
-    known_args, remaining_argv = parser2.parse_known_args(args)
-
-    defaults.update(vars(known_args))
-
-    assert isinstance(known_args.serialize, list), "Argument `serialize` must be a list"
+    known_args, parser2, remaining_argv = _parse_phase_2(args, defaults, known_args, root_parser)
 
     context = dict(
         list(time_context.items())
@@ -654,3 +610,50 @@ def _load_configuration(config_file, defaults, explicit_config, files, part_conf
             raise argparse.ArgumentTypeError(message)
         logger.info(message)
     return config, config_file_exists
+
+
+def _parse_phase_2(args, defaults, known_args, root_parser):
+    parser2 = argparse.ArgumentParser(
+        prog="bumpversion", add_help=False, parents=[root_parser]
+    )
+    parser2.set_defaults(**defaults)
+    parser2.add_argument(
+        "--current-version",
+        metavar="VERSION",
+        help="Version that needs to be updated",
+        required=False,
+    )
+    parser2.add_argument(
+        "--parse",
+        metavar="REGEX",
+        help="Regex parsing the version string",
+        default=defaults.get(
+            "parse", r"(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)"
+        ),
+    )
+    parser2.add_argument(
+        "--serialize",
+        metavar="FORMAT",
+        action=DiscardDefaultIfSpecifiedAppendAction,
+        help="How to format what is parsed back to a version",
+        default=defaults.get("serialize", [str("{major}.{minor}.{patch}")]),
+    )
+    parser2.add_argument(
+        "--search",
+        metavar="SEARCH",
+        help="Template for complete string to search",
+        default=defaults.get("search", "{current_version}"),
+    )
+    parser2.add_argument(
+        "--replace",
+        metavar="REPLACE",
+        help="Template for complete string to replace",
+        default=defaults.get("replace", "{new_version}"),
+    )
+    known_args, remaining_argv = parser2.parse_known_args(args)
+
+    defaults.update(vars(known_args))
+
+    assert isinstance(known_args.serialize, list), "Argument `serialize` must be a list"
+
+    return known_args, parser2, remaining_argv
