@@ -91,26 +91,7 @@ def split_args_in_optional_and_positional(args):
 
 def main(original_args=None):
     args, known_args, parser1, positionals = _parse_phase_1(original_args)
-
-    logformatter = logging.Formatter("%(message)s")
-
-    if not logger_list.handlers:
-        ch2 = logging.StreamHandler(sys.stdout)
-        ch2.setFormatter(logformatter)
-        logger_list.addHandler(ch2)
-
-    if known_args.list:
-        logger_list.setLevel(logging.DEBUG)
-
-    try:
-        log_level = [logging.WARNING, logging.INFO, logging.DEBUG][known_args.verbose]
-    except IndexError:
-        log_level = logging.DEBUG
-
-    root_logger = logging.getLogger('')
-    root_logger.setLevel(log_level)
-
-    logger.debug("Starting %s", DESCRIPTION)
+    _setup_logging(known_args)
 
     defaults = {}
     vcs_info = {}
@@ -649,3 +630,20 @@ def _parse_phase_1(original_args):
     )
     known_args, remaining_argv = parser1.parse_known_args(args)
     return args, known_args, parser1, positionals
+
+
+def _setup_logging(known_args):
+    logformatter = logging.Formatter("%(message)s")
+    if len(logger_list.handlers) == 0:
+        ch2 = logging.StreamHandler(sys.stdout)
+        ch2.setFormatter(logformatter)
+        logger_list.addHandler(ch2)
+    if known_args.list:
+        logger_list.setLevel(logging.DEBUG)
+    try:
+        log_level = [logging.WARNING, logging.INFO, logging.DEBUG][known_args.verbose]
+    except IndexError:
+        log_level = logging.DEBUG
+    root_logger = logging.getLogger('')
+    root_logger.setLevel(log_level)
+    logger.debug("Starting {}".format(DESCRIPTION))
