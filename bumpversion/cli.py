@@ -118,7 +118,6 @@ def main(original_args=None):
     _replace_version_in_files(files, current_version, new_version, args.dry_run, context)
     _log_list(config, args.new_version)
     _update_config_file(config, config_file, config_file_exists, args.new_version, args.dry_run)
-
     if vcs:
         vcs_context = _commit_to_vcs(args, config_file, config_file_exists, files, vcs)
         _tag_in_vcs(args, vcs, vcs_context)
@@ -595,11 +594,11 @@ def _log_list(config, new_version):
     config.remove_option("bumpversion", "new_version")
 
 
-def _update_config_file(args, config, config_file, config_file_exists):
-    config.set("bumpversion", "current_version", args.new_version)
+def _update_config_file(config, config_file, config_file_exists, new_version, dry_run):
+    config.set("bumpversion", "current_version", new_version)
     new_config = StringIO()
     try:
-        write_to_config_file = (not args.dry_run) and config_file_exists
+        write_to_config_file = (not dry_run) and config_file_exists
 
         logger.info(
             "{} to config file {}:".format(
