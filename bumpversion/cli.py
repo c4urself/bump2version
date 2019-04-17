@@ -110,7 +110,7 @@ def main(original_args=None):
     current_version = _parse_current_version(known_args.current_version, vc)
     context = _assemble_context(vcs_info)
     new_version = _assemble_new_version(context, current_version, defaults, known_args.current_version, new_version, positionals, vc)
-    args, file_names = _parse_phase_3(defaults, parser2, positionals, remaining_argv)
+    args, file_names = _parse_arguments_phase_3(remaining_argv, positionals, defaults, parser2)
     new_version = _parse_new_version(args, new_version, vc)
     _determine_files(file_names, files, positionals, vc)
     vcs = _determine_vcs_dirty(VCS, defaults)
@@ -423,7 +423,7 @@ def _assemble_new_version(context, current_version, defaults, arg_current_versio
     return new_version
 
 
-def _parse_phase_3(defaults, parser2, positionals, remaining_argv):
+def _parse_arguments_phase_3(remaining_argv, positionals, defaults, parser2):
     parser3 = argparse.ArgumentParser(
         prog="bumpversion",
         description=DESCRIPTION,
