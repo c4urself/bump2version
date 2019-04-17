@@ -104,7 +104,7 @@ def main(original_args=None):
     if hasattr(known_args, "config_file"):
         explicit_config = known_args.config_file
     config_file = _determine_config_file(explicit_config)
-    config, config_file_exists = _load_configuration(config_file, defaults, explicit_config, files, part_configs)
+    config, config_file_exists = _load_configuration(config_file, explicit_config, files, defaults, part_configs)
     known_args, parser2, remaining_argv = _parse_phase_2(args, defaults, known_args, root_parser)
     vc = _setup_versionconfig(known_args, part_configs)
     current_version = _parse_current_version(known_args.current_version, vc)
@@ -188,7 +188,7 @@ def _determine_vcs_usability(possible_vcses, vcs_info):
             vcs_info.update(vcs.latest_tag_info())
 
 
-def _determine_current_version(defaults, vcs_info):
+def _determine_current_version(vcs_info, defaults):
     if "current_version" in vcs_info:
         defaults["current_version"] = vcs_info["current_version"]
 
@@ -201,7 +201,7 @@ def _determine_config_file(explicit_config):
     return ".bumpversion.cfg"
 
 
-def _load_configuration(config_file, defaults, explicit_config, files, part_configs):
+def _load_configuration(config_file, explicit_config, files, defaults, part_configs):
     # setup.cfg supports interpolation - for compatibility we must do the same.
     if os.path.basename(config_file) == "setup.cfg":
         config = ConfigParser("")
