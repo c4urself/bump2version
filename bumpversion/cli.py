@@ -96,9 +96,7 @@ def main(original_args=None):
     args, known_args, root_parser, positionals = _parse_phase_1(original_args)
     _setup_logging(known_args)
     vcs = _determine_vcs_is_usable(vcs_info)
-
-    if "current_version" in vcs_info:
-        defaults["current_version"] = vcs_info["current_version"]
+    _determine_current_version(defaults, vcs_info)
 
     explicit_config = hasattr(known_args, "config_file")
 
@@ -585,6 +583,11 @@ def main(original_args=None):
 
     if do_tag:
         vcs.tag(sign_tags, tag_name, tag_message)
+
+
+def _determine_current_version(defaults, vcs_info):
+    if "current_version" in vcs_info:
+        defaults["current_version"] = vcs_info["current_version"]
 
 
 def _determine_vcs_is_usable(vcs_info):
