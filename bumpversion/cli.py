@@ -96,7 +96,7 @@ def main(original_args=None):
     files = []
     new_version = None
 
-    args, known_args, root_parser, positionals = _parse_phase_1(original_args)
+    args, known_args, root_parser, positionals = _parse_arguments_phase_1(original_args)
     _setup_logging(known_args.list, known_args.verbose)
     _determine_vcs_usability(VCS, vcs_info)
     _determine_current_version(vcs_info, defaults)
@@ -123,7 +123,7 @@ def main(original_args=None):
         _tag_in_vcs(args, vcs, vcs_context)
 
 
-def _parse_phase_1(original_args):
+def _parse_arguments_phase_1(original_args):
     positionals, args = split_args_in_optional_and_positional(
         sys.argv[1:] if original_args is None else original_args
     )
