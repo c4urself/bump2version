@@ -570,12 +570,11 @@ def _determine_vcs_dirty(possible_vcses, defaults):
     return None
 
 
-def _check_files_contain_version(context, current_version, files):
+def _check_files_contain_version(files, current_version, context):
     # make sure files exist and contain version string
     logger.info(
-        "Asserting files {} contain the version string:".format(
-            ", ".join([str(f) for f in files])
-        )
+        "Asserting files %s contain the version string...",
+        ", ".join([str(f) for f in files]),
     )
     for f in files:
         f.should_contain_version(current_version, context)
