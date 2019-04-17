@@ -112,10 +112,7 @@ def main(original_args=None):
     _determine_files(file_names, files, positionals, vc)
     vcs = _determine_vcs_dirty(defaults, vcs)
     _check_files_contain_version(context, current_version, files)
-
-    # change version string in files
-    for f in files:
-        f.replace(current_version, new_version, context, args.dry_run)
+    _replace_version_in_files(args, context, current_version, files, new_version)
 
     commit_files = [f.path for f in files]
 
@@ -676,3 +673,9 @@ def _check_files_contain_version(context, current_version, files):
     )
     for f in files:
         f.should_contain_version(current_version, context)
+
+
+def _replace_version_in_files(args, context, current_version, files, new_version):
+    # change version string in files
+    for f in files:
+        f.replace(current_version, new_version, context, args.dry_run)
