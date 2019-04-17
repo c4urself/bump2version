@@ -109,8 +109,8 @@ def main(original_args=None):
     vc = _setup_versionconfig(known_args, part_configs)
     current_version = _parse_current_version(known_args.current_version, vc)
     context = _assemble_context(vcs_info)
-    new_version = _assemble_new_version(context, current_version, defaults, known_args, new_version, positionals, vc)
-    args, file_names = _parse_phase_3(args, defaults, parser2, positionals, remaining_argv)
+    new_version = _assemble_new_version(context, current_version, defaults, known_args.current_version, new_version, positionals, vc)
+    args, file_names = _parse_phase_3(defaults, parser2, positionals, remaining_argv)
     new_version = _parse_new_version(args, new_version, vc)
     _determine_files(file_names, files, positionals, vc)
     vcs = _determine_vcs_dirty(VCS, defaults)
@@ -406,8 +406,8 @@ def _assemble_context(vcs_info):
     return context
 
 
-def _assemble_new_version(context, current_version, defaults, known_args, new_version, positionals, vc):
-    if "new_version" not in defaults and known_args.current_version:
+def _assemble_new_version(context, current_version, defaults, arg_current_version, new_version, positionals, vc):
+    if "new_version" not in defaults and arg_current_version:
         try:
             if current_version and len(positionals) > 0:
                 logger.info("Attempting to increment part '{}'".format(positionals[0]))
@@ -423,7 +423,7 @@ def _assemble_new_version(context, current_version, defaults, known_args, new_ve
     return new_version
 
 
-def _parse_phase_3(args, defaults, parser2, positionals, remaining_argv):
+def _parse_phase_3(defaults, parser2, positionals, remaining_argv):
     parser3 = argparse.ArgumentParser(
         prog="bumpversion",
         description=DESCRIPTION,
