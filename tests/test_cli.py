@@ -411,8 +411,8 @@ def test_dirty_work_dir(tmpdir, vcs):
     tmpdir.join("dirty").write("i'm dirty")
 
     check_call([vcs, "add", "dirty"])
-    vcs_name = 'Mercurial' if vcs == 'hg' else 'Git'
-    vcs_output = "b'A dirty'" if vcs == 'hg' else "b'A  dirty'"
+    vcs_name = "Mercurial" if vcs == "hg" else "Git"
+    vcs_output = "A dirty" if vcs == "hg" else "A  dirty"
 
     with pytest.raises(WorkingDirectoryIsDirtyException):
         with LogCapture() as log_capture:
