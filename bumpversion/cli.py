@@ -240,23 +240,6 @@ def main(original_args=None):
         vcs.tag(sign_tags, tag_name, tag_message)
 
 
-def _assemble_new_version(context, current_version, defaults, known_args, new_version, positionals, vc):
-    if "new_version" not in defaults and known_args.current_version:
-        try:
-            if current_version and len(positionals) > 0:
-                logger.info("Attempting to increment part '{}'".format(positionals[0]))
-                new_version = current_version.bump(positionals[0], vc.order())
-                logger.info("Values are now: " + keyvaluestring(new_version._values))
-                defaults["new_version"] = vc.serialize(new_version, context)
-        except MissingValueForSerializationException as e:
-            logger.info("Opportunistic finding of new_version failed: " + e.message)
-        except IncompleteVersionRepresentationException as e:
-            logger.info("Opportunistic finding of new_version failed: " + e.message)
-        except KeyError as e:
-            logger.info("Opportunistic finding of new_version failed")
-    return new_version
-
-
 def _parse_phase_1(original_args):
     positionals, args = split_args_in_optional_and_positional(
         sys.argv[1:] if original_args is None else original_args
@@ -543,6 +526,23 @@ def _assemble_context(vcs_info):
         + list(vcs_info.items())
     )
     return context
+
+
+def _assemble_new_version(context, current_version, defaults, known_args, new_version, positionals, vc):
+    if "new_version" not in defaults and known_args.current_version:
+        try:
+            if current_version and len(positionals) > 0:
+                logger.info("Attempting to increment part '{}'".format(positionals[0]))
+                new_version = current_version.bump(positionals[0], vc.order())
+                logger.info("Values are now: " + keyvaluestring(new_version._values))
+                defaults["new_version"] = vc.serialize(new_version, context)
+        except MissingValueForSerializationException as e:
+            logger.info("Opportunistic finding of new_version failed: " + e.message)
+        except IncompleteVersionRepresentationException as e:
+            logger.info("Opportunistic finding of new_version failed: " + e.message)
+        except KeyError as e:
+            logger.info("Opportunistic finding of new_version failed")
+    return new_version
 
 
 def _parse_phase_3(args, defaults, parser2, positionals, remaining_argv):
