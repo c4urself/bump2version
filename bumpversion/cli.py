@@ -119,22 +119,7 @@ def main(original_args=None):
         return
 
     vcs_context = _commit_to_vcs(args, config_file, config_file_exists, files, vcs)
-
-    sign_tags = args.sign_tags
-    tag_name = args.tag_name.format(**vcs_context)
-    tag_message = args.tag_message.format(**vcs_context)
-    do_tag = args.tag and not args.dry_run
-    logger.info(
-        "%s '%s' %s in %s and %s",
-        "Would tag" if not do_tag else "Tagging",
-        tag_name,
-        "with message '{}'".format(tag_message) if tag_message else "without message",
-        vcs.__name__,
-        "signing" if sign_tags else "not signing",
-    )
-
-    if do_tag:
-        vcs.tag(sign_tags, tag_name, tag_message)
+    _tag_in_vcs(args, vcs, vcs_context)
 
 
 def _parse_phase_1(original_args):
@@ -676,3 +661,22 @@ def _commit_to_vcs(args, config_file, config_file_exists, files, vcs):
     if do_commit:
         vcs.commit(message=commit_message)
     return vcs_context
+
+
+def _tag_in_vcs(args, vcs, vcs_context):
+    sign_tags = args.sign_tags
+    tag_name = args.tag_name.format(**vcs_context)
+    tag_message = args.tag_message.format(**vcs_context)
+    do_tag = args.tag and not args.dry_run
+    logger.info(
+        "{} '{}' {} in {} and {}".format(
+            "Would tag" if not do_tag else "Tagging",
+            tag_name,
+            "with message '{}'".format(tag_message) if tag_message else "without message",
+            vcs.__name__,
+            "signing" if sign_tags else "not signing",
+        )
+    )
+    if do_tag:
+        vcs.tag(sign_tags, tag_name, tag_message)
+
