@@ -113,15 +113,7 @@ def main(original_args=None):
     vcs = _determine_vcs_dirty(defaults, vcs)
     _check_files_contain_version(context, current_version, files)
     _replace_version_in_files(args, context, current_version, files, new_version)
-
-    commit_files = [f.path for f in files]
-
-    config.set("bumpversion", "new_version", args.new_version)
-
-    for key, value in config.items("bumpversion"):
-        logger_list.info("%s=%s", key, value)
-
-    config.remove_option("bumpversion", "new_version")
+    _log_list(args, config)
 
     config.set("bumpversion", "current_version", args.new_version)
 
@@ -149,6 +141,7 @@ def main(original_args=None):
             "Update with `pip install --upgrade configparser`."
         )
 
+    commit_files = [f.path for f in files]
     if config_file_exists:
         commit_files.append(config_file)
 
@@ -679,3 +672,10 @@ def _replace_version_in_files(args, context, current_version, files, new_version
     # change version string in files
     for f in files:
         f.replace(current_version, new_version, context, args.dry_run)
+
+
+def _log_list(args, config):
+    config.set("bumpversion", "new_version", args.new_version)
+    for key, value in config.items("bumpversion"):
+        logger_list.info("{}={}".format(key, value))
+    config.remove_option("bumpversion", "new_version")
