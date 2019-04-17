@@ -114,32 +114,7 @@ def main(original_args=None):
     _check_files_contain_version(context, current_version, files)
     _replace_version_in_files(args, context, current_version, files, new_version)
     _log_list(args, config)
-
-    config.set("bumpversion", "current_version", args.new_version)
-
-    new_config = StringIO()
-
-    try:
-        write_to_config_file = (not args.dry_run) and config_file_exists
-
-        logger.info(
-            "%s to config file %s:",
-            "Would write" if not write_to_config_file else "Writing",
-            config_file
-        )
-
-        config.write(new_config)
-        logger.info(new_config.getvalue())
-
-        if write_to_config_file:
-            with io.open(config_file, "wt", encoding="utf-8", newline=config_new_lines) as f:
-                f.write(new_config.getvalue())
-
-    except UnicodeEncodeError:
-        warnings.warn(
-            "Unable to write UTF-8 to config file, because of an old configparser version. "
-            "Update with `pip install --upgrade configparser`."
-        )
+    _update_config_file(args, config, config_file, config_file_exists)
 
     commit_files = [f.path for f in files]
     if config_file_exists:
@@ -679,3 +654,29 @@ def _log_list(args, config):
     for key, value in config.items("bumpversion"):
         logger_list.info("{}={}".format(key, value))
     config.remove_option("bumpversion", "new_version")
+
+
+def _update_config_file(args, config, config_file, config_file_exists):
+    config.set("bumpversion", "current_version", args.new_version)
+    new_config = StringIO()
+    try:
+        write_to_config_file = (not args.dry_run) and config_file_exists
+
+        logger.info(
+            "{} to config file {}:".format(
+                "Would write" if not write_to_config_file else "Writing", config_file
+            )
+        )
+
+        config.write(new_config)
+        logger.info(new_config.getvalue())
+
+        if write_to_config_file:
+            with io.open(config_file, "wt", encoding="utf-8") as f:
+                f.write(new_config.getvalue())
+
+    except UnicodeEncodeError:
+        warnings.warn(
+            "Unable to write UTF-8 to config file, because of an old configparser version. "
+            "Update with `pip install --upgrade configparser`."
+        )
