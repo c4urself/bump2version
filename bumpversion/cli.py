@@ -110,7 +110,7 @@ def main(original_args=None):
     args, file_names = _parse_phase_3(args, defaults, parser2, positionals, remaining_argv)
     new_version = _parse_new_version(args, new_version, vc)
     _determine_files(file_names, files, positionals, vc)
-    vcs = _determine_vcs_dirty(defaults, vcs)
+    vcs = _determine_vcs_dirty(VCS, defaults)
     _check_files_contain_version(context, current_version, files)
     _replace_version_in_files(args, context, current_version, files, new_version)
     _log_list(args, config)
@@ -547,23 +547,25 @@ def _determine_files(file_names, files, positionals, vc):
         files.append(ConfiguredFile(file_name, vc))
 
 
-def _determine_vcs_dirty(defaults, vcs):
-    for vcs in VCS:
-        if vcs.is_usable():
-            try:
-                vcs.assert_nondirty()
-            except WorkingDirectoryIsDirtyException as e:
-                if not defaults["allow_dirty"]:
-                    logger.warning(
-                        "{}\n\nUse --allow-dirty to override this if you know what you're doing.".format(
-                            e.message
-                        )
+def _determine_vcs_dirty(possible_vcses, defaults):
+    for vcs in possible_vcses:
+        if not vcs.is_usable():
+            continue
+
+        try:
+            vcs.assert_nondirty()
+        except WorkingDirectoryIsDirtyException as e:
+            if not defaults["allow_dirty"]:
+                logger.warning(
+                    "{}\n\nUse --allow-dirty to override this if you know what you're doing.".format(
+                        e.message
                     )
-                    raise
-            break
-        else:
-            vcs = None
-    return vcs
+                )
+                raise
+
+        return vcs
+
+    return None
 
 
 def _check_files_contain_version(context, current_version, files):
