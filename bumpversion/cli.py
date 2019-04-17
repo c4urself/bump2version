@@ -96,7 +96,7 @@ def main(original_args=None):
     _log_list(config, args.new_version)
     _update_config_file(config, config_file, config_file_exists, args.new_version, args.dry_run)
     if vcs:
-        vcs_context = _commit_to_vcs(args, config_file, config_file_exists, files, vcs)
+        vcs_context = _commit_to_vcs(files, config_file, config_file_exists, vcs, args)
         _tag_in_vcs(args, vcs, vcs_context)
 
 
@@ -619,7 +619,7 @@ def _update_config_file(config, config_file, config_file_exists, new_version, dr
         )
 
 
-def _commit_to_vcs(args, config_file, config_file_exists, files, vcs):
+def _commit_to_vcs(files, config_file, config_file_exists, vcs, args):
     commit_files = [f.path for f in files]
     if config_file_exists:
         commit_files.append(config_file)
