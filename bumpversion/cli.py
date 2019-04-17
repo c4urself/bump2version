@@ -103,10 +103,7 @@ def main(original_args=None):
     config, config_file_exists = _load_configuration(config_file, defaults, explicit_config, files, part_configs)
     known_args, parser2, remaining_argv = _parse_phase_2(args, defaults, known_args, root_parser)
     vc = _setup_versionconfig(known_args, part_configs)
-
-    current_version = (
-        vc.parse(known_args.current_version) if known_args.current_version else None
-    )
+    current_version = _update_current_version(known_args, vc)
 
     new_version = None
 
@@ -661,3 +658,10 @@ def _setup_versionconfig(known_args, part_configs):
         # TODO: use re.error here mayhaps, also: should we log?
         sys.exit(1)
     return vc
+
+
+def _update_current_version(known_args, vc):
+    current_version = (
+        vc.parse(known_args.current_version) if known_args.current_version else None
+    )
+    return current_version
