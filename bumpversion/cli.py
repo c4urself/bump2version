@@ -66,29 +66,6 @@ OPTIONAL_ARGUMENTS_THAT_TAKE_VALUES = [
 ]
 
 
-def split_args_in_optional_and_positional(args):
-    # manually parsing positional arguments because stupid argparse can't mix
-    # positional and optional arguments
-
-    positions = []
-    for i, arg in enumerate(args):
-
-        previous = None
-
-        if i > 0:
-            previous = args[i - 1]
-
-        if (not arg.startswith("-")) and (
-            previous not in OPTIONAL_ARGUMENTS_THAT_TAKE_VALUES
-        ):
-            positions.append(i)
-
-    positionals = [arg for i, arg in enumerate(args) if i in positions]
-    args = [arg for i, arg in enumerate(args) if i not in positions]
-
-    return (positionals, args)
-
-
 def main(original_args=None):
     defaults = {}
     vcs_info = {}
@@ -121,6 +98,29 @@ def main(original_args=None):
     if vcs:
         vcs_context = _commit_to_vcs(args, config_file, config_file_exists, files, vcs)
         _tag_in_vcs(args, vcs, vcs_context)
+
+
+def split_args_in_optional_and_positional(args):
+    # manually parsing positional arguments because stupid argparse can't mix
+    # positional and optional arguments
+
+    positions = []
+    for i, arg in enumerate(args):
+
+        previous = None
+
+        if i > 0:
+            previous = args[i - 1]
+
+        if (not arg.startswith("-")) and (
+            previous not in OPTIONAL_ARGUMENTS_THAT_TAKE_VALUES
+        ):
+            positions.append(i)
+
+    positionals = [arg for i, arg in enumerate(args) if i in positions]
+    args = [arg for i, arg in enumerate(args) if i not in positions]
+
+    return (positionals, args)
 
 
 def _parse_arguments_phase_1(original_args):
