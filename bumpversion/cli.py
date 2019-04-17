@@ -108,11 +108,7 @@ def main(original_args=None):
     context = _assemble_context(vcs_info)
     new_version = _assemble_new_version(context, current_version, defaults, known_args, new_version, positionals, vc)
     args, file_names = _parse_phase_3(args, defaults, parser2, positionals, remaining_argv)
-
-    if args.new_version:
-        new_version = vc.parse(args.new_version)
-
-    logger.info("New version will be '%s'", args.new_version)
+    new_version = _parse_new_version(args, new_version, vc)
 
     file_names = file_names or positionals[1:]
 
@@ -664,3 +660,10 @@ def _parse_phase_3(args, defaults, parser2, positionals, remaining_argv):
         logger.info("Dry run active, won't touch any files.")
 
     return args, file_names
+
+
+def _parse_new_version(args, new_version, vc):
+    if args.new_version:
+        new_version = vc.parse(args.new_version)
+    logger.info("New version will be '{}'".format(args.new_version))
+    return new_version
