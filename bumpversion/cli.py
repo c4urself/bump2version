@@ -98,7 +98,7 @@ def main(original_args=None):
 
     args, known_args, root_parser, positionals = _parse_phase_1(original_args)
     _setup_logging(known_args.list, known_args.verbose)
-    vcs = _determine_vcs_is_usable(vcs_info)
+    _determine_vcs_usability(VCS, vcs_info)
     _determine_current_version(defaults, vcs_info)
     config_file, explicit_config = _determine_config_file(known_args)
     config, config_file_exists = _load_configuration(config_file, defaults, explicit_config, files, part_configs)
@@ -179,11 +179,10 @@ def _setup_logging(show_list, verbose):
     logger.debug("Starting {}".format(DESCRIPTION))
 
 
-def _determine_vcs_is_usable(vcs_info):
-    for vcs in VCS:
+def _determine_vcs_usability(possible_vcses, vcs_info):
+    for vcs in possible_vcses:
         if vcs.is_usable():
             vcs_info.update(vcs.latest_tag_info())
-    return vcs
 
 
 def _determine_current_version(defaults, vcs_info):
