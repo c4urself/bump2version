@@ -97,7 +97,7 @@ def main(original_args=None):
     _update_config_file(config, config_file, config_file_exists, args.new_version, args.dry_run)
     if vcs:
         vcs_context = _commit_to_vcs(files, config_file, config_file_exists, vcs, args)
-        _tag_in_vcs(args, vcs, vcs_context)
+        _tag_in_vcs(vcs, vcs_context, args)
 
 
 def split_args_in_optional_and_positional(args):
@@ -660,7 +660,7 @@ def _commit_to_vcs(files, config_file, config_file_exists, vcs, args):
     return vcs_context
 
 
-def _tag_in_vcs(args, vcs, vcs_context):
+def _tag_in_vcs(vcs, vcs_context, args):
     sign_tags = args.sign_tags
     tag_name = args.tag_name.format(**vcs_context)
     tag_message = args.tag_message.format(**vcs_context)
@@ -676,4 +676,3 @@ def _tag_in_vcs(args, vcs, vcs_context):
     )
     if do_tag:
         vcs.tag(sign_tags, tag_name, tag_message)
-
