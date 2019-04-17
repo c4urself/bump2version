@@ -114,10 +114,11 @@ def main(original_args=None):
     new_version = _parse_new_version(args, new_version, vc)
     _determine_files(file_names, files, positionals, vc)
     vcs = _determine_vcs_dirty(VCS, defaults)
-    _check_files_contain_version(context, current_version, files)
-    _replace_version_in_files(args, context, current_version, files, new_version)
-    _log_list(args, config)
-    _update_config_file(args, config, config_file, config_file_exists)
+    _check_files_contain_version(files, current_version, context)
+    _replace_version_in_files(files, current_version, new_version, args.dry_run, context)
+    _log_list(config, args.new_version)
+    _update_config_file(config, config_file, config_file_exists, args.new_version, args.dry_run)
+
     if vcs:
         vcs_context = _commit_to_vcs(args, config_file, config_file_exists, files, vcs)
         _tag_in_vcs(args, vcs, vcs_context)
@@ -581,10 +582,10 @@ def _check_files_contain_version(context, current_version, files):
         f.should_contain_version(current_version, context)
 
 
-def _replace_version_in_files(args, context, current_version, files, new_version):
+def _replace_version_in_files(files, current_version, new_version, dry_run, context):
     # change version string in files
     for f in files:
-        f.replace(current_version, new_version, context, args.dry_run)
+        f.replace(current_version, new_version, context, dry_run)
 
 
 def _log_list(args, config):
