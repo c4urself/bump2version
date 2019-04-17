@@ -90,7 +90,7 @@ def split_args_in_optional_and_positional(args):
 
 
 def main(original_args=None):
-    args, known_args, parser1, positionals = _parse_phase_1(original_args)
+    args, known_args, root_parser, positionals = _parse_phase_1(original_args)
     _setup_logging(known_args)
 
     defaults = {}
@@ -247,7 +247,7 @@ def main(original_args=None):
         logger.info(message)
 
     parser2 = argparse.ArgumentParser(
-        prog="bumpversion", add_help=False, parents=[parser1]
+        prog="bumpversion", add_help=False, parents=[root_parser]
     )
     parser2.set_defaults(**defaults)
 
@@ -599,37 +599,37 @@ def _parse_phase_1(original_args):
             "Giving multiple files on the command line will be deprecated, please use [bumpversion:file:...] in a config file.",
             PendingDeprecationWarning,
         )
-    parser1 = argparse.ArgumentParser(add_help=False)
-    parser1.add_argument(
+    root_parser = argparse.ArgumentParser(add_help=False)
+    root_parser.add_argument(
         "--config-file",
         metavar="FILE",
         default=argparse.SUPPRESS,
         required=False,
         help="Config file to read most of the variables from (default: .bumpversion.cfg)",
     )
-    parser1.add_argument(
+    root_parser.add_argument(
         "--verbose",
         action="count",
         default=0,
         help="Print verbose logging to stderr",
         required=False,
     )
-    parser1.add_argument(
+    root_parser.add_argument(
         "--list",
         action="store_true",
         default=False,
         help="List machine readable information",
         required=False,
     )
-    parser1.add_argument(
+    root_parser.add_argument(
         "--allow-dirty",
         action="store_true",
         default=False,
         help="Don't abort if working directory is dirty",
         required=False,
     )
-    known_args, remaining_argv = parser1.parse_known_args(args)
-    return args, known_args, parser1, positionals
+    known_args, remaining_argv = root_parser.parse_known_args(args)
+    return args, known_args, root_parser, positionals
 
 
 def _setup_logging(known_args):
