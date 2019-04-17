@@ -105,7 +105,7 @@ def main(original_args=None):
         explicit_config = known_args.config_file
     config_file = _determine_config_file(explicit_config)
     config, config_file_exists = _load_configuration(config_file, explicit_config, files, defaults, part_configs)
-    known_args, parser2, remaining_argv = _parse_phase_2(args, defaults, known_args, root_parser)
+    known_args, parser2, remaining_argv = _parse_arguments_phase_2(args, known_args, defaults, root_parser)
     vc = _setup_versionconfig(known_args, part_configs)
     current_version = _parse_current_version(known_args.current_version, vc)
     context = _assemble_context(vcs_info)
@@ -326,7 +326,7 @@ def _load_configuration(config_file, explicit_config, files, defaults, part_conf
     return config, config_file_exists
 
 
-def _parse_phase_2(args, defaults, known_args, root_parser):
+def _parse_arguments_phase_2(args, known_args, defaults, root_parser):
     parser2 = argparse.ArgumentParser(
         prog="bumpversion", add_help=False, parents=[root_parser]
     )
