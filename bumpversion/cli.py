@@ -102,30 +102,19 @@ def main(original_args=None):
     config_file, explicit_config = _determine_config_file(known_args)
     config, config_file_exists = _load_configuration(config_file, defaults, explicit_config, files, part_configs)
     known_args, parser2, remaining_argv = _parse_phase_2(args, defaults, known_args, root_parser)
-
-    context = dict(
-        list(time_context.items())
-        + list(prefixed_environ().items())
-        + list(vcs_info.items())
-    )
-
-    try:
-        vc = VersionConfig(
-            parse=known_args.parse,
-            serialize=known_args.serialize,
-            search=known_args.search,
-            replace=known_args.replace,
-            part_configs=part_configs,
-        )
-    except sre_constants.error as e:
-        # TODO: use re.error here mayhaps, also: should we log?
-        sys.exit(1)
+    vc = _setup_versionconfig(known_args, part_configs)
 
     current_version = (
         vc.parse(known_args.current_version) if known_args.current_version else None
     )
 
     new_version = None
+
+    context = dict(
+        list(time_context.items())
+        + list(prefixed_environ().items())
+        + list(vcs_info.items())
+    )
 
     if "new_version" not in defaults and known_args.current_version:
         try:
@@ -657,3 +646,18 @@ def _parse_phase_2(args, defaults, known_args, root_parser):
     assert isinstance(known_args.serialize, list), "Argument `serialize` must be a list"
 
     return known_args, parser2, remaining_argv
+
+
+def _setup_versionconfig(known_args, part_configs):
+    try:
+        vc = VersionConfig(
+            parse=known_args.parse,
+            serialize=known_args.serialize,
+            search=known_args.search,
+            replace=known_args.replace,
+            part_configs=part_configs,
+        )
+    except sre_constants.error as e:
+        # TODO: use re.error here mayhaps, also: should we log?
+        sys.exit(1)
+    return vc
