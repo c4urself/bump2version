@@ -585,18 +585,6 @@ def main(original_args=None):
         vcs.tag(sign_tags, tag_name, tag_message)
 
 
-def _determine_current_version(defaults, vcs_info):
-    if "current_version" in vcs_info:
-        defaults["current_version"] = vcs_info["current_version"]
-
-
-def _determine_vcs_is_usable(vcs_info):
-    for vcs in VCS:
-        if vcs.is_usable():
-            vcs_info.update(vcs.latest_tag_info())
-    return vcs
-
-
 def _parse_phase_1(original_args):
     positionals, args = split_args_in_optional_and_positional(
         sys.argv[1:] if original_args is None else original_args
@@ -654,3 +642,15 @@ def _setup_logging(known_args):
     root_logger = logging.getLogger('')
     root_logger.setLevel(log_level)
     logger.debug("Starting {}".format(DESCRIPTION))
+
+
+def _determine_vcs_is_usable(vcs_info):
+    for vcs in VCS:
+        if vcs.is_usable():
+            vcs_info.update(vcs.latest_tag_info())
+    return vcs
+
+
+def _determine_current_version(defaults, vcs_info):
+    if "current_version" in vcs_info:
+        defaults["current_version"] = vcs_info["current_version"]
