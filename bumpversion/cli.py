@@ -97,7 +97,7 @@ def main(original_args=None):
     new_version = None
 
     args, known_args, root_parser, positionals = _parse_phase_1(original_args)
-    _setup_logging(known_args)
+    _setup_logging(known_args.list, known_args.verbose)
     vcs = _determine_vcs_is_usable(vcs_info)
     _determine_current_version(defaults, vcs_info)
     config_file, explicit_config = _determine_config_file(known_args)
@@ -162,16 +162,16 @@ def _parse_phase_1(original_args):
     return args, known_args, root_parser, positionals
 
 
-def _setup_logging(known_args):
+def _setup_logging(show_list, verbose):
     logformatter = logging.Formatter("%(message)s")
     if len(logger_list.handlers) == 0:
         ch2 = logging.StreamHandler(sys.stdout)
         ch2.setFormatter(logformatter)
         logger_list.addHandler(ch2)
-    if known_args.list:
+    if show_list:
         logger_list.setLevel(logging.DEBUG)
     try:
-        log_level = [logging.WARNING, logging.INFO, logging.DEBUG][known_args.verbose]
+        log_level = [logging.WARNING, logging.INFO, logging.DEBUG][verbose]
     except IndexError:
         log_level = logging.DEBUG
     root_logger = logging.getLogger('')
