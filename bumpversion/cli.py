@@ -107,128 +107,7 @@ def main(original_args=None):
     current_version = _update_current_version(known_args, vc)
     context = _assemble_context(vcs_info)
     new_version = _assemble_new_version(context, current_version, defaults, known_args, new_version, positionals, vc)
-
-    parser3 = argparse.ArgumentParser(
-        prog="bumpversion",
-        description=DESCRIPTION,
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-        conflict_handler="resolve",
-        parents=[parser2],
-    )
-
-    parser3.set_defaults(**defaults)
-
-    parser3.add_argument(
-        "--current-version",
-        metavar="VERSION",
-        help="Version that needs to be updated",
-        required="current_version" not in defaults,
-    )
-    parser3.add_argument(
-        "--dry-run",
-        "-n",
-        action="store_true",
-        default=False,
-        help="Don't write any files, just pretend.",
-    )
-    parser3.add_argument(
-        "--new-version",
-        metavar="VERSION",
-        help="New version that should be in the files",
-        required="new_version" not in defaults,
-    )
-
-    commitgroup = parser3.add_mutually_exclusive_group()
-
-    commitgroup.add_argument(
-        "--commit",
-        action="store_true",
-        dest="commit",
-        help="Commit to version control",
-        default=defaults.get("commit", False),
-    )
-    commitgroup.add_argument(
-        "--no-commit",
-        action="store_false",
-        dest="commit",
-        help="Do not commit to version control",
-        default=argparse.SUPPRESS,
-    )
-
-    taggroup = parser3.add_mutually_exclusive_group()
-
-    taggroup.add_argument(
-        "--tag",
-        action="store_true",
-        dest="tag",
-        default=defaults.get("tag", False),
-        help="Create a tag in version control",
-    )
-    taggroup.add_argument(
-        "--no-tag",
-        action="store_false",
-        dest="tag",
-        help="Do not create a tag in version control",
-        default=argparse.SUPPRESS,
-    )
-
-    signtagsgroup = parser3.add_mutually_exclusive_group()
-    signtagsgroup.add_argument(
-        "--sign-tags",
-        action="store_true",
-        dest="sign_tags",
-        help="Sign tags if created",
-        default=defaults.get("sign_tags", False),
-    )
-    signtagsgroup.add_argument(
-        "--no-sign-tags",
-        action="store_false",
-        dest="sign_tags",
-        help="Do not sign tags if created",
-        default=argparse.SUPPRESS,
-    )
-
-    parser3.add_argument(
-        "--tag-name",
-        metavar="TAG_NAME",
-        help="Tag name (only works with --tag)",
-        default=defaults.get("tag_name", "v{new_version}"),
-    )
-
-    parser3.add_argument(
-        "--tag-message",
-        metavar="TAG_MESSAGE",
-        dest="tag_message",
-        help="Tag message",
-        default=defaults.get(
-            "tag_message", "Bump version: {current_version} → {new_version}"
-        ),
-    )
-
-    parser3.add_argument(
-        "--message",
-        "-m",
-        metavar="COMMIT_MSG",
-        help="Commit message",
-        default=defaults.get(
-            "message", "Bump version: {current_version} → {new_version}"
-        ),
-    )
-
-    file_names = []
-    if "files" in defaults:
-        assert defaults["files"] is not None
-        file_names = defaults["files"].split(" ")
-
-    parser3.add_argument("part", help="Part of the version to be bumped.")
-    parser3.add_argument(
-        "files", metavar="file", nargs="*", help="Files to change", default=file_names
-    )
-
-    args = parser3.parse_args(remaining_argv + positionals)
-
-    if args.dry_run:
-        logger.info("Dry run active, won't touch any files.")
+    args, file_names = _parse_phase_3(args, defaults, parser2, positionals, remaining_argv)
 
     if args.new_version:
         new_version = vc.parse(args.new_version)
@@ -672,3 +551,116 @@ def _assemble_context(vcs_info):
         + list(vcs_info.items())
     )
     return context
+
+
+def _parse_phase_3(args, defaults, parser2, positionals, remaining_argv):
+    parser3 = argparse.ArgumentParser(
+        prog="bumpversion",
+        description=DESCRIPTION,
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        conflict_handler="resolve",
+        parents=[parser2],
+    )
+    parser3.set_defaults(**defaults)
+    parser3.add_argument(
+        "--current-version",
+        metavar="VERSION",
+        help="Version that needs to be updated",
+        required="current_version" not in defaults,
+    )
+    parser3.add_argument(
+        "--dry-run",
+        "-n",
+        action="store_true",
+        default=False,
+        help="Don't write any files, just pretend.",
+    )
+    parser3.add_argument(
+        "--new-version",
+        metavar="VERSION",
+        help="New version that should be in the files",
+        required="new_version" not in defaults,
+    )
+    commitgroup = parser3.add_mutually_exclusive_group()
+    commitgroup.add_argument(
+        "--commit",
+        action="store_true",
+        dest="commit",
+        help="Commit to version control",
+        default=defaults.get("commit", False),
+    )
+    commitgroup.add_argument(
+        "--no-commit",
+        action="store_false",
+        dest="commit",
+        help="Do not commit to version control",
+        default=argparse.SUPPRESS,
+    )
+    taggroup = parser3.add_mutually_exclusive_group()
+    taggroup.add_argument(
+        "--tag",
+        action="store_true",
+        dest="tag",
+        default=defaults.get("tag", False),
+        help="Create a tag in version control",
+    )
+    taggroup.add_argument(
+        "--no-tag",
+        action="store_false",
+        dest="tag",
+        help="Do not create a tag in version control",
+        default=argparse.SUPPRESS,
+    )
+    signtagsgroup = parser3.add_mutually_exclusive_group()
+    signtagsgroup.add_argument(
+        "--sign-tags",
+        action="store_true",
+        dest="sign_tags",
+        help="Sign tags if created",
+        default=defaults.get("sign_tags", False),
+    )
+    signtagsgroup.add_argument(
+        "--no-sign-tags",
+        action="store_false",
+        dest="sign_tags",
+        help="Do not sign tags if created",
+        default=argparse.SUPPRESS,
+    )
+    parser3.add_argument(
+        "--tag-name",
+        metavar="TAG_NAME",
+        help="Tag name (only works with --tag)",
+        default=defaults.get("tag_name", "v{new_version}"),
+    )
+    parser3.add_argument(
+        "--tag-message",
+        metavar="TAG_MESSAGE",
+        dest="tag_message",
+        help="Tag message",
+        default=defaults.get(
+            "tag_message", "Bump version: {current_version} → {new_version}"
+        ),
+    )
+    parser3.add_argument(
+        "--message",
+        "-m",
+        metavar="COMMIT_MSG",
+        help="Commit message",
+        default=defaults.get(
+            "message", "Bump version: {current_version} → {new_version}"
+        ),
+    )
+    file_names = []
+    if "files" in defaults:
+        assert defaults["files"] is not None
+        file_names = defaults["files"].split(" ")
+    parser3.add_argument("part", help="Part of the version to be bumped.")
+    parser3.add_argument(
+        "files", metavar="file", nargs="*", help="Files to change", default=file_names
+    )
+    args = parser3.parse_args(remaining_argv + positionals)
+
+    if args.dry_run:
+        logger.info("Dry run active, won't touch any files.")
+
+    return args, file_names
