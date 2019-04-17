@@ -94,6 +94,7 @@ def main(original_args=None):
     vcs_info = {}
     part_configs = {}
     files = []
+    new_version = None
 
     args, known_args, root_parser, positionals = _parse_phase_1(original_args)
     _setup_logging(known_args)
@@ -104,14 +105,7 @@ def main(original_args=None):
     known_args, parser2, remaining_argv = _parse_phase_2(args, defaults, known_args, root_parser)
     vc = _setup_versionconfig(known_args, part_configs)
     current_version = _update_current_version(known_args, vc)
-
-    new_version = None
-
-    context = dict(
-        list(time_context.items())
-        + list(prefixed_environ().items())
-        + list(vcs_info.items())
-    )
+    context = _assemble_context(vcs_info)
 
     if "new_version" not in defaults and known_args.current_version:
         try:
@@ -665,3 +659,12 @@ def _update_current_version(known_args, vc):
         vc.parse(known_args.current_version) if known_args.current_version else None
     )
     return current_version
+
+
+def _assemble_context(vcs_info):
+    context = dict(
+        list(time_context.items())
+        + list(prefixed_environ().items())
+        + list(vcs_info.items())
+    )
+    return context
