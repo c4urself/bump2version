@@ -99,7 +99,7 @@ def main(original_args=None):
     args, known_args, root_parser, positionals = _parse_phase_1(original_args)
     _setup_logging(known_args.list, known_args.verbose)
     _determine_vcs_usability(VCS, vcs_info)
-    _determine_current_version(defaults, vcs_info)
+    _determine_current_version(vcs_info, defaults)
     explicit_config = None
     if hasattr(known_args, "config_file"):
         explicit_config = known_args.config_file
