@@ -662,7 +662,7 @@ def _commit_to_vcs(files, context, config_file, config_file_exists, vcs, args):
         commit_message,
     )
     if do_commit:
-        vcs.commit(message=commit_message)
+        vcs.commit(message=commit_message, context=context)
     return context
 
 
