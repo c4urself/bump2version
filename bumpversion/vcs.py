@@ -30,7 +30,7 @@ class BaseVCS(object):
         env = os.environ.copy()
         env[str("HGENCODING")] = str("utf-8")
         for key in ["current_version", "new_version"]:
-            env[str("BUMPVERSION_"+key.upper())] = context[key]
+            env[str("BUMPVERSION_"+key.upper())] = str(context[key])
         try:
             subprocess.check_output(cls._COMMIT_COMMAND + [f.name], env=env)
         except subprocess.CalledProcessError as exc:
