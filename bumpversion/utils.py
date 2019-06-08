@@ -21,7 +21,7 @@ class DiscardDefaultIfSpecifiedAppendAction(_AppendAction):
     def __call__(self, parser, namespace, values, option_string=None):
         if getattr(self, "_discarded_default", None) is None:
             setattr(namespace, self.dest, [])
-            self._discarded_default = True
+            self._discarded_default = True  # pylint: disable=attribute-defined-outside-init
 
         super(DiscardDefaultIfSpecifiedAppendAction, self).__call__(
             parser, namespace, values, option_string=None
@@ -77,12 +77,11 @@ class ConfiguredFile(object):
                     and search_lines[1:-1] == lookbehind[1:-1]
                 ):
                     logger.info(
-                        "Found '{}' in {} at line {}: {}".format(
-                            search,
-                            self.path,
-                            lineno - (len(lookbehind) - 1),
-                            line.rstrip()
-                        )
+                        "Found '%s' in %s at line %s: %s",
+                        search,
+                        self.path,
+                        lineno - (len(lookbehind) - 1),
+                        line.rstrip(),
                     )
                     return True
         return False
@@ -110,11 +109,7 @@ class ConfiguredFile(object):
             )
 
         if file_content_before != file_content_after:
-            logger.info(
-                "{} file {}:".format(
-                    "Would change" if dry_run else "Changing", self.path
-                )
-            )
+            logger.info("%s file %s:", "Would change" if dry_run else "Changing", self.path)
             logger.info(
                 "\n".join(
                     list(
@@ -129,11 +124,7 @@ class ConfiguredFile(object):
                 )
             )
         else:
-            logger.info(
-                "{} file {}".format(
-                    "Would not change" if dry_run else "Not changing", self.path
-                )
-            )
+            logger.info("%s file %s", "Would not change" if dry_run else "Not changing", self.path)
 
         if not dry_run:
             with io.open(self.path, "wt", encoding="utf-8", newline=file_new_lines) as f:

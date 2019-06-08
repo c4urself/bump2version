@@ -7,7 +7,10 @@ import os
 import subprocess
 from tempfile import NamedTemporaryFile
 
-from bumpversion.exceptions import WorkingDirectoryIsDirtyException, MercurialDoesNotSupportSignedTagsException
+from bumpversion.exceptions import (
+    WorkingDirectoryIsDirtyException,
+    MercurialDoesNotSupportSignedTagsException
+)
 from bumpversion.compat import _command_args
 
 
@@ -15,6 +18,10 @@ logger = logging.getLogger(__name__)
 
 
 class BaseVCS(object):
+
+    _TEST_USABLE_COMMAND = None
+    _COMMIT_COMMAND = None
+
     @classmethod
     def commit(cls, message):
         with NamedTemporaryFile("wb", delete=False) as f:
@@ -67,7 +74,9 @@ class Git(BaseVCS):
 
         if lines:
             raise WorkingDirectoryIsDirtyException(
-                "Git working directory is not clean:\n{}".format(b"\n".join(lines))
+                "Git working directory is not clean:\n{}".format(
+                    b"\n".join(lines).decode()
+                )
             )
 
     @classmethod
@@ -143,7 +152,7 @@ class Mercurial(BaseVCS):
         if lines:
             raise WorkingDirectoryIsDirtyException(
                 "Mercurial working directory is not clean:\n{}".format(
-                    b"\n".join(lines)
+                    b"\n".join(lines).decode()
                 )
             )
 
