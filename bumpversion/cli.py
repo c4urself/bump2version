@@ -228,13 +228,16 @@ def _load_configuration(config_file, explicit_config, files, defaults, part_conf
 
     logger.info("Reading config file %s:", config_file)
     # TODO: this is a DEBUG level log
-    logger.info(io.open(config_file, "rt", encoding="utf-8").read())
+
+    with io.open(config_file, "rt", encoding="utf-8") as config_fp:
+        config_content = config_fp.read()
+
+    logger.info(config_content)
 
     try:
-        # TODO: we're reading the config file twice.
-        config.read_file(io.open(config_file, "rt", encoding="utf-8"))
+        config.read_string(config_content)
     except AttributeError:
-        # python 2 standard ConfigParser doesn't have read_file,
+        # python 2 standard ConfigParser doesn't have read_string,
         # only deprecated readfp
         config.readfp(io.open(config_file, "rt", encoding="utf-8"))
 
