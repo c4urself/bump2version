@@ -29,6 +29,7 @@ init:
   - ps: "ls C:/Python*"
 
 install:
+  - "%PYTHON%/python.exe -m pip install --upgrade wheel pip setuptools virtualenv"
   - "%PYTHON%/python.exe -m pip install tox"
   - "%PYTHON%/python.exe -m pip install -e ."
 
