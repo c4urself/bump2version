@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 import argparse
 from datetime import datetime
 import io
+import itertools
 import logging
 import os
 import re
@@ -407,10 +408,9 @@ def _parse_current_version(current_version, vc):
 
 def _assemble_context(vcs_info):
     context = dict(
-        list(time_context.items())
-        + list(prefixed_environ().items())
-        + list(vcs_info.items())
+        itertools.chain(time_context.items(), prefixed_environ().items(), vcs_info.items())
     )
+
     return context
 
 
