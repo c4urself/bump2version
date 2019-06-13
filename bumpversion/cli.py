@@ -68,22 +68,16 @@ OPTIONAL_ARGUMENTS_THAT_TAKE_VALUES = [
 
 
 def main(original_args=None):
-    defaults = {}
-    vcs_info = {}
-    part_configs = {}
-    files = []
-    new_version = None
-
     args, known_args, root_parser, positionals = _parse_arguments_phase_1(original_args)
     _setup_logging(known_args.list, known_args.verbose)
-    _determine_vcs_usability(VCS, vcs_info)
-    _determine_current_version(vcs_info, defaults)
+    vcs_info = _determine_vcs_usability()
+    defaults = _determine_current_version(vcs_info)
     explicit_config = None
     if hasattr(known_args, "config_file"):
         explicit_config = known_args.config_file
     config_file = _determine_config_file(explicit_config)
-    config, config_file_exists = _load_configuration(
-        config_file, explicit_config, files, defaults, part_configs
+    config, config_file_exists, part_configs, files = _load_configuration(
+        config_file, explicit_config, defaults,
     )
     known_args, parser2, remaining_argv = _parse_arguments_phase_2(
         args, known_args, defaults, root_parser
@@ -92,7 +86,7 @@ def main(original_args=None):
     current_version = _parse_current_version(known_args.current_version, vc)
     context = _assemble_context(vcs_info)
     new_version = _assemble_new_version(
-        context, current_version, defaults, known_args.current_version, new_version, positionals, vc
+        context, current_version, defaults, known_args.current_version, positionals, vc
     )
     args, file_names = _parse_arguments_phase_3(remaining_argv, positionals, defaults, parser2)
     new_version = _parse_new_version(args, new_version, vc)
@@ -190,15 +184,19 @@ def _setup_logging(show_list, verbose):
     logger.debug("Starting %s", DESCRIPTION)
 
 
-def _determine_vcs_usability(possible_vcses, vcs_info):
-    for vcs in possible_vcses:
+def _determine_vcs_usability():
+    vcs_info = {}
+    for vcs in VCS:
         if vcs.is_usable():
             vcs_info.update(vcs.latest_tag_info())
+    return vcs_info
 
 
-def _determine_current_version(vcs_info, defaults):
+def _determine_current_version(vcs_info):
+    defaults = {}
     if "current_version" in vcs_info:
         defaults["current_version"] = vcs_info["current_version"]
+    return defaults
 
 
 def _determine_config_file(explicit_config):
@@ -209,7 +207,7 @@ def _determine_config_file(explicit_config):
     return ".bumpversion.cfg"
 
 
-def _load_configuration(config_file, explicit_config, files, defaults, part_configs):
+def _load_configuration(config_file, explicit_config, defaults):
     # setup.cfg supports interpolation - for compatibility we must do the same.
     if os.path.basename(config_file) == "setup.cfg":
         config = ConfigParser("")
@@ -225,7 +223,7 @@ def _load_configuration(config_file, explicit_config, files, defaults, part_conf
         if explicit_config:
             raise argparse.ArgumentTypeError(message)
         logger.info(message)
-        return config, config_file_exists
+        return config, config_file_exists, {}, []
 
     logger.info("Reading config file %s:", config_file)
     # TODO: this is a DEBUG level log
@@ -270,6 +268,8 @@ def _load_configuration(config_file, explicit_config, files, defaults, part_conf
         except NoOptionError:
             pass  # no default value then ;)
 
+    part_configs = {}
+    files = []
     for section_name in config.sections():
         section_name_match = re.compile("^bumpversion:(file|part):(.+)").match(
             section_name
@@ -334,7 +334,7 @@ def _load_configuration(config_file, explicit_config, files, defaults, part_conf
 
             files.append(ConfiguredFile(filename, VersionConfig(**section_config)))
 
-    return config, config_file_exists
+    return config, config_file_exists, part_configs, files
 
 
 def _parse_arguments_phase_2(args, known_args, defaults, root_parser):
@@ -415,8 +415,9 @@ def _assemble_context(vcs_info):
 
 
 def _assemble_new_version(
-    context, current_version, defaults, arg_current_version, new_version, positionals, vc
+    context, current_version, defaults, arg_current_version, positionals, vc
 ):
+    new_version = None
     if "new_version" not in defaults and arg_current_version:
         try:
             if current_version and positionals:
