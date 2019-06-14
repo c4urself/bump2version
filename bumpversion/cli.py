@@ -76,7 +76,7 @@ def main(original_args=None):
     if hasattr(known_args, "config_file"):
         explicit_config = known_args.config_file
     config_file = _determine_config_file(explicit_config)
-    config, config_file_exists, part_configs, files = _load_configuration(
+    config, config_file_exists, config_newlines, part_configs, files = _load_configuration(
         config_file, explicit_config, defaults,
     )
     known_args, parser2, remaining_argv = _parse_arguments_phase_2(
@@ -95,7 +95,9 @@ def main(original_args=None):
     _check_files_contain_version(files, current_version, context)
     _replace_version_in_files(files, current_version, new_version, args.dry_run, context)
     _log_list(config, args.new_version)
-    _update_config_file(config, config_file, config_file_exists, args.new_version, args.dry_run)
+    _update_config_file(
+        config, config_file, config_newlines, config_file_exists, args.new_version, args.dry_run,
+    )
     if vcs:
         vcs_context = _commit_to_vcs(files, config_file, config_file_exists, vcs, args)
         _tag_in_vcs(vcs, vcs_context, args)
@@ -223,13 +225,14 @@ def _load_configuration(config_file, explicit_config, defaults):
         if explicit_config:
             raise argparse.ArgumentTypeError(message)
         logger.info(message)
-        return config, config_file_exists, {}, []
+        return config, config_file_exists, None, {}, []
 
     logger.info("Reading config file %s:", config_file)
     # TODO: this is a DEBUG level log
 
     with io.open(config_file, "rt", encoding="utf-8") as config_fp:
         config_content = config_fp.read()
+        config_newlines = config_fp.newlines
 
     logger.info(config_content)
 
@@ -334,7 +337,7 @@ def _load_configuration(config_file, explicit_config, defaults):
 
             files.append(ConfiguredFile(filename, VersionConfig(**section_config)))
 
-    return config, config_file_exists, part_configs, files
+    return config, config_file_exists, config_newlines, part_configs, files
 
 
 def _parse_arguments_phase_2(args, known_args, defaults, root_parser):
@@ -603,7 +606,9 @@ def _log_list(config, new_version):
     config.remove_option("bumpversion", "new_version")
 
 
-def _update_config_file(config, config_file, config_file_exists, new_version, dry_run):
+def _update_config_file(
+        config, config_file, config_newlines, config_file_exists, new_version, dry_run,
+):
     config.set("bumpversion", "current_version", new_version)
     new_config = StringIO()
     try:
@@ -619,7 +624,7 @@ def _update_config_file(config, config_file, config_file_exists, new_version, dr
         logger.info(new_config.getvalue())
 
         if write_to_config_file:
-            with io.open(config_file, "wt", encoding="utf-8") as f:
+            with io.open(config_file, "wt", encoding="utf-8", newline=config_newlines) as f:
                 f.write(new_config.getvalue())
 
     except UnicodeEncodeError:
