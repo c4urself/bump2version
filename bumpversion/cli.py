@@ -84,7 +84,9 @@ def main(original_args=None):
     )
     version_config = _setup_versionconfig(known_args, part_configs)
     current_version = _parse_current_version(known_args.current_version, version_config)
-    context = _assemble_context(vcs_info)
+    context = dict(
+        itertools.chain(time_context.items(), prefixed_environ().items(), vcs_info.items())
+    )
     new_version = _assemble_new_version(
         context, current_version, defaults, known_args.current_version, positionals, version_config
     )
@@ -407,14 +409,6 @@ def _parse_current_version(current_version, vc):
         return None
 
     return vc.parse(current_version)
-
-
-def _assemble_context(vcs_info):
-    context = dict(
-        itertools.chain(time_context.items(), prefixed_environ().items(), vcs_info.items())
-    )
-
-    return context
 
 
 def _assemble_new_version(
