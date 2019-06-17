@@ -92,7 +92,11 @@ def main(original_args=None):
     )
     args, file_names = _parse_arguments_phase_3(remaining_argv, positionals, defaults, parser2)
     new_version = _parse_new_version(args, new_version, version_config)
-    _determine_files(file_names, files, positionals, version_config)
+    files.extend(
+        ConfiguredFile(file_name, version_config)
+        for file_name
+        in (file_names or positionals[1:])
+    )
     vcs = _determine_vcs_dirty(VCS, defaults)
     _check_files_contain_version(files, current_version, context)
     _replace_version_in_files(files, current_version, new_version, args.dry_run, context)
@@ -541,12 +545,6 @@ def _parse_new_version(args, new_version, vc):
         new_version = vc.parse(args.new_version)
     logger.info("New version will be '%s'", args.new_version)
     return new_version
-
-
-def _determine_files(file_names, files, positionals, vc):
-    file_names = file_names or positionals[1:]
-    for file_name in file_names:
-        files.append(ConfiguredFile(file_name, vc))
 
 
 def _determine_vcs_dirty(possible_vcses, defaults):
