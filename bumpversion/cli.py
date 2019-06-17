@@ -262,7 +262,7 @@ def _load_configuration(config_file, explicit_config, defaults):
     log_config = StringIO()
     config.write(log_config)
 
-    if "files" in dict(config.items("bumpversion")):
+    if config.has_option("bumpversion", "files"):
         warnings.warn(
             "'files =' configuration will be deprecated, please use [bumpversion:file:...]",
             PendingDeprecationWarning,
