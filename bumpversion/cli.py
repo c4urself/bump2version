@@ -244,12 +244,12 @@ def _load_configuration(config_file, explicit_config, defaults):
         return config, config_file_exists, None, {}, []
 
     logger.info("Reading config file %s:", config_file)
-    # TODO: this is a DEBUG level log
 
     with io.open(config_file, "rt", encoding="utf-8") as config_fp:
         config_content = config_fp.read()
         config_newlines = config_fp.newlines
 
+    # TODO: this is a DEBUG level log
     logger.info(config_content)
 
     try:
