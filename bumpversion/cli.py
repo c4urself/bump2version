@@ -82,15 +82,15 @@ def main(original_args=None):
     known_args, parser2, remaining_argv = _parse_arguments_phase_2(
         args, known_args, defaults, root_parser
     )
-    vc = _setup_versionconfig(known_args, part_configs)
-    current_version = _parse_current_version(known_args.current_version, vc)
+    version_config = _setup_versionconfig(known_args, part_configs)
+    current_version = _parse_current_version(known_args.current_version, version_config)
     context = _assemble_context(vcs_info)
     new_version = _assemble_new_version(
-        context, current_version, defaults, known_args.current_version, positionals, vc
+        context, current_version, defaults, known_args.current_version, positionals, version_config
     )
     args, file_names = _parse_arguments_phase_3(remaining_argv, positionals, defaults, parser2)
-    new_version = _parse_new_version(args, new_version, vc)
-    _determine_files(file_names, files, positionals, vc)
+    new_version = _parse_new_version(args, new_version, version_config)
+    _determine_files(file_names, files, positionals, version_config)
     vcs = _determine_vcs_dirty(VCS, defaults)
     _check_files_contain_version(files, current_version, context)
     _replace_version_in_files(files, current_version, new_version, args.dry_run, context)
@@ -389,7 +389,7 @@ def _parse_arguments_phase_2(args, known_args, defaults, root_parser):
 
 def _setup_versionconfig(known_args, part_configs):
     try:
-        vc = VersionConfig(
+        version_config = VersionConfig(
             parse=known_args.parse,
             serialize=known_args.serialize,
             search=known_args.search,
@@ -399,7 +399,7 @@ def _setup_versionconfig(known_args, part_configs):
     except sre_constants.error:
         # TODO: use re.error here mayhaps, also: should we log?
         sys.exit(1)
-    return vc
+    return version_config
 
 
 def _parse_current_version(current_version, vc):
@@ -418,16 +418,16 @@ def _assemble_context(vcs_info):
 
 
 def _assemble_new_version(
-    context, current_version, defaults, arg_current_version, positionals, vc
+    context, current_version, defaults, arg_current_version, positionals, version_config
 ):
     new_version = None
     if "new_version" not in defaults and arg_current_version:
         try:
             if current_version and positionals:
                 logger.info("Attempting to increment part '%s'", positionals[0])
-                new_version = current_version.bump(positionals[0], vc.order())
+                new_version = current_version.bump(positionals[0], version_config.order())
                 logger.info("Values are now: %s", keyvaluestring(new_version._values))
-                defaults["new_version"] = vc.serialize(new_version, context)
+                defaults["new_version"] = version_config.serialize(new_version, context)
         except MissingValueForSerializationException as e:
             logger.info("Opportunistic finding of new_version failed: %s", e.message)
         except IncompleteVersionRepresentationException as e:
