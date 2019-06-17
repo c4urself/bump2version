@@ -275,10 +275,9 @@ def _load_configuration(config_file, explicit_config, defaults):
 
     part_configs = {}
     files = []
+    file_or_part = re.compile("^bumpversion:(file|part):(.+)")
     for section_name in config.sections():
-        section_name_match = re.compile("^bumpversion:(file|part):(.+)").match(
-            section_name
-        )
+        section_name_match = file_or_part.match(section_name)
 
         if not section_name_match:
             continue
