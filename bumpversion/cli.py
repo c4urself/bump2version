@@ -68,6 +68,8 @@ OPTIONAL_ARGUMENTS_THAT_TAKE_VALUES = [
 
 
 def main(original_args=None):
+    # determine configuration based on command-line arguments
+    # and on-disk configuration files
     args, known_args, root_parser, positionals = _parse_arguments_phase_1(original_args)
     _setup_logging(known_args.list, known_args.verbose)
     vcs_info = _determine_vcs_usability()
@@ -82,25 +84,39 @@ def main(original_args=None):
     known_args, parser2, remaining_argv = _parse_arguments_phase_2(
         args, known_args, defaults, root_parser
     )
-    vc = _setup_versionconfig(known_args, part_configs)
-    current_version = _parse_current_version(known_args.current_version, vc)
-    context = _assemble_context(vcs_info)
+    version_config = _setup_versionconfig(known_args, part_configs)
+    current_version = version_config.parse(known_args.current_version)
+    context = dict(
+        itertools.chain(time_context.items(), prefixed_environ().items(), vcs_info.items())
+    )
+
+    # calculate the desired new version
     new_version = _assemble_new_version(
-        context, current_version, defaults, known_args.current_version, positionals, vc
+        context, current_version, defaults, known_args.current_version, positionals, version_config
     )
     args, file_names = _parse_arguments_phase_3(remaining_argv, positionals, defaults, parser2)
-    new_version = _parse_new_version(args, new_version, vc)
-    _determine_files(file_names, files, positionals, vc)
+    new_version = _parse_new_version(args, new_version, version_config)
+
+    # replace version in target files
     vcs = _determine_vcs_dirty(VCS, defaults)
+    files.extend(
+        ConfiguredFile(file_name, version_config)
+        for file_name
+        in (file_names or positionals[1:])
+    )
     _check_files_contain_version(files, current_version, context)
     _replace_version_in_files(files, current_version, new_version, args.dry_run, context)
     _log_list(config, args.new_version)
+
+    # store the new version
     _update_config_file(
         config, config_file, config_newlines, config_file_exists, args.new_version, args.dry_run,
     )
+
+    # commit and tag
     if vcs:
-        vcs_context = _commit_to_vcs(files, config_file, config_file_exists, vcs, args)
-        _tag_in_vcs(vcs, vcs_context, args)
+        context = _commit_to_vcs(files, context, config_file, config_file_exists, vcs, args)
+        _tag_in_vcs(vcs, context, args)
 
 
 def split_args_in_optional_and_positional(args):
@@ -228,12 +244,12 @@ def _load_configuration(config_file, explicit_config, defaults):
         return config, config_file_exists, None, {}, []
 
     logger.info("Reading config file %s:", config_file)
-    # TODO: this is a DEBUG level log
 
     with io.open(config_file, "rt", encoding="utf-8") as config_fp:
         config_content = config_fp.read()
         config_newlines = config_fp.newlines
 
+    # TODO: this is a DEBUG level log
     logger.info(config_content)
 
     try:
@@ -246,7 +262,7 @@ def _load_configuration(config_file, explicit_config, defaults):
     log_config = StringIO()
     config.write(log_config)
 
-    if "files" in dict(config.items("bumpversion")):
+    if config.has_option("bumpversion", "files"):
         warnings.warn(
             "'files =' configuration will be deprecated, please use [bumpversion:file:...]",
             PendingDeprecationWarning,
@@ -273,10 +289,9 @@ def _load_configuration(config_file, explicit_config, defaults):
 
     part_configs = {}
     files = []
+    file_or_part = re.compile("^bumpversion:(file|part):(.+)")
     for section_name in config.sections():
-        section_name_match = re.compile("^bumpversion:(file|part):(.+)").match(
-            section_name
-        )
+        section_name_match = file_or_part.match(section_name)
 
         if not section_name_match:
             continue
@@ -389,7 +404,7 @@ def _parse_arguments_phase_2(args, known_args, defaults, root_parser):
 
 def _setup_versionconfig(known_args, part_configs):
     try:
-        vc = VersionConfig(
+        version_config = VersionConfig(
             parse=known_args.parse,
             serialize=known_args.serialize,
             search=known_args.search,
@@ -399,35 +414,20 @@ def _setup_versionconfig(known_args, part_configs):
     except sre_constants.error:
         # TODO: use re.error here mayhaps, also: should we log?
         sys.exit(1)
-    return vc
-
-
-def _parse_current_version(current_version, vc):
-    if not current_version:
-        return None
-
-    return vc.parse(current_version)
-
-
-def _assemble_context(vcs_info):
-    context = dict(
-        itertools.chain(time_context.items(), prefixed_environ().items(), vcs_info.items())
-    )
-
-    return context
+    return version_config
 
 
 def _assemble_new_version(
-    context, current_version, defaults, arg_current_version, positionals, vc
+    context, current_version, defaults, arg_current_version, positionals, version_config
 ):
     new_version = None
     if "new_version" not in defaults and arg_current_version:
         try:
             if current_version and positionals:
                 logger.info("Attempting to increment part '%s'", positionals[0])
-                new_version = current_version.bump(positionals[0], vc.order())
+                new_version = current_version.bump(positionals[0], version_config.order())
                 logger.info("Values are now: %s", keyvaluestring(new_version._values))
-                defaults["new_version"] = vc.serialize(new_version, context)
+                defaults["new_version"] = version_config.serialize(new_version, context)
         except MissingValueForSerializationException as e:
             logger.info("Opportunistic finding of new_version failed: %s", e.message)
         except IncompleteVersionRepresentationException as e:
@@ -557,12 +557,6 @@ def _parse_new_version(args, new_version, vc):
     return new_version
 
 
-def _determine_files(file_names, files, positionals, vc):
-    file_names = file_names or positionals[1:]
-    for file_name in file_names:
-        files.append(ConfiguredFile(file_name, vc))
-
-
 def _determine_vcs_dirty(possible_vcses, defaults):
     for vcs in possible_vcses:
         if not vcs.is_usable():
@@ -634,7 +628,7 @@ def _update_config_file(
         )
 
 
-def _commit_to_vcs(files, config_file, config_file_exists, vcs, args):
+def _commit_to_vcs(files, context, config_file, config_file_exists, vcs, args):
     commit_files = [f.path for f in files]
     if config_file_exists:
         commit_files.append(config_file)
@@ -657,13 +651,10 @@ def _commit_to_vcs(files, config_file, config_file_exists, vcs, args):
 
         if do_commit:
             vcs.add_path(path)
-    vcs_context = {
-        "current_version": args.current_version,
-        "new_version": args.new_version,
-    }
-    vcs_context.update(time_context)
-    vcs_context.update(prefixed_environ())
-    commit_message = args.message.format(**vcs_context)
+
+    context["current_version"] = args.current_version
+    context["new_version"] = args.new_version
+    commit_message = args.message.format(**context)
     logger.info(
         "%s to %s with message '%s'",
         "Would commit" if not do_commit else "Committing",
@@ -672,13 +663,13 @@ def _commit_to_vcs(files, config_file, config_file_exists, vcs, args):
     )
     if do_commit:
         vcs.commit(message=commit_message)
-    return vcs_context
+    return context
 
 
-def _tag_in_vcs(vcs, vcs_context, args):
+def _tag_in_vcs(vcs, context, args):
     sign_tags = args.sign_tags
-    tag_name = args.tag_name.format(**vcs_context)
-    tag_message = args.tag_message.format(**vcs_context)
+    tag_name = args.tag_name.format(**context)
+    tag_message = args.tag_message.format(**context)
     do_tag = args.tag and not args.dry_run
     logger.info(
         "%s '%s' %s in %s and %s",
