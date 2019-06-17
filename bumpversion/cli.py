@@ -68,6 +68,8 @@ OPTIONAL_ARGUMENTS_THAT_TAKE_VALUES = [
 
 
 def main(original_args=None):
+    # determine configuration based on command-line arguments
+    # and on-disk configuration files
     args, known_args, root_parser, positionals = _parse_arguments_phase_1(original_args)
     _setup_logging(known_args.list, known_args.verbose)
     vcs_info = _determine_vcs_usability()
@@ -87,23 +89,31 @@ def main(original_args=None):
     context = dict(
         itertools.chain(time_context.items(), prefixed_environ().items(), vcs_info.items())
     )
+
+    # calculate the desired new version
     new_version = _assemble_new_version(
         context, current_version, defaults, known_args.current_version, positionals, version_config
     )
     args, file_names = _parse_arguments_phase_3(remaining_argv, positionals, defaults, parser2)
     new_version = _parse_new_version(args, new_version, version_config)
+
+    # replace version in target files
+    vcs = _determine_vcs_dirty(VCS, defaults)
     files.extend(
         ConfiguredFile(file_name, version_config)
         for file_name
         in (file_names or positionals[1:])
     )
-    vcs = _determine_vcs_dirty(VCS, defaults)
     _check_files_contain_version(files, current_version, context)
     _replace_version_in_files(files, current_version, new_version, args.dry_run, context)
     _log_list(config, args.new_version)
+
+    # store the new version
     _update_config_file(
         config, config_file, config_newlines, config_file_exists, args.new_version, args.dry_run,
     )
+
+    # commit and tag
     if vcs:
         context = _commit_to_vcs(files, context, config_file, config_file_exists, vcs, args)
         _tag_in_vcs(vcs, context, args)
