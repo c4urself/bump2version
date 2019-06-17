@@ -101,8 +101,8 @@ def main(original_args=None):
         config, config_file, config_newlines, config_file_exists, args.new_version, args.dry_run,
     )
     if vcs:
-        vcs_context = _commit_to_vcs(files, config_file, config_file_exists, vcs, args)
-        _tag_in_vcs(vcs, vcs_context, args)
+        context = _commit_to_vcs(files, context, config_file, config_file_exists, vcs, args)
+        _tag_in_vcs(vcs, context, args)
 
 
 def split_args_in_optional_and_positional(args):
@@ -628,7 +628,7 @@ def _update_config_file(
         )
 
 
-def _commit_to_vcs(files, config_file, config_file_exists, vcs, args):
+def _commit_to_vcs(files, context, config_file, config_file_exists, vcs, args):
     commit_files = [f.path for f in files]
     if config_file_exists:
         commit_files.append(config_file)
@@ -651,13 +651,10 @@ def _commit_to_vcs(files, config_file, config_file_exists, vcs, args):
 
         if do_commit:
             vcs.add_path(path)
-    vcs_context = {
-        "current_version": args.current_version,
-        "new_version": args.new_version,
-    }
-    vcs_context.update(time_context)
-    vcs_context.update(prefixed_environ())
-    commit_message = args.message.format(**vcs_context)
+
+    context["current_version"] = args.current_version
+    context["new_version"] = args.new_version
+    commit_message = args.message.format(**context)
     logger.info(
         "%s to %s with message '%s'",
         "Would commit" if not do_commit else "Committing",
@@ -666,13 +663,13 @@ def _commit_to_vcs(files, config_file, config_file_exists, vcs, args):
     )
     if do_commit:
         vcs.commit(message=commit_message)
-    return vcs_context
+    return context
 
 
-def _tag_in_vcs(vcs, vcs_context, args):
+def _tag_in_vcs(vcs, context, args):
     sign_tags = args.sign_tags
-    tag_name = args.tag_name.format(**vcs_context)
-    tag_message = args.tag_message.format(**vcs_context)
+    tag_name = args.tag_name.format(**context)
+    tag_message = args.tag_message.format(**context)
     do_tag = args.tag and not args.dry_run
     logger.info(
         "%s '%s' %s in %s and %s",
