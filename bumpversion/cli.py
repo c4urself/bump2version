@@ -83,7 +83,7 @@ def main(original_args=None):
         args, known_args, defaults, root_parser
     )
     version_config = _setup_versionconfig(known_args, part_configs)
-    current_version = _parse_current_version(known_args.current_version, version_config)
+    current_version = version_config.parse(known_args.current_version)
     context = dict(
         itertools.chain(time_context.items(), prefixed_environ().items(), vcs_info.items())
     )
@@ -401,13 +401,6 @@ def _setup_versionconfig(known_args, part_configs):
         # TODO: use re.error here mayhaps, also: should we log?
         sys.exit(1)
     return version_config
-
-
-def _parse_current_version(current_version, vc):
-    if not current_version:
-        return None
-
-    return vc.parse(current_version)
 
 
 def _assemble_new_version(
