@@ -51,8 +51,8 @@ class BaseVCS(object):
                 == 0
             )
         except OSError as e:
-            if e.errno == 2:
-                # mercurial is not installed then, ok.
+            if e.errno in (2, 13):
+                # VCS is not installed or permission denied then, ok.
                 return False
             raise
 
