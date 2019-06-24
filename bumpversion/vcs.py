@@ -5,6 +5,7 @@ from __future__ import unicode_literals, print_function
 import logging
 import os
 import subprocess
+import errno
 from tempfile import NamedTemporaryFile
 
 from bumpversion.exceptions import (
@@ -51,8 +52,7 @@ class BaseVCS(object):
                 == 0
             )
         except OSError as e:
-            if e.errno in (2, 13):
-                # VCS is not installed or permission denied then, ok.
+            if e.errno in (errno.ENOENT, errno.EACCES):
                 return False
             raise
 
