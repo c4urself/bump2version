@@ -2,10 +2,10 @@
 
 from __future__ import unicode_literals, print_function
 
+import errno
 import logging
 import os
 import subprocess
-import errno
 from tempfile import NamedTemporaryFile
 
 from bumpversion.exceptions import (
