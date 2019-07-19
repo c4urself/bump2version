@@ -582,7 +582,7 @@ def main(original_args=None):
 
         if write_to_config_file:
             with io.open(config_file, "wt", encoding="utf-8", newline=config_new_lines) as f:
-                f.write(new_config.getvalue())
+                f.write(new_config.getvalue().strip()+'\n')
 
     except UnicodeEncodeError:
         warnings.warn(
