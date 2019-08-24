@@ -162,6 +162,8 @@ class VersionConfig(object):
         return labels_for_format(self.serialize_formats[0])
 
     def parse(self, version_string):
+        if not version_string:
+            return None
 
         regexp_one_line = "".join(
             [l.split("#")[0].strip() for l in self.parse_regex.pattern.splitlines()]
