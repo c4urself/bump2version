@@ -2,6 +2,7 @@
 
 from __future__ import unicode_literals, print_function
 
+import errno
 import logging
 import os
 import subprocess
@@ -51,8 +52,7 @@ class BaseVCS(object):
                 == 0
             )
         except OSError as e:
-            if e.errno == 2:
-                # mercurial is not installed then, ok.
+            if e.errno in (errno.ENOENT, errno.EACCES):
                 return False
             raise
 
