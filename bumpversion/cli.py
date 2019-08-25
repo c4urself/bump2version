@@ -115,7 +115,7 @@ def main(original_args=None):
 
     # commit and tag
     if vcs:
-        context = _commit_to_vcs(files, context, config_file, config_file_exists, vcs, args)
+        context = _commit_to_vcs(files, context, config_file, config_file_exists, vcs, args, current_version, new_version)
         _tag_in_vcs(vcs, context, args)
 
 
@@ -653,8 +653,8 @@ def _commit_to_vcs(files, context, config_file, config_file_exists, vcs, args, c
             vcs.add_path(path)
 
     context = {
-        "current_version": current_version,
-        "new_version": new_version,
+        "current_version": args.current_version,
+        "new_version": args.new_version,
     }
     context.update(time_context)
     context.update(prefixed_environ())
