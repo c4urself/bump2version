@@ -2,6 +2,9 @@ test:
 	docker-compose build test
 	docker-compose run test
 
+local_test:
+	PYTHONPATH=. py.test tests/
+
 lint:
 	pip install pylint
 	pylint bumpversion

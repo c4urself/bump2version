@@ -144,14 +144,16 @@ General configuration is grouped in a `[bumpversion]` section.
 
   The name of the tag that will be created. Only valid when using `--tag` / `tag = True`.
 
-  This is templated using the [Python Format String Syntax](http://docs.python.org/2/library/string.html#format-string-syntax)
+  This is templated using the [Python Format String Syntax](http://docs.python.org/2/library/string.html#format-string-syntax).  
   Available in the template context are `current_version` and `new_version`
-  as well as all environment variables (prefixed with `$`). You can also use
-  the variables `now` or `utcnow` to get a current timestamp. Both accept
+  as well as `current_[part]` and `new_[part]` (e.g. '`current_major`'
+  or '`new_patch`').
+  In addtion, all environment variables are exposed, prefixed with `$`.  
+  You can also use the variables `now` or `utcnow` to get a current timestamp. Both accept
   datetime formatting (when used like as in `{now:%d.%m.%Y}`).
 
-  Also available as a command line flag, `--tag-name` (e.g. `bump2version --message 'Jenkins Build
-  {$BUILD_NUMBER}: {new_version}' patch`).
+  Also available as command-line flag `tag_name`.  Example usage:  
+  `bump2version --tag_name 'release-{new_version}' patch`
 
 #### `commit = (True | False)`
   _**[optional]**_<br />
@@ -176,14 +178,16 @@ General configuration is grouped in a `[bumpversion]` section.
 
   The commit message to use when creating a commit. Only valid when using `--commit` / `commit = True`.
 
-  This is templated using the [Python Format String Syntax](http://docs.python.org/2/library/string.html#format-string-syntax)
+  This is templated using the [Python Format String Syntax](http://docs.python.org/2/library/string.html#format-string-syntax).  
   Available in the template context are `current_version` and `new_version`
-  as well as all environment variables (prefixed with `$`). You can also use
-  the variables `now` or `utcnow` to get a current timestamp. Both accept
+  as well as `current_[part]` and `new_[part]` (e.g. '`current_major`'
+  or '`new_patch`').
+  In addition, all environment variables are exposed, prefixed with `$`.  
+  You can also use the variables `now` or `utcnow` to get a current timestamp. Both accept
   datetime formatting (when used like as in `{now:%d.%m.%Y}`).
-
-  Also available as `--message` (e.g.: `bump2version --message
-  '[{now:%Y-%m-%d}] Jenkins Build {$BUILD_NUMBER}: {new_version}' patch`)
+  
+  Also available as command-line flag `--message`.  Example usage:  
+  `bump2version --message '[{now:%Y-%m-%d}] Jenkins Build {$BUILD_NUMBER}: {new_version}' patch`)
 
 
 ### Configuration file -- Part specific configuration
@@ -277,7 +281,7 @@ This configuration is in the section: `[bumpversion:file:…]`
   Available in the template context are parsed values of the named groups
   specified in `parse =` as well as all environment variables (prefixed with
   `$`).
-
+  
   Can be specified multiple times, bumpversion will try the serialization
   formats beginning with the first and choose the last one where all values can
   be represented like this::
@@ -286,8 +290,8 @@ This configuration is in the section: `[bumpversion:file:…]`
       {major}.{minor}
       {major}
 
-  Given the example above, the new version *1.9* it will be serialized as
-  `1.9`, but the version *2.0* will be serialized as `2`.
+  Given the example above, the new version `1.9` will be serialized as
+  `1.9`, but the version `2.0` will be serialized as `2`.
 
   Also available as `--serialize`. Multiple values on the command line are
   given like `--serialize {major}.{minor} --serialize {major}`
@@ -297,7 +301,7 @@ This configuration is in the section: `[bumpversion:file:…]`
 
   Template string how to search for the string to be replaced in the file.
   Useful if the remotest possibility exists that the current version number
-  might be multiple times in the file and you mean to only bump one of the
+  might be present multiple times in the file and you mean to only bump one of the
   occurences. Can be multiple lines, templated using [Python Format String Syntax](http://docs.python.org/2/library/string.html#format-string-syntax)
 
 #### `replace =`
