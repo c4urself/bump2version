@@ -10,7 +10,7 @@ from tempfile import NamedTemporaryFile
 
 from bumpversion.exceptions import (
     WorkingDirectoryIsDirtyException,
-    MercurialDoesNotSupportSignedTagsException
+    MercurialDoesNotSupportSignedTagsException,
 )
 from bumpversion.compat import _command_args
 
@@ -24,11 +24,13 @@ class BaseVCS(object):
     _COMMIT_COMMAND = None
 
     @classmethod
-    def commit(cls, message):
+    def commit(cls, message, context):
         with NamedTemporaryFile("wb", delete=False) as f:
             f.write(message.encode("utf-8"))
         env = os.environ.copy()
         env[str("HGENCODING")] = str("utf-8")
+        for key in ("current_version", "new_version"):
+            env[str("BUMPVERSION_" + key.upper())] = str(context[key])
         try:
             subprocess.check_output(cls._COMMIT_COMMAND + [f.name], env=env)
         except subprocess.CalledProcessError as exc:

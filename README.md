@@ -161,6 +161,15 @@ General configuration is grouped in a `[bumpversion]` section.
 
   Also available as `(--commit | --no-commit)`.
 
+  In many projects it is common to have a pre-commit hook that runs prior to a
+  commit and in case of failure aborts the commit. For some use cases it might
+  be desired that when bumping a version and having `commit = True`, the
+  pre-commit hook should perform slightly different actions than in regular
+  commits. For example run an extended set of checks only for actual releases of
+  the software. To allow the pre-commit hooks to distinguish a bumpversion
+  commit, the `BUMPVERSION_CURRENT_VERSION` and `BUMPVERSION_NEW_VERSION`
+  environment variables are set when executing the commit command.
+
 #### `message =`
   _**[optional]**_<br />
   **default:** `Bump version: {current_version} → {new_version}`
