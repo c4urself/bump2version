@@ -404,6 +404,18 @@ bump2version is licensed under the MIT License - see the LICENSE.rst file for de
 
 **unreleased**
 **v0.5.11-dev**
+
+- Housekeeping, also publish an sdist
+- Housekeeping, fix appveyor builds
+- Housekeeping, `make lint` now lints with pylint
+- Drop support for Python3.4, thanks @hugovk #79 
+- Enhance missing VCS command detection (errno 13), thanks @lowell80 #75
+- Add environment variables for other scripts to use, thanks @mauvilsa #70
+- Refactor, cli.main is now much more readable, thanks @florisla #68
+- Fix, retain file newlines for Windows, thanks @hesstobi #59
+- Add support (tests) for Pythno3.7, thanks @florisla #49
+- Allow any part to be configured in configurable strings such as tag_name etc., thanks @florisla #41
+
 **v0.5.10**
 
 - Housekeeping, use twine
