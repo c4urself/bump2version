@@ -1,6 +1,8 @@
 **unreleased**
 **v0.5.12-dev**
 
+- Housekeeping, move changelog into own file
+
 **v0.5.11**
 
 - Housekeeping, also publish an sdist
