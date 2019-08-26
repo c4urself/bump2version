@@ -391,8 +391,10 @@ Execute the following commands:
     git checkout master
     git pull
     make test
+    make lint
     bump2version release
-    python setup.py sdist bdist_wheel upload
+    make dist
+    make upload
     bump2version --no-tag patch
     git push origin master --tags
 
@@ -404,7 +406,6 @@ bump2version is licensed under the MIT License - see the LICENSE.rst file for de
 
 **unreleased**
 **v0.5.11**
-**v0.5.11-dev**
 
 - Housekeeping, also publish an sdist
 - Housekeeping, fix appveyor builds
