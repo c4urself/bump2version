@@ -228,7 +228,7 @@ def _determine_config_file(explicit_config):
 def _load_configuration(config_file, explicit_config, defaults):
     # setup.cfg supports interpolation - for compatibility we must do the same.
     if os.path.basename(config_file) == "setup.cfg":
-        config = ConfigParser("")
+        config = MetadataVersionConfigAdapter(ConfigParser(""))
     else:
         config = RawConfigParser("")
     # don't transform keys to lowercase (which would be the default)
@@ -689,3 +689,55 @@ def _tag_in_vcs(vcs, context, args):
     )
     if do_tag:
         vcs.tag(sign_tags, tag_name, tag_message)
+
+
+class MetadataVersionConfigAdapter(object):
+    """
+    Adapt a ConfigParser instance to cause get/set of
+    bumpversion.current_version to instead use metadata.version
+    """
+    __slots__ = ['_MetadataVersionConfigAdapter__config']
+
+    def __init__(self, config):
+        super(MetadataVersionConfigAdapter, self).__setattr__(
+            '_MetadataVersionConfigAdapter__config', config)
+
+    def __getattr__(self, *args, **kwargs):
+        return getattr(self.__config, *args, **kwargs)
+
+    def __setattr__(self, key, value):
+        setattr(self.__config, key, value)
+
+    def _adapt_key(self, section, key):
+        enabled = (
+            section == 'bumpversion'
+            and key == 'current_version'
+            and self._safe_get('metadata', 'version')
+        )
+        if enabled:
+            section = 'metadata'
+            key = 'version'
+        return section, key
+
+    def _safe_get(self, section, key):
+        try:
+            return self.__config.get(section, key)
+        except Exception:
+            pass
+
+    def get(self, section, key):
+        section, key = self._adapt_key(section, key)
+        return self.__config.get(section, key)
+
+    def set(self, section, key, value):
+        section, key = self._adapt_key(section, key)
+        return self.__config.set(section, key, value)
+
+    def items(self, section):
+        items = self.__config.items(section)
+        if section == 'bumpversion':
+            try:
+                items.append(('current_version', self.get('metadata', 'version')))
+            except Exception:
+                pass
+        return items
