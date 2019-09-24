@@ -156,8 +156,8 @@ General configuration is grouped in a `[bumpversion]` section.
   You can also use the variables `now` or `utcnow` to get a current timestamp. Both accept
   datetime formatting (when used like as in `{now:%d.%m.%Y}`).
 
-  Also available as command-line flag `tag_name`.  Example usage:  
-  `bump2version --tag_name 'release-{new_version}' patch`
+  Also available as command-line flag `tag-name`.  Example usage:  
+  `bump2version --tag-name 'release-{new_version}' patch`
 
 #### `commit = (True | False)`
   _**[optional]**_<br />
