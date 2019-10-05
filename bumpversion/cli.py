@@ -104,14 +104,18 @@ def main(original_args=None):
         for file_name
         in (file_names or positionals[1:])
     )
+
+    if config_file_exists and config_file not in files:
+        files.extend([ConfiguredFile(config_file, version_config)])
+
     _check_files_contain_version(files, current_version, context)
     _replace_version_in_files(files, current_version, new_version, args.dry_run, context)
     _log_list(config, args.new_version)
 
     # store the new version
-    _update_config_file(
-        config, config_file, config_newlines, config_file_exists, args.new_version, args.dry_run,
-    )
+    # _update_config_file(
+    #     config, config_file, config_newlines, config_file_exists, args.new_version, args.dry_run,
+    # )
 
     # commit and tag
     if vcs:
