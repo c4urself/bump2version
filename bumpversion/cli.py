@@ -113,9 +113,9 @@ def main(original_args=None):
     _log_list(config, args.new_version)
 
     # store the new version
-    # _update_config_file(
-    #     config, config_file, config_newlines, config_file_exists, args.new_version, args.dry_run,
-    # )
+    _update_config_file(
+        config, config_file, config_newlines, config_file_exists, args.new_version, args.dry_run,
+    )
 
     # commit and tag
     if vcs:
@@ -610,7 +610,7 @@ def _update_config_file(
     config.set("bumpversion", "current_version", new_version)
     new_config = StringIO()
     try:
-        write_to_config_file = (not dry_run) and config_file_exists
+        write_to_config_file = (not dry_run) and not config_file_exists
 
         logger.info(
             "%s to config file %s:",
