@@ -71,7 +71,7 @@ and using a configuration file (`bumpversion.cfg`) for more complex multi-file o
 
   If not given, the list of `[bumpversion:file:…]` sections from the
   configuration file will be used. If no files are mentioned on the
-  configuration file either, are no files will be modified.
+  configuration file either, then no files will be modified.
 
   Example bumping 1.1.9 to 2.0.0:
 
@@ -152,7 +152,7 @@ General configuration is grouped in a `[bumpversion]` section.
   Available in the template context are `current_version` and `new_version`
   as well as `current_[part]` and `new_[part]` (e.g. '`current_major`'
   or '`new_patch`').
-  In addtion, all environment variables are exposed, prefixed with `$`.  
+  In addition, all environment variables are exposed, prefixed with `$`.
   You can also use the variables `now` or `utcnow` to get a current timestamp. Both accept
   datetime formatting (when used like as in `{now:%d.%m.%Y}`).
 
@@ -201,7 +201,7 @@ has three parts, separated by a dot (`.`) character. In the default
 configuration these parts are named `major`, `minor`, `patch`, however you can
 customize that using the `parse`/`serialize` option.
 
-By default all parts considered numeric, that is their initial value is `0`
+By default all parts are considered numeric, that is their initial value is `0`
 and they are increased as integers. Also, the value `0` is considered to be
 optional if it's not needed for serialization, i.e. the version `1.4.0` is
 equal to `1.4` if `{major}.{minor}` is given as a `serialize` value.
@@ -221,7 +221,7 @@ The following options are valid inside a part configuration:
   Explicit list of all values that will be iterated when bumping that specific
   part.
 
-  Example::
+  Example:
 
     [bumpversion:part:release_name]
     values =
@@ -233,9 +233,9 @@ The following options are valid inside a part configuration:
   **default**: The first entry in `values =`.
 
   If the value of the part matches this value it is considered optional, i.e.
-  it's representation in a `--serialize` possibility is not required.
+  its representation in a `--serialize` possibility is not required.
 
-  Example::
+  Example:
 
     [bumpversion]
     current_version = 1.alpha
@@ -288,7 +288,7 @@ This configuration is in the section: `[bumpversion:file:…]`
   
   Can be specified multiple times, bumpversion will try the serialization
   formats beginning with the first and choose the last one where all values can
-  be represented like this::
+  be represented like this:
 
     serialize =
       {major}.{minor}
@@ -314,13 +314,13 @@ This configuration is in the section: `[bumpversion:file:…]`
   Template to create the string that will replace the current version number in
   the file.
 
-  Given this `requirements.txt`::
+  Given this `requirements.txt`:
 
     Django>=1.5.6,<1.6
     MyProject==1.5.6
 
   using this `.bumpversion.cfg` will ensure only the line containing
-  `MyProject` will be changed::
+  `MyProject` will be changed:
 
     [bumpversion]
     current_version = 1.5.6
@@ -351,7 +351,7 @@ Additionally, the following options are available:
   List machine readable information to stdout for consumption by other
   programs.
 
-  Example output::
+  Example output:
 
     current_version=0.0.18
     new_version=0.0.19
@@ -372,7 +372,7 @@ The standard way to get it in a bash script is
 
     bump2version --dry-run --list <part> | grep <field name> | sed -r s,"^.*=",,
 
-where <part> is as usual the part of the version number you are updating. You need to specify
+where `part` is as usual the part of the version number you are updating. You need to specify
 `--dry-run` to avoid bumpversion actually bumping the version number.
 
 For example, if you are updating the minor number and looking for the new version number this becomes
@@ -390,4 +390,4 @@ workflow, as it is intended to be very versatile.
 
 ## License
 
-bump2version is licensed under the MIT License - see the LICENSE.rst file for details
+bump2version is licensed under the MIT License - see the [LICENSE.rst](LICENSE.rst) file for details
