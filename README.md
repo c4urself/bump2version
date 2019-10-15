@@ -225,13 +225,13 @@ The following options are valid inside a part configuration:
 
   Example:
 
-  ```ini
-  [bumpversion:part:release_name]
-  values =
-    witty-warthog
-    ridiculous-rat
-    marvelous-mantis
-  ```
+```ini
+[bumpversion:part:release_name]
+values =
+  witty-warthog
+  ridiculous-rat
+  marvelous-mantis
+```
 
 #### `optional_value =`
   **default**: The first entry in `values =`.
@@ -241,21 +241,21 @@ The following options are valid inside a part configuration:
 
   Example:
 
-  ```ini
-  [bumpversion]
-  current_version = 1.alpha
-  parse = (?P<num>\d+)\.(?P<release>.*)
-  serialize =
-    {num}.{release}
-    {num}
+```ini
+[bumpversion]
+current_version = 1.alpha
+parse = (?P<num>\d+)\.(?P<release>.*)
+serialize =
+  {num}.{release}
+  {num}
 
-  [bumpversion:part:release]
-  optional_value = gamma
-  values =
-    alpha
-    beta
-    gamma
-  ```
+[bumpversion:part:release]
+optional_value = gamma
+values =
+  alpha
+  beta
+  gamma
+```
 
   Here, `bump2version release` would bump `1.alpha` to `1.beta`. Executing
   `bump2version release` again would bump `1.beta` to `1`, because
@@ -296,11 +296,11 @@ This configuration is in the section: `[bumpversion:file:…]`
   formats beginning with the first and choose the last one where all values can
   be represented like this:
 
-  ```ini
-  serialize =
-    {major}.{minor}
-    {major}
-  ```
+```ini
+serialize =
+  {major}.{minor}
+  {major}
+```
 
   Given the example above, the new version `1.9` will be serialized as
   `1.9`, but the version `2.0` will be serialized as `2`.
@@ -330,14 +330,14 @@ This configuration is in the section: `[bumpversion:file:…]`
   using this `.bumpversion.cfg` will ensure only the line containing
   `MyProject` will be changed:
 
-  ```ini
-  [bumpversion]
-  current_version = 1.5.6
+```ini
+[bumpversion]
+current_version = 1.5.6
 
-  [bumpversion:file:requirements.txt]
-  search = MyProject=={current_version}
-  replace = MyProject=={new_version}
-  ```
+[bumpversion:file:requirements.txt]
+search = MyProject=={current_version}
+replace = MyProject=={new_version}
+```
 
   Can be multiple lines, templated using [Python Format String Syntax](http://docs.python.org/2/library/string.html#format-string-syntax).
 
