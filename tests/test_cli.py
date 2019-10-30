@@ -32,16 +32,17 @@ def _get_subprocess_env():
 
 
 SUBPROCESS_ENV = _get_subprocess_env()
+call = partial(subprocess.call, env=SUBPROCESS_ENV, shell=True)
 check_call = partial(subprocess.check_call, env=SUBPROCESS_ENV)
 check_output = partial(subprocess.check_output,  env=SUBPROCESS_ENV)
 
 xfail_if_no_git = pytest.mark.xfail(
-  subprocess.call(["git", "version"]) != 0,
+  call(["git version"]) != 0,
   reason="git is not installed"
 )
 
 xfail_if_no_hg = pytest.mark.xfail(
-  subprocess.call(["hg", "version"]) != 0,
+  call(["hg version"]) != 0,
   reason="hg is not installed"
 )
 
