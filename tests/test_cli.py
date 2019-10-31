@@ -317,7 +317,6 @@ new_version: 0.0.14
 current_version = 0.0.14
 
 [bumpversion:file:file3]
-
 """ == tmpdir.join(".bumpversion.cfg").read()
 
 
