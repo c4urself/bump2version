@@ -1994,7 +1994,12 @@ def test_retain_newline(tmpdir, configfile, newline):
     main(["major"])
 
     assert newline in tmpdir.join("file.py").read_binary()
-    assert newline in tmpdir.join(configfile).read_binary()
+    new_config = tmpdir.join(configfile).read_binary()
+    assert newline in new_config
+
+    # Ensure there is only a single newline (not two) at the end of the file
+    # and that it is of the right type
+    assert new_config.endswith(b"[bumpversion:file:file.py]" + newline)
 
 
 class TestSplitArgsInOptionalAndPositional:
