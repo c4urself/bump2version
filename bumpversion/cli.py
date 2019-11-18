@@ -635,7 +635,7 @@ def _run_commands(defaults, dry_run):
     """Run additional default commands."""
     for command in defaults.get('commands', []):
         if dry_run:
-            print('Would run %s command', command)
+            logger.info('Would run %s command', command)
         else:
             subprocess.check_output(command, shell=True)
 
