@@ -6,6 +6,7 @@ python:
   - "3.5"
   - "3.6"
   - "3.7"
+  - "3.8"
 
 # also test PyPy; do this on Trusty due to
 # https://travis-ci.community/t/pypy-2-7-on-xenial/889
