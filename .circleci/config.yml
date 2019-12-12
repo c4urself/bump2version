@@ -7,8 +7,6 @@ jobs:
       - image: themattrix/tox-base
 
     environment:
-      PYPY_VERSION: pypy2.7-5.10.0
-      PYPY3_VERSION: pypy3.5-5.10.1
       # prevent *.pyc files
       PYTHONDONTWRITEBYTECODE: 1
 
@@ -28,14 +26,14 @@ jobs:
           command: |
             cd /.pyenv
             git fetch
-            git checkout v1.2.8
+            git checkout v1.2.15
       - run:
           name: Install python interpreters
           command: |
-            pyenv install "$PYPY_VERSION"
-            pyenv install "$PYPY3_VERSION"
             pyenv versions
-            pyenv global system 2.7.15 3.4.9 3.5.6 3.6.6 3.7.0 "$PYPY_VERSION" "$PYPY3_VERSION"
+            # for the list of pre-installed Python versions in the docker image,
+            # see https://github.com/themattrix/docker-tox-base/blob/master/python-versions.txt
+            pyenv global system 2.7.17 3.5.7 3.6.9 3.7.5 pypy2.7-7.2.0 pypy3.6-7.2.0
 
       - run:
           name: Run tests
