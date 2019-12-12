@@ -4,7 +4,7 @@ version: 2.1
 jobs:
   build:
     docker:
-      - image: themattrix/tox-base
+      - image: themattrix/tox-base@sha256:90652d28db65c8977b985ecfaaeed72de2092c930eec123cca31e17ac20a2622
 
     environment:
       # prevent *.pyc files
