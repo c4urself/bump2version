@@ -4,6 +4,7 @@ import os
 import platform
 import warnings
 import subprocess
+from configparser import RawConfigParser
 from datetime import datetime
 from shlex import split as shlex_split
 from textwrap import dedent
@@ -14,7 +15,6 @@ import pytest
 from testfixtures import LogCapture
 
 import bumpversion
-from bumpversion.compat import RawConfigParser
 from bumpversion.exceptions import WorkingDirectoryIsDirtyException
 from bumpversion.cli import DESCRIPTION, main, split_args_in_optional_and_positional
 

@@ -8,18 +8,17 @@ import re
 import sre_constants
 import sys
 import warnings
+from configparser import (
+    RawConfigParser,
+    ConfigParser,
+    NoOptionError,
+)
 
 from bumpversion import __version__, __title__
 from bumpversion.version_part import (
     VersionConfig,
     NumericVersionPartConfiguration,
     ConfiguredVersionPartConfiguration,
-)
-from bumpversion.compat import (
-    ConfigParser,
-    StringIO,
-    RawConfigParser,
-    NoOptionError,
 )
 from bumpversion.exceptions import (
     IncompleteVersionRepresentationException,
@@ -256,7 +255,7 @@ def _load_configuration(config_file, explicit_config, defaults):
         # only deprecated readfp
         config.readfp(open(config_file, "rt", encoding="utf-8"))
 
-    log_config = StringIO()
+    log_config = io.StringIO()
     config.write(log_config)
 
     if config.has_option("bumpversion", "files"):
@@ -601,7 +600,7 @@ def _update_config_file(
         config, config_file, config_newlines, config_file_exists, new_version, dry_run,
 ):
     config.set("bumpversion", "current_version", new_version)
-    new_config = StringIO()
+    new_config = io.StringIO()
     try:
         write_to_config_file = (not dry_run) and config_file_exists
 

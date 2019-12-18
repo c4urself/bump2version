@@ -8,7 +8,6 @@ from bumpversion.exceptions import (
     WorkingDirectoryIsDirtyException,
     MercurialDoesNotSupportSignedTagsException,
 )
-from bumpversion.compat import _command_args
 
 
 logger = logging.getLogger(__name__)
@@ -118,7 +117,7 @@ class Git(BaseVCS):
 
     @classmethod
     def add_path(cls, path):
-        subprocess.check_output(_command_args(["git", "add", "--update", path]))
+        subprocess.check_output(["git", "add", "--update", path])
 
     @classmethod
     def tag(cls, sign, name, message):
@@ -127,7 +126,7 @@ class Git(BaseVCS):
             command += ["-s"]
         if message:
             command += ["--message", message]
-        subprocess.check_output(_command_args(command))
+        subprocess.check_output(command)
 
 
 class Mercurial(BaseVCS):
@@ -167,4 +166,4 @@ class Mercurial(BaseVCS):
             )
         if message:
             command += ["--message", message]
-        subprocess.check_output(_command_args(command))
+        subprocess.check_output(command)
