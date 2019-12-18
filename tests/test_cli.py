@@ -12,8 +12,8 @@ from datetime import datetime
 from shlex import split as shlex_split
 from textwrap import dedent
 from functools import partial
+from unittest import mock
 
-import mock
 import pytest
 from testfixtures import LogCapture
 
