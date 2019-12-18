@@ -7,7 +7,7 @@ description = 'Version-bump your software with a single command!'
 # Import the README and use it as the long-description.
 # This requires 'README.md' to be present in MANIFEST.in.
 here = os.path.abspath(os.path.dirname(__file__))
-with io.open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
+with open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = '\n' + f.read()
 
 setup(

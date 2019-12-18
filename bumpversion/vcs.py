@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import unicode_literals, print_function
-
 import errno
 import logging
 import os
@@ -18,7 +14,7 @@ from bumpversion.compat import _command_args
 logger = logging.getLogger(__name__)
 
 
-class BaseVCS(object):
+class BaseVCS:
 
     _TEST_USABLE_COMMAND = None
     _COMMIT_COMMAND = None
@@ -28,7 +24,7 @@ class BaseVCS(object):
         with NamedTemporaryFile("wb", delete=False) as f:
             f.write(message.encode("utf-8"))
         env = os.environ.copy()
-        env[str("HGENCODING")] = str("utf-8")
+        env["HGENCODING"] = "utf-8"
         for key in ("current_version", "new_version"):
             env[str("BUMPVERSION_" + key.upper())] = str(context[key])
         try:
