@@ -27,7 +27,7 @@ commits and tags:
 * works without any VCS, but happily reads tag information from and writes
   commits and tags to Git and Mercurial if available
 * just handles text files, so it's not specific to any programming language
-* supports Python2, Python3 and Pypy
+* supports Python 3 and PyPy3
 
 <!---
 ## Screencast

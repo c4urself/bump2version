@@ -247,14 +247,7 @@ def _load_configuration(config_file, explicit_config, defaults):
 
     # TODO: this is a DEBUG level log
     logger.info(config_content)
-
-    try:
-        config.read_string(config_content)
-    except AttributeError:
-        # python 2 standard ConfigParser doesn't have read_string,
-        # only deprecated readfp
-        config.readfp(open(config_file, "rt", encoding="utf-8"))
-
+    config.read_string(config_content)
     log_config = io.StringIO()
     config.write(log_config)
 
