@@ -108,7 +108,7 @@ class Version:
         for label in order:
             if label not in self._values:
                 continue
-            elif label == part_name:
+            if label == part_name:
                 new_values[label] = self._values[label].bump()
                 bumped = True
             elif bumped:
