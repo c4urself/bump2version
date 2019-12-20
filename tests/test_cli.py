@@ -21,8 +21,6 @@ from bumpversion.cli import DESCRIPTION, main, split_args_in_optional_and_positi
 
 def _get_subprocess_env():
     env = os.environ.copy()
-    # In python2 cast to str from unicode (note the future import).
-    # In python3 does nothing.
     env['HGENCODING'] = 'utf-8'
     return env
 
