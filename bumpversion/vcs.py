@@ -126,9 +126,15 @@ class Git(BaseVCS):
 
     @classmethod
     def tag(cls, sign, name, message):
+        """
+        Create a tag of the new_version in VCS.
+
+        If only name is given, bumpversion uses a lightweight tag,
+        Otherwise, it utilizes an annotated tag.
+        """
         command = ["git", "tag", name]
         if sign:
-            command += ["-s"]
+            command += ["--sign"]
         if message:
             command += ["--message", message]
         subprocess.check_output(_command_args(command))
