@@ -389,6 +389,51 @@ For example, if you are updating the minor number and looking for the new versio
 
     bump2version --dry-run --list minor | grep new_version | sed -r s,"^.*=",,
 
+## Using bumpversion to maintain a go.mod file within a Go project
+
+In a module-aware Go project, when you create a major version of your module beyond v1, your module name will need 
+to include the major version # (e.g. `github.com/myorg/myproject/v2`).
+
+You can use bump2version to maintain the major version # within the go.mod file by using the `parse` and `serialize`
+options, as in this example:
+
+- Example `.bumpversion.cfg` file:
+
+```
+    [bumpversion]
+    current_version = 2.0.0
+    commit = True
+
+    [bumpversion:file:go.mod]
+    parse = (?P<major>\d+)
+    serialize = {major}
+    search = module github.com/myorg/myproject/v{current_version}
+    replace = module github.com/myorg/myproject/v{new_version}
+```
+
+- Example `go.mod` file:
+
+```
+    module github.com/myorg/myproject/v2
+
+    go 1.12
+
+    require (
+        ...
+    )
+```
+
+Then run this command to create version 3.0.0 of your project:
+
+```
+    bump2version --new-version 3.0.0 major
+```
+Your `go.mod` file now contains this module directive:
+
+```
+    module github.com/myorg/myproject/v3
+```
+
 ## Development & Contributing
 
 See also our [CONTRIBUTING.md](CONTRIBUTING.md)
