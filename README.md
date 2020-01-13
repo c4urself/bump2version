@@ -244,7 +244,7 @@ values =
 ```ini
 [bumpversion]
 current_version = 1.alpha
-parse = (?P<num>\d+)\.(?P<release>.*)
+parse = (?P<num>\d+)(\.(?P<release>.*))?
 serialize =
   {num}.{release}
   {num}
