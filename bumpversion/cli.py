@@ -534,6 +534,12 @@ def _parse_arguments_phase_3(remaining_argv, positionals, defaults, parser2):
             "message", "Bump version: {current_version} → {new_version}"
         ),
     )
+    parser3.add_argument(
+        "--commit-args",
+        metavar="COMMIT_ARGS",
+        help="Extra arguments to commit command",
+        default=defaults.get("commit_args", ""),
+    )
     file_names = []
     if "files" in defaults:
         assert defaults["files"] is not None
@@ -670,7 +676,11 @@ def _commit_to_vcs(files, context, config_file, config_file_exists, vcs, args, c
         commit_message,
     )
     if do_commit:
-        vcs.commit(message=commit_message, context=context)
+        vcs.commit(
+            message=commit_message,
+            context=context,
+            extra_args=[arg.strip() for arg in args.commit_args.splitlines()],
+        )
     return context
 
 

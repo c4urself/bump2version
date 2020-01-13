@@ -195,6 +195,21 @@ General configuration is grouped in a `[bumpversion]` section.
   Also available as command-line flag `--message`.  Example usage:  
   `bump2version --message '[{now:%Y-%m-%d}] Jenkins Build {$BUILD_NUMBER}: {new_version}' patch`)
 
+#### `commit_args =`
+  _**[optional**_<br />
+  **default:** empty
+
+  Extra arguments to pass to commit command. Only valid when using `--commit` /
+  `commit = True`.
+
+  This is for example useful to add `-s` to generate `Signed-off-by:` line in
+  the commit message.
+
+  Multiple arguments can be specified on separate lines.
+
+  Also available as command-line flag `--commit-args`, in which case only one
+  argument can be specified.
+
 
 ### Configuration file -- Part specific configuration
 

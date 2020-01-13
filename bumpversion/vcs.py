@@ -24,7 +24,8 @@ class BaseVCS(object):
     _COMMIT_COMMAND = None
 
     @classmethod
-    def commit(cls, message, context):
+    def commit(cls, message, context, extra_args=None):
+        extra_args = extra_args or []
         with NamedTemporaryFile("wb", delete=False) as f:
             f.write(message.encode("utf-8"))
         env = os.environ.copy()
@@ -32,7 +33,9 @@ class BaseVCS(object):
         for key in ("current_version", "new_version"):
             env[str("BUMPVERSION_" + key.upper())] = str(context[key])
         try:
-            subprocess.check_output(cls._COMMIT_COMMAND + [f.name], env=env)
+            subprocess.check_output(
+                cls._COMMIT_COMMAND + [f.name] + extra_args, env=env
+            )
         except subprocess.CalledProcessError as exc:
             err_msg = "Failed to run {}: return code {}, output: {}".format(
                 exc.cmd, exc.returncode, exc.output
