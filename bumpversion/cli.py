@@ -9,8 +9,8 @@ import sre_constants
 import sys
 import warnings
 from configparser import (
-    RawConfigParser,
     ConfigParser,
+    RawConfigParser,
     NoOptionError,
 )
 
