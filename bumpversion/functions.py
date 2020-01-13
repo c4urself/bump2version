@@ -1,7 +1,7 @@
 import re
 
 
-class NumericFunction(object):
+class NumericFunction:
 
     """
     This is a class that provides a numeric function for version parts.
@@ -43,7 +43,7 @@ class NumericFunction(object):
         return "".join([part_prefix, str(bumped_numeric), part_suffix])
 
 
-class ValuesFunction(object):
+class ValuesFunction:
 
     """
     This is a class that provides a values list based function for version parts.
@@ -69,7 +69,7 @@ class ValuesFunction(object):
 
         if optional_value not in values:
             raise ValueError(
-                "Optional value {0} must be included in values {1}".format(
+                "Optional value {} must be included in values {}".format(
                     optional_value, values
                 )
             )
@@ -81,7 +81,7 @@ class ValuesFunction(object):
 
         if first_value not in values:
             raise ValueError(
-                "First value {0} must be included in values {1}".format(
+                "First value {} must be included in values {}".format(
                     first_value, values
                 )
             )

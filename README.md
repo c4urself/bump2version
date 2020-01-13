@@ -27,7 +27,12 @@ commits and tags:
 * works without any VCS, but happily reads tag information from and writes
   commits and tags to Git and Mercurial if available
 * just handles text files, so it's not specific to any programming language
-* supports Python2, Python3 and Pypy
+* supports Python 3 and PyPy3
+
+If you want to use Python 2, use `pip>=9` and you'll get the last supported version,
+or pin `bump2version<1`.
+
+
 
 <!---
 ## Screencast
@@ -150,7 +155,7 @@ General configuration is grouped in a `[bumpversion]` section.
 
   The name of the tag that will be created. Only valid when using `--tag` / `tag = True`.
 
-  This is templated using the [Python Format String Syntax](http://docs.python.org/2/library/string.html#format-string-syntax).  
+  This is templated using the [Python Format String Syntax](https://docs.python.org/3/library/string.html#format-string-syntax).  
   Available in the template context are `current_version` and `new_version`
   as well as `current_[part]` and `new_[part]` (e.g. '`current_major`'
   or '`new_patch`').
@@ -184,7 +189,7 @@ General configuration is grouped in a `[bumpversion]` section.
 
   The commit message to use when creating a commit. Only valid when using `--commit` / `commit = True`.
 
-  This is templated using the [Python Format String Syntax](http://docs.python.org/2/library/string.html#format-string-syntax).  
+  This is templated using the [Python Format String Syntax](https://docs.python.org/3/library/string.html#format-string-syntax).  
   Available in the template context are `current_version` and `new_version`
   as well as `current_[part]` and `new_[part]` (e.g. '`current_major`'
   or '`new_patch`').
@@ -288,7 +293,7 @@ This configuration is in the section: `[bumpversion:file:…]`
 #### `parse =`
   **default:** `(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)`
 
-  Regular expression (using [Python regular expression syntax](http://docs.python.org/2/library/re.html#regular-expression-syntax)) on
+  Regular expression (using [Python regular expression syntax](https://docs.python.org/3/library/re.html#regular-expression-syntax)) on
   how to find and parse the version string.
 
   Is required to parse all strings produced by `serialize =`. Named matching
@@ -302,7 +307,7 @@ This configuration is in the section: `[bumpversion:file:…]`
   Template specifying how to serialize the version parts back to a version
   string.
 
-  This is templated using the [Python Format String Syntax](http://docs.python.org/2/library/string.html#format-string-syntax).
+  This is templated using the [Python Format String Syntax](https://docs.python.org/3/library/string.html#format-string-syntax).
   Available in the template context are parsed values of the named groups
   specified in `parse =` as well as all environment variables (prefixed with
   `$`).
@@ -329,7 +334,7 @@ serialize =
   Template string how to search for the string to be replaced in the file.
   Useful if the remotest possibility exists that the current version number
   might be present multiple times in the file and you mean to only bump one of the
-  occurences. Can be multiple lines, templated using [Python Format String Syntax](http://docs.python.org/2/library/string.html#format-string-syntax)
+  occurrences. Can be multiple lines, templated using [Python Format String Syntax](https://docs.python.org/3/library/string.html#format-string-syntax)
 
 #### `replace =`
   **default:** `{new_version}`
@@ -354,7 +359,7 @@ search = MyProject=={current_version}
 replace = MyProject=={new_version}
 ```
 
-  Can be multiple lines, templated using [Python Format String Syntax](http://docs.python.org/2/library/string.html#format-string-syntax).
+  Can be multiple lines, templated using [Python Format String Syntax](https://docs.python.org/3/library/string.html#format-string-syntax).
 
 ## Command-line Options
 

@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import unicode_literals, print_function
-
 import logging
 import re
 import sre_constants
@@ -18,7 +14,7 @@ from bumpversion.utils import keyvaluestring
 logger = logging.getLogger(__name__)
 
 
-class PartConfiguration(object):
+class PartConfiguration:
     function_cls = NumericFunction
 
     def __init__(self, *args, **kwds):
@@ -44,7 +40,7 @@ class NumericVersionPartConfiguration(PartConfiguration):
     function_cls = NumericFunction
 
 
-class VersionPart(object):
+class VersionPart:
 
     """
     This class represents part of a version number. It contains a self.config
@@ -87,7 +83,7 @@ class VersionPart(object):
         return VersionPart(self.config.first_value, self.config)
 
 
-class Version(object):
+class Version:
     def __init__(self, values, original=None):
         self._values = dict(values)
         self.original = original
@@ -112,7 +108,7 @@ class Version(object):
         for label in order:
             if label not in self._values:
                 continue
-            elif label == part_name:
+            if label == part_name:
                 new_values[label] = self._values[label].bump()
                 bumped = True
             elif bumped:
@@ -131,7 +127,7 @@ def labels_for_format(serialize_format):
     )
 
 
-class VersionConfig(object):
+class VersionConfig:
 
     """
     Holds a complete representation of a version string

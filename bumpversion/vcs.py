@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import unicode_literals, print_function
-
 import errno
 import logging
 import os
@@ -12,13 +8,12 @@ from bumpversion.exceptions import (
     WorkingDirectoryIsDirtyException,
     MercurialDoesNotSupportSignedTagsException,
 )
-from bumpversion.compat import _command_args
 
 
 logger = logging.getLogger(__name__)
 
 
-class BaseVCS(object):
+class BaseVCS:
 
     _TEST_USABLE_COMMAND = None
     _COMMIT_COMMAND = None
@@ -29,7 +24,7 @@ class BaseVCS(object):
         with NamedTemporaryFile("wb", delete=False) as f:
             f.write(message.encode("utf-8"))
         env = os.environ.copy()
-        env[str("HGENCODING")] = str("utf-8")
+        env["HGENCODING"] = "utf-8"
         for key in ("current_version", "new_version"):
             env[str("BUMPVERSION_" + key.upper())] = str(context[key])
         try:
@@ -125,7 +120,7 @@ class Git(BaseVCS):
 
     @classmethod
     def add_path(cls, path):
-        subprocess.check_output(_command_args(["git", "add", "--update", path]))
+        subprocess.check_output(["git", "add", "--update", path])
 
     @classmethod
     def tag(cls, sign, name, message):
@@ -134,7 +129,7 @@ class Git(BaseVCS):
             command += ["-s"]
         if message:
             command += ["--message", message]
-        subprocess.check_output(_command_args(command))
+        subprocess.check_output(command)
 
 
 class Mercurial(BaseVCS):
@@ -174,4 +169,4 @@ class Mercurial(BaseVCS):
             )
         if message:
             command += ["--message", message]
-        subprocess.check_output(_command_args(command))
+        subprocess.check_output(command)

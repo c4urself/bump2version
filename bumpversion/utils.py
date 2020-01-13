@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import unicode_literals, print_function
-
 from argparse import _AppendAction
 from difflib import unified_diff
 import io
@@ -23,7 +19,7 @@ class DiscardDefaultIfSpecifiedAppendAction(_AppendAction):
             setattr(namespace, self.dest, [])
             self._discarded_default = True  # pylint: disable=attribute-defined-outside-init
 
-        super(DiscardDefaultIfSpecifiedAppendAction, self).__call__(
+        super().__call__(
             parser, namespace, values, option_string=None
         )
 
@@ -36,7 +32,7 @@ def prefixed_environ():
     return {"${}".format(key): value for key, value in os.environ.items()}
 
 
-class ConfiguredFile(object):
+class ConfiguredFile:
     def __init__(self, path, versionconfig):
         self.path = path
         self._versionconfig = versionconfig
@@ -61,7 +57,7 @@ class ConfiguredFile(object):
         assert False, msg
 
     def contains(self, search):
-        with io.open(self.path, "rt", encoding="utf-8") as f:
+        with open(self.path, "rt", encoding="utf-8") as f:
             search_lines = search.splitlines()
             lookbehind = []
 
@@ -88,7 +84,7 @@ class ConfiguredFile(object):
 
     def replace(self, current_version, new_version, context, dry_run):
 
-        with io.open(self.path, "rt", encoding="utf-8") as f:
+        with open(self.path, "rt", encoding="utf-8") as f:
             file_content_before = f.read()
             file_new_lines = f.newlines
 
@@ -127,7 +123,7 @@ class ConfiguredFile(object):
             logger.info("%s file %s", "Would not change" if dry_run else "Not changing", self.path)
 
         if not dry_run:
-            with io.open(self.path, "wt", encoding="utf-8", newline=file_new_lines) as f:
+            with open(self.path, "wt", encoding="utf-8", newline=file_new_lines) as f:
                 f.write(file_content_after)
 
     def __str__(self):

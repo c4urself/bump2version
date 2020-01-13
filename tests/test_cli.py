@@ -1,33 +1,27 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import unicode_literals, print_function
-
 import argparse
 import logging
 import os
 import platform
 import warnings
 import subprocess
+from configparser import RawConfigParser
 from datetime import datetime
+from functools import partial
 from shlex import split as shlex_split
 from textwrap import dedent
-from functools import partial
+from unittest import mock
 
-import mock
 import pytest
 from testfixtures import LogCapture
 
 import bumpversion
-from bumpversion.compat import RawConfigParser
 from bumpversion.exceptions import WorkingDirectoryIsDirtyException
 from bumpversion.cli import DESCRIPTION, main, split_args_in_optional_and_positional
 
 
 def _get_subprocess_env():
     env = os.environ.copy()
-    # In python2 cast to str from unicode (note the future import).
-    # In python3 does nothing.
-    env[str('HGENCODING')] = str('utf-8')
+    env['HGENCODING'] = 'utf-8'
     return env
 
 
@@ -253,7 +247,7 @@ def test_simple_replacement(tmpdir):
 
 
 def test_simple_replacement_in_utf8_file(tmpdir):
-    tmpdir.join("VERSION").write("Kröt1.3.0".encode('utf-8'), 'wb')
+    tmpdir.join("VERSION").write("Kröt1.3.0".encode(), 'wb')
     tmpdir.chdir()
     out = tmpdir.join("VERSION").read('rb')
     main(shlex_split("patch --verbose --current-version 1.3.0 --new-version 1.3.1 VERSION"))
@@ -1000,7 +994,7 @@ def test_commit_and_tag_from_below_vcs_root(tmpdir, vcs, monkeypatch):
 
 
 def test_non_vcs_operations_if_vcs_is_not_installed(tmpdir, vcs, monkeypatch):
-    monkeypatch.setenv(str("PATH"), str(""))
+    monkeypatch.setenv("PATH", "")
 
     tmpdir.chdir()
     tmpdir.join("VERSION").write("31.0.3")

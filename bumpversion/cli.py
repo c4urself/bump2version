@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 import argparse
 from datetime import datetime
 import io
@@ -11,18 +8,17 @@ import re
 import sre_constants
 import sys
 import warnings
+from configparser import (
+    ConfigParser,
+    RawConfigParser,
+    NoOptionError,
+)
 
 from bumpversion import __version__, __title__
 from bumpversion.version_part import (
     VersionConfig,
     NumericVersionPartConfiguration,
     ConfiguredVersionPartConfiguration,
-)
-from bumpversion.compat import (
-    ConfigParser,
-    StringIO,
-    RawConfigParser,
-    NoOptionError,
 )
 from bumpversion.exceptions import (
     IncompleteVersionRepresentationException,
@@ -115,7 +111,8 @@ def main(original_args=None):
 
     # commit and tag
     if vcs:
-        context = _commit_to_vcs(files, context, config_file, config_file_exists, vcs, args, current_version, new_version)
+        context = _commit_to_vcs(files, context, config_file, config_file_exists, vcs,
+                                 args, current_version, new_version)
         _tag_in_vcs(vcs, context, args)
 
 
@@ -245,21 +242,14 @@ def _load_configuration(config_file, explicit_config, defaults):
 
     logger.info("Reading config file %s:", config_file)
 
-    with io.open(config_file, "rt", encoding="utf-8") as config_fp:
+    with open(config_file, "rt", encoding="utf-8") as config_fp:
         config_content = config_fp.read()
         config_newlines = config_fp.newlines
 
     # TODO: this is a DEBUG level log
     logger.info(config_content)
-
-    try:
-        config.read_string(config_content)
-    except AttributeError:
-        # python 2 standard ConfigParser doesn't have read_string,
-        # only deprecated readfp
-        config.readfp(io.open(config_file, "rt", encoding="utf-8"))
-
-    log_config = StringIO()
+    config.read_string(config_content)
+    log_config = io.StringIO()
     config.write(log_config)
 
     if config.has_option("bumpversion", "files"):
@@ -339,7 +329,7 @@ def _load_configuration(config_file, explicit_config, defaults):
 
             if "serialize" not in section_config:
                 section_config["serialize"] = defaults.get(
-                    "serialize", [str("{major}.{minor}.{patch}")]
+                    "serialize", ["{major}.{minor}.{patch}"]
                 )
 
             if "search" not in section_config:
@@ -379,7 +369,7 @@ def _parse_arguments_phase_2(args, known_args, defaults, root_parser):
         metavar="FORMAT",
         action=DiscardDefaultIfSpecifiedAppendAction,
         help="How to format what is parsed back to a version",
-        default=defaults.get("serialize", [str("{major}.{minor}.{patch}")]),
+        default=defaults.get("serialize", ["{major}.{minor}.{patch}"]),
     )
     parser2.add_argument(
         "--search",
@@ -610,7 +600,7 @@ def _update_config_file(
         config, config_file, config_newlines, config_file_exists, new_version, dry_run,
 ):
     config.set("bumpversion", "current_version", new_version)
-    new_config = StringIO()
+    new_config = io.StringIO()
     try:
         write_to_config_file = (not dry_run) and config_file_exists
 
@@ -624,7 +614,7 @@ def _update_config_file(
         logger.info(new_config.getvalue())
 
         if write_to_config_file:
-            with io.open(config_file, "wt", encoding="utf-8", newline=config_newlines) as f:
+            with open(config_file, "wt", encoding="utf-8", newline=config_newlines) as f:
                 f.write(new_config.getvalue())
 
     except UnicodeEncodeError:
@@ -634,7 +624,8 @@ def _update_config_file(
         )
 
 
-def _commit_to_vcs(files, context, config_file, config_file_exists, vcs, args, current_version, new_version):
+def _commit_to_vcs(files, context, config_file, config_file_exists, vcs, args,
+                   current_version, new_version):
     commit_files = [f.path for f in files]
     if config_file_exists:
         commit_files.append(config_file)
