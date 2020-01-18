@@ -1,20 +1,11 @@
 language: python
-dist: xenial
 
 python:
-  - "2.7"
   - "3.5"
   - "3.6"
   - "3.7"
-
-# also test PyPy; do this on Trusty due to
-# https://travis-ci.community/t/pypy-2-7-on-xenial/889
-matrix:
-  include:
-    - python: "pypy"
-      dist: trusty
-    - python: "pypy3"
-      dist: trusty
+  - "3.8"
+  - "pypy3"
 
 install:
   - git config --global user.email "bumpversion-test-git@travis.ci"

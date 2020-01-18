@@ -27,7 +27,12 @@ commits and tags:
 * works without any VCS, but happily reads tag information from and writes
   commits and tags to Git and Mercurial if available
 * just handles text files, so it's not specific to any programming language
-* supports Python2, Python3 and Pypy
+* supports Python 3 and PyPy3
+
+If you want to use Python 2, use `pip>=9` and you'll get the last supported version,
+or pin `bump2version<1`.
+
+
 
 <!---
 ## Screencast
@@ -150,7 +155,7 @@ General configuration is grouped in a `[bumpversion]` section.
 
   The name of the tag that will be created. Only valid when using `--tag` / `tag = True`.
 
-  This is templated using the [Python Format String Syntax](http://docs.python.org/2/library/string.html#format-string-syntax).  
+  This is templated using the [Python Format String Syntax](https://docs.python.org/3/library/string.html#format-string-syntax).  
   Available in the template context are `current_version` and `new_version`
   as well as `current_[part]` and `new_[part]` (e.g. '`current_major`'
   or '`new_patch`').
@@ -184,7 +189,7 @@ General configuration is grouped in a `[bumpversion]` section.
 
   The commit message to use when creating a commit. Only valid when using `--commit` / `commit = True`.
 
-  This is templated using the [Python Format String Syntax](http://docs.python.org/2/library/string.html#format-string-syntax).  
+  This is templated using the [Python Format String Syntax](https://docs.python.org/3/library/string.html#format-string-syntax).  
   Available in the template context are `current_version` and `new_version`
   as well as `current_[part]` and `new_[part]` (e.g. '`current_major`'
   or '`new_patch`').
@@ -194,6 +199,21 @@ General configuration is grouped in a `[bumpversion]` section.
   
   Also available as command-line flag `--message`.  Example usage:  
   `bump2version --message '[{now:%Y-%m-%d}] Jenkins Build {$BUILD_NUMBER}: {new_version}' patch`)
+
+#### `commit_args =`
+  _**[optional**_<br />
+  **default:** empty
+
+  Extra arguments to pass to commit command. Only valid when using `--commit` /
+  `commit = True`.
+
+  This is for example useful to add `-s` to generate `Signed-off-by:` line in
+  the commit message.
+
+  Multiple arguments can be specified on separate lines.
+
+  Also available as command-line flag `--commit-args`, in which case only one
+  argument can be specified.
 
 
 ### Configuration file -- Part specific configuration
@@ -244,7 +264,7 @@ values =
 ```ini
 [bumpversion]
 current_version = 1.alpha
-parse = (?P<num>\d+)\.(?P<release>.*)
+parse = (?P<num>\d+)(\.(?P<release>.*))?
 serialize =
   {num}.{release}
   {num}
@@ -273,7 +293,7 @@ This configuration is in the section: `[bumpversion:file:…]`
 #### `parse =`
   **default:** `(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)`
 
-  Regular expression (using [Python regular expression syntax](http://docs.python.org/2/library/re.html#regular-expression-syntax)) on
+  Regular expression (using [Python regular expression syntax](https://docs.python.org/3/library/re.html#regular-expression-syntax)) on
   how to find and parse the version string.
 
   Is required to parse all strings produced by `serialize =`. Named matching
@@ -287,7 +307,7 @@ This configuration is in the section: `[bumpversion:file:…]`
   Template specifying how to serialize the version parts back to a version
   string.
 
-  This is templated using the [Python Format String Syntax](http://docs.python.org/2/library/string.html#format-string-syntax).
+  This is templated using the [Python Format String Syntax](https://docs.python.org/3/library/string.html#format-string-syntax).
   Available in the template context are parsed values of the named groups
   specified in `parse =` as well as all environment variables (prefixed with
   `$`).
@@ -314,7 +334,7 @@ serialize =
   Template string how to search for the string to be replaced in the file.
   Useful if the remotest possibility exists that the current version number
   might be present multiple times in the file and you mean to only bump one of the
-  occurences. Can be multiple lines, templated using [Python Format String Syntax](http://docs.python.org/2/library/string.html#format-string-syntax)
+  occurrences. Can be multiple lines, templated using [Python Format String Syntax](https://docs.python.org/3/library/string.html#format-string-syntax)
 
 #### `replace =`
   **default:** `{new_version}`
@@ -339,7 +359,7 @@ search = MyProject=={current_version}
 replace = MyProject=={new_version}
 ```
 
-  Can be multiple lines, templated using [Python Format String Syntax](http://docs.python.org/2/library/string.html#format-string-syntax).
+  Can be multiple lines, templated using [Python Format String Syntax](https://docs.python.org/3/library/string.html#format-string-syntax).
 
 ## Command-line Options
 
@@ -388,6 +408,51 @@ where `part` is as usual the part of the version number you are updating. You ne
 For example, if you are updating the minor number and looking for the new version number this becomes
 
     bump2version --dry-run --list minor | grep new_version | sed -r s,"^.*=",,
+
+## Using bumpversion to maintain a go.mod file within a Go project
+
+In a module-aware Go project, when you create a major version of your module beyond v1, your module name will need 
+to include the major version # (e.g. `github.com/myorg/myproject/v2`).
+
+You can use bump2version to maintain the major version # within the go.mod file by using the `parse` and `serialize`
+options, as in this example:
+
+- Example `.bumpversion.cfg` file:
+
+```
+    [bumpversion]
+    current_version = 2.0.0
+    commit = True
+
+    [bumpversion:file:go.mod]
+    parse = (?P<major>\d+)
+    serialize = {major}
+    search = module github.com/myorg/myproject/v{current_version}
+    replace = module github.com/myorg/myproject/v{new_version}
+```
+
+- Example `go.mod` file:
+
+```
+    module github.com/myorg/myproject/v2
+
+    go 1.12
+
+    require (
+        ...
+    )
+```
+
+Then run this command to create version 3.0.0 of your project:
+
+```
+    bump2version --new-version 3.0.0 major
+```
+Your `go.mod` file now contains this module directive:
+
+```
+    module github.com/myorg/myproject/v3
+```
 
 ## Development & Contributing
 

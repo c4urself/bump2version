@@ -3,7 +3,7 @@ test:
 	docker-compose run test
 
 local_test:
-	PYTHONPATH=. py.test tests/
+	PYTHONPATH=. pytest tests/
 
 lint:
 	pip install pylint
