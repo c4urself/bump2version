@@ -615,7 +615,7 @@ def _update_config_file(
 
         if write_to_config_file:
             with open(config_file, "wt", encoding="utf-8", newline=config_newlines) as f:
-                f.write(new_config.getvalue())
+                f.write(new_config.getvalue().strip() + "\n")
 
     except UnicodeEncodeError:
         warnings.warn(
