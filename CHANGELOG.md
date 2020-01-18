@@ -1,4 +1,5 @@
 **unreleased**
+**v1.0.0-dev**
 **v0.5.12-dev**
 
 - Housekeeping, move changelog into own file
