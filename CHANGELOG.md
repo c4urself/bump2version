@@ -1,4 +1,5 @@
 **unreleased**
+**v1.0.1-dev**
 **v1.0.0**
 **v1.0.0-dev**
 - Fix the spurious newline that bump2version adds when writing to bumpversion.cfg, thanks @kyluca #58
