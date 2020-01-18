@@ -1,7 +1,10 @@
 **unreleased**
 **v1.0.0-dev**
-**v0.5.12-dev**
-
+- Fix the spurious newline that bump2version adds when writing to bumpversion.cfg, thanks @kyluca #58
+- Add Python3.8 support, thanks @florisla 
+- Drop Python2 support, thanks @hugovk
+- Allow additional arguments to the commit call, thanks @lubomir
+- Various documentation improvements, thanks @lubomir @florisla @padamstx @glotis
 - Housekeeping, move changelog into own file
 
 **v0.5.11**
