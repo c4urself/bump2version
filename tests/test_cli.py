@@ -339,7 +339,7 @@ def test_single_file_processed_twice(tmpdir):
 current_version: 0.10.2
 new_version: 0.10.3
 [bumpversion:file:file2]""")
-    tmpdir.join(".bumpversion.cfg").write("""[bumpversion]
+    tmpdir.join(".bumpversion.cfg").write(r"""[bumpversion]
 current_version: 0.10.2
 new_version: 0.10.4
 [bumpversion:file (version with dots):file2]
