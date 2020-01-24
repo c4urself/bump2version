@@ -659,6 +659,7 @@ def _commit_to_vcs(files, context, config_file, config_file_exists, vcs, args,
     context.update({'new_' + part: new_version[part].value for part in new_version})
 
     commit_message = args.message.format(**context)
+    context.update({'commit_message': commit_message})
 
     logger.info(
         "%s to %s with message '%s'",
