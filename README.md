@@ -164,7 +164,7 @@ General configuration is grouped in a `[bumpversion]` section.
   In addition, it is also possible to provide a tag message by using `--tag-message TAG_MESSAGE`. Example usage:
   `bump2version --tag-name 'release-{new_version}' --tag-message "Release {new_version}" patch`
 
-  * If neither tag message or sign tag is provided, `bumpversion` uses a `lightweight` tag. Otherwise, it utilizes an `annotated` tag. You can also read more on git tagging [here](https://git-scm.com/book/en/v2/Git-Basics-Tagging).
+  * If neither tag message or sign tag is provided, `bumpversion` uses a `lightweight` tag in Git. Otherwise, it utilizes an `annotated` Git tag. You can read more about Git tagging [here](https://git-scm.com/book/en/v2/Git-Basics-Tagging).
 
 #### `commit = (True | False)`
   _**[optional]**_<br />
