@@ -22,3 +22,7 @@ class WorkingDirectoryIsDirtyException(BumpVersionException):
 class MercurialDoesNotSupportSignedTagsException(BumpVersionException):
     def __init__(self, message):
         self.message = message
+
+
+class VersionNotFoundException(BumpVersionException):
+    """A version number was not found in a source file."""

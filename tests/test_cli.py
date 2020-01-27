@@ -15,7 +15,7 @@ import pytest
 from testfixtures import LogCapture
 
 import bumpversion
-from bumpversion.exceptions import WorkingDirectoryIsDirtyException
+from bumpversion import exceptions
 from bumpversion.cli import DESCRIPTION, main, split_args_in_optional_and_positional
 
 
@@ -408,7 +408,7 @@ def test_dirty_work_dir(tmpdir, vcs):
     vcs_name = "Mercurial" if vcs == "hg" else "Git"
     vcs_output = "A dirty" if vcs == "hg" else "A  dirty"
 
-    with pytest.raises(WorkingDirectoryIsDirtyException):
+    with pytest.raises(exceptions.WorkingDirectoryIsDirtyException):
         with LogCapture() as log_capture:
             main(['patch', '--current-version', '1', '--new-version', '2', 'file7'])
 
@@ -1679,7 +1679,10 @@ def test_non_matching_search_does_not_modify_file(tmpdir):
     tmpdir.join("CHANGELOG.md").write(changelog_content)
     tmpdir.join(".bumpversion.cfg").write(config_content)
 
-    with pytest.raises(ValueError, match="Did not find 'Not-yet-released' in file: 'CHANGELOG.md'"):
+    with pytest.raises(
+            exceptions.VersionNotFoundException,
+            match="Did not find 'Not-yet-released' in file: 'CHANGELOG.md'"
+    ):
         main(['patch', '--verbose'])
 
     assert changelog_content == tmpdir.join("CHANGELOG.md").read()

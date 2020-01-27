@@ -4,6 +4,7 @@ import io
 import logging
 import os
 
+from bumpversion.exceptions import VersionNotFoundException
 
 logger = logging.getLogger(__name__)
 
@@ -33,13 +34,14 @@ def prefixed_environ():
 
 
 class ConfiguredFile:
+
     def __init__(self, path, versionconfig):
         self.path = path
         self._versionconfig = versionconfig
 
     def should_contain_version(self, version, context):
         """
-        Raise an error in case the version number can't be found in this file.
+        Raise VersionNotFound if the version number isn't present in this file.
 
         Return normally if the version number is in fact present.
         """
@@ -63,7 +65,7 @@ class ConfiguredFile:
             return
 
         # version not found
-        raise ValueError(
+        raise VersionNotFoundException(
             "Did not find '{}' in file: '{}'".format(
                 search_expression, self.path
             )
