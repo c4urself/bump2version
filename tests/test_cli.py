@@ -169,7 +169,7 @@ def test_usage_string(tmpdir, capsys):
     assert EXPECTED_USAGE in out
 
 
-def test_usage_string_fork(tmpdir, capsys):
+def test_usage_string_fork(tmpdir):
     tmpdir.chdir()
 
     if platform.system() == "Windows":
@@ -746,7 +746,7 @@ def test_tag_name(tmpdir, vcs):
     assert b'ReleasedVersion-31.1.2' in tag_out
 
 
-def test_message_from_config_file(tmpdir, capsys, vcs):
+def test_message_from_config_file(tmpdir, vcs):
     tmpdir.chdir()
     check_call([vcs, "init"])
     tmpdir.join("VERSION").write("400.0.0")
@@ -772,7 +772,7 @@ tag_name: from-{current_version}-to-{new_version}""")
     assert b'from-400.0.0-to-401.0.0' in tag_out
 
 
-def test_all_parts_in_message_and_serialize_and_tag_name_from_config_file(tmpdir, capsys, vcs):
+def test_all_parts_in_message_and_serialize_and_tag_name_from_config_file(tmpdir, vcs):
     """
     Ensure that major/minor/patch *and* custom parts can be used everywhere.
 
@@ -811,7 +811,7 @@ tag_name: from-{current_version}-aka-{current_major}.{current_minor}.{current_pa
     assert b'from-400.1.2.101-aka-400.1.2-custom-101-to-401.2.3.102-aka-401.2.3-custom-102' in tag_out
 
 
-def test_all_parts_in_replace_from_config_file(tmpdir, capsys, vcs):
+def test_all_parts_in_replace_from_config_file(tmpdir, vcs):
     """
     Ensure that major/minor/patch *and* custom parts can be used in 'replace'.
     """
@@ -931,7 +931,7 @@ except ImportError:
 
 @pytest.mark.xfail(not config_parser_handles_utf8,
                    reason="old ConfigParser uses non-utf-8-strings internally")
-def test_utf8_message_from_config_file(tmpdir, capsys, vcs):
+def test_utf8_message_from_config_file(tmpdir, vcs):
     tmpdir.chdir()
     check_call([vcs, "init"])
     tmpdir.join("VERSION").write("500.0.0")
@@ -952,7 +952,7 @@ message = Nová verze: {current_version} ☃, {new_version} ☀
     assert expected_new_config.encode('utf-8') == tmpdir.join(".bumpversion.cfg").read(mode='rb')
 
 
-def test_utf8_message_from_config_file(tmpdir, capsys, vcs):
+def test_utf8_message_from_config_file(tmpdir, vcs):
     tmpdir.chdir()
     check_call([vcs, "init"])
     tmpdir.join("VERSION").write("10.10.0")
@@ -1082,7 +1082,7 @@ parse = (?P<major>\d+)\.(?P<minor>\d+)(\.(?P<patch>\d+))?
     assert '0.6.1' == tmpdir.join("fileD").read()
 
 
-def test_log_no_config_file_info_message(tmpdir, capsys):
+def test_log_no_config_file_info_message(tmpdir):
     tmpdir.chdir()
 
     tmpdir.join("a_file.txt").write("1.0.0")
@@ -1140,7 +1140,7 @@ def test_log_invalid_regex_exit(tmpdir):
     )
 
 
-def test_complex_info_logging(tmpdir, capsys):
+def test_complex_info_logging(tmpdir):
     tmpdir.join("fileE").write("0.4")
     tmpdir.chdir()
 
@@ -1337,7 +1337,7 @@ def test_no_list_no_stdout(tmpdir, vcs):
     assert out == ""
 
 
-def test_bump_non_numeric_parts(tmpdir, capsys):
+def test_bump_non_numeric_parts(tmpdir):
     tmpdir.join("with_pre_releases.txt").write("1.5.dev")
     tmpdir.chdir()
 
@@ -1397,7 +1397,7 @@ def test_optional_value_from_documentation(tmpdir):
     assert '1' == tmpdir.join("optional_value_from_doc.txt").read()
 
 
-def test_python_pre_release_release_post_release(tmpdir, capsys):
+def test_python_pre_release_release_post_release(tmpdir):
     tmpdir.join("python386.txt").write("1.0a")
     tmpdir.chdir()
 
@@ -1479,7 +1479,7 @@ def test_part_first_value(tmpdir):
     assert '1.1.0' == tmpdir.join("the_version.txt").read()
 
 
-def test_multi_file_configuration(tmpdir, capsys):
+def test_multi_file_configuration(tmpdir):
     tmpdir.join("FULL_VERSION.txt").write("1.0.3")
     tmpdir.join("MAJOR_VERSION.txt").write("1")
 
@@ -1506,7 +1506,7 @@ def test_multi_file_configuration(tmpdir, capsys):
     assert '2' in tmpdir.join("MAJOR_VERSION.txt").read()
 
 
-def test_multi_file_configuration2(tmpdir, capsys):
+def test_multi_file_configuration2(tmpdir):
     tmpdir.join("setup.cfg").write("1.6.6")
     tmpdir.join("README.txt").write("MyAwesomeSoftware(TM) v1.6")
     tmpdir.join("BUILD_NUMBER").write("1.6.6+joe+38943")
@@ -1555,7 +1555,7 @@ def test_multi_file_configuration2(tmpdir, capsys):
     assert '1.7.1+bob+38945' in tmpdir.join("BUILD_NUMBER").read()
 
 
-def test_search_replace_to_avoid_updating_unconcerned_lines(tmpdir, capsys):
+def test_search_replace_to_avoid_updating_unconcerned_lines(tmpdir):
     tmpdir.chdir()
 
     tmpdir.join("requirements.txt").write("Django>=1.5.6,<1.6\nMyProject==1.5.6")
@@ -1596,7 +1596,7 @@ def test_search_replace_to_avoid_updating_unconcerned_lines(tmpdir, capsys):
     assert 'Django>=1.5.6' in tmpdir.join("requirements.txt").read()
 
 
-def test_search_replace_expanding_changelog(tmpdir, capsys):
+def test_search_replace_expanding_changelog(tmpdir):
     tmpdir.chdir()
 
     tmpdir.join("CHANGELOG.md").write(dedent("""
@@ -1654,7 +1654,7 @@ def test_search_replace_expanding_changelog(tmpdir, capsys):
     assert postdate in tmpdir.join("CHANGELOG.md").read()
 
 
-def test_search_replace_cli(tmpdir, capsys):
+def test_search_replace_cli(tmpdir):
     tmpdir.join("file89").write("My birthday: 3.5.98\nCurrent version: 3.5.98")
     tmpdir.chdir()
     main([
@@ -1829,7 +1829,7 @@ def test_configparser_empty_lines_in_values(tmpdir):
     """) == tmpdir.join("CHANGES.rst").read()
 
 
-def test_regression_tag_name_with_hyphens(tmpdir, capsys, git):
+def test_regression_tag_name_with_hyphens(tmpdir, git):
     tmpdir.chdir()
     tmpdir.join("some_source.txt").write("2014.10.22")
     check_call([git, "init"])
@@ -1873,7 +1873,7 @@ message = XXX
     assert "Failed to run" in caplog.text
 
 
-def test_regression_characters_after_last_label_serialize_string(tmpdir, capsys):
+def test_regression_characters_after_last_label_serialize_string(tmpdir):
     tmpdir.chdir()
     tmpdir.join("bower.json").write('''
     {
@@ -1894,7 +1894,7 @@ def test_regression_characters_after_last_label_serialize_string(tmpdir, capsys)
     main(['patch', 'bower.json'])
 
 
-def test_regression_dont_touch_capitalization_of_keys_in_config(tmpdir, capsys):
+def test_regression_dont_touch_capitalization_of_keys_in_config(tmpdir):
     tmpdir.chdir()
     tmpdir.join("setup.cfg").write(dedent("""
     [bumpversion]
@@ -1915,7 +1915,7 @@ def test_regression_dont_touch_capitalization_of_keys_in_config(tmpdir, capsys):
     """).strip() == tmpdir.join("setup.cfg").read().strip()
 
 
-def test_regression_new_version_cli_in_files(tmpdir, capsys):
+def test_regression_new_version_cli_in_files(tmpdir):
     """
     Reported here: https://github.com/peritus/bumpversion/issues/60
     """
