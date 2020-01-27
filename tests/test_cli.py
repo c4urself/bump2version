@@ -1654,6 +1654,38 @@ def test_search_replace_expanding_changelog(tmpdir):
     assert postdate in tmpdir.join("CHANGELOG.md").read()
 
 
+def test_non_matching_search_does_not_modify_file(tmpdir):
+    tmpdir.chdir()
+
+    changelog_content = dedent("""
+    # Unreleased
+    
+    * bullet point A
+    
+    # Release v'older' (2019-09-17)
+    
+    * bullet point B
+    """)
+
+    config_content = dedent("""
+      [bumpversion]
+      current_version = 1.0.3
+
+      [bumpversion:file:CHANGELOG.md]
+      search = Not-yet-released
+      replace = Release v{new_version} ({now:%Y-%m-%d})
+    """)
+
+    tmpdir.join("CHANGELOG.md").write(changelog_content)
+    tmpdir.join(".bumpversion.cfg").write(config_content)
+
+    with pytest.raises(ValueError, match="Did not find 'Not-yet-released' in file: 'CHANGELOG.md'"):
+        main(['patch', '--verbose'])
+
+    assert changelog_content == tmpdir.join("CHANGELOG.md").read()
+    assert config_content in tmpdir.join(".bumpversion.cfg").read()
+
+
 def test_search_replace_cli(tmpdir):
     tmpdir.join("file89").write("My birthday: 3.5.98\nCurrent version: 3.5.98")
     tmpdir.chdir()
