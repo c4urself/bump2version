@@ -33,12 +33,17 @@ If you want to use Python 2, use `pip>=9` and you'll get the last supported vers
 or pin `bump2version<1`.
 
 
-
 <!---
 ## Screencast
 
 <a href="https://asciinema.org/a/3828">Watch a screencast here</a>.
 -->
+
+## Alternatives
+
+If bump2version does not fully suit your needs, you could take a look
+at other tools doing similar or related tasks:
+[ALTERNATIVES.md](https://github.com/c4urself/bump2version/blob/master/RELATED.md).
 
 ## Installation
 
