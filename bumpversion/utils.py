@@ -38,25 +38,41 @@ class ConfiguredFile:
         self._versionconfig = versionconfig
 
     def should_contain_version(self, version, context):
+        """
+        Raise an error in case the version number can't be found in this file.
 
+        Return normally if the version number is in fact present.
+        """
         context["current_version"] = self._versionconfig.serialize(version, context)
+        search_expression = self._versionconfig.search.format(**context)
 
-        serialized_version = self._versionconfig.search.format(**context)
-
-        if self.contains(serialized_version):
+        if self.contains(search_expression):
             return
 
-        msg = "Did not find '{}' or '{}' in file {}".format(
-            version.original, serialized_version, self.path
+        # the `search` pattern did not match, but the original supplied
+        # version number (representing the same version part values) might
+        # match instead.
+
+        # check whether `search` isn't customized, i.e. should match only
+        # very specific parts of the file
+        search_pattern_is_default = self._versionconfig.search == "{current_version}"
+
+        if search_pattern_is_default and self.contains(version.original):
+            # original version is present and we're not looking for something
+            # more specific -> this is accepted as a match
+            return
+
+        # version not found
+        raise ValueError(
+            "Did not find '{}' in file: '{}'".format(
+                search_expression, self.path
+            )
         )
 
-        if version.original:
-            assert self.contains(version.original), msg
-            return
-
-        assert False, msg
-
     def contains(self, search):
+        if not search:
+            return False
+
         with open(self.path, "rt", encoding="utf-8") as f:
             search_lines = search.splitlines()
             lookbehind = []
