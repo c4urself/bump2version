@@ -129,7 +129,7 @@ class Git(BaseVCS):
         """
         Create a tag of the new_version in VCS.
 
-        If only name is given, bumpversion uses a lightweight tag,
+        If only name is given, bumpversion uses a lightweight tag.
         Otherwise, it utilizes an annotated tag.
         """
         command = ["git", "tag", name]
