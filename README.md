@@ -10,10 +10,8 @@
 
 This is an interim fork of the excellent project that can be found here: https://github.com/peritus/bumpversion
 
-Unfortunately it seems like development has been stuck for some time and no activity has been seen from the
-author, to that end this project is a drop-in replacement that merges in some of the more important fixes.
-
-Hopefully we can merge back into the original bumpversion and carry on development there.
+In the future, both projects will re-merge with backwards
+compatibility as a goal (issue [86](https://github.com/c4urself/bump2version/issues/86)).
 
 ## Overview
 
@@ -33,12 +31,17 @@ If you want to use Python 2, use `pip>=9` and you'll get the last supported vers
 or pin `bump2version<1`.
 
 
-
 <!---
 ## Screencast
 
 <a href="https://asciinema.org/a/3828">Watch a screencast here</a>.
 -->
+
+## Alternatives
+
+If bump2version does not fully suit your needs, you could take a look
+at other tools doing similar or related tasks:
+[ALTERNATIVES.md](https://github.com/c4urself/bump2version/blob/master/RELATED.md).
 
 ## Installation
 
