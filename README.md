@@ -11,7 +11,7 @@
 This is an interim fork of the excellent project that can be found here: https://github.com/peritus/bumpversion
 
 In the future, both projects will re-merge with backwards
-compatibility as a goal.
+compatibility as a goal (issue [86](https://github.com/c4urself/bump2version/issues/86)).
 
 ## Overview
 
