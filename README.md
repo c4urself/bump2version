@@ -169,6 +169,11 @@ General configuration is grouped in a `[bumpversion]` section.
   Also available as command-line flag `tag-name`.  Example usage:  
   `bump2version --tag-name 'release-{new_version}' patch`
 
+  In addition, it is also possible to provide a tag message by using `--tag-message TAG_MESSAGE`. Example usage:
+  `bump2version --tag-name 'release-{new_version}' --tag-message "Release {new_version}" patch`
+
+  * If neither tag message or sign tag is provided, `bumpversion` uses a `lightweight` tag in Git. Otherwise, it utilizes an `annotated` Git tag. You can read more about Git tagging [here](https://git-scm.com/book/en/v2/Git-Basics-Tagging).
+
 #### `commit = (True | False)`
   _**[optional]**_<br />
   **default:** False (Don't create a commit)
@@ -199,7 +204,7 @@ General configuration is grouped in a `[bumpversion]` section.
   In addition, all environment variables are exposed, prefixed with `$`.  
   You can also use the variables `now` or `utcnow` to get a current timestamp. Both accept
   datetime formatting (when used like as in `{now:%d.%m.%Y}`).
-  
+
   Also available as command-line flag `--message`.  Example usage:  
   `bump2version --message '[{now:%Y-%m-%d}] Jenkins Build {$BUILD_NUMBER}: {new_version}' patch`)
 
@@ -314,7 +319,7 @@ This configuration is in the section: `[bumpversion:file:…]`
   Available in the template context are parsed values of the named groups
   specified in `parse =` as well as all environment variables (prefixed with
   `$`).
-  
+
   Can be specified multiple times, bumpversion will try the serialization
   formats beginning with the first and choose the last one where all values can
   be represented like this:
