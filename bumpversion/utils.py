@@ -116,8 +116,10 @@ class ConfiguredFile:
 
         file_content_after = file_content_before.replace(search_for, replace_with)
 
-        if file_content_before == file_content_after:
-            # TODO expose this to be configurable
+        if not self._versionconfig.search_strict and file_content_before == file_content_after:
+            logger.debug("The pattern '%s' was not found for file %s. Trying to search with the original version '%s'.",
+                search_for, self.path, current_version.original
+            )
             file_content_after = file_content_before.replace(
                 current_version.original, replace_with
             )

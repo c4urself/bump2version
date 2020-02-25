@@ -93,6 +93,7 @@ EXPECTED_OPTIONS = r"""
 [--parse REGEX]
 [--serialize FORMAT]
 [--search SEARCH]
+[--search-strict]
 [--replace REPLACE]
 [--current-version VERSION]
 [--dry-run]
@@ -129,6 +130,8 @@ optional arguments:
                         (default: ['{major}.{minor}.{patch}'])
   --search SEARCH       Template for complete string to search (default:
                         {current_version})
+  --search-strict       Search strictly for the given strings - no fallback to
+                        the original version (default: False)
   --replace REPLACE     Template for complete string to replace (default:
                         {new_version})
   --current-version VERSION
@@ -2030,6 +2033,77 @@ def test_retain_newline(tmpdir, configfile, newline):
     # Ensure there is only a single newline (not two) at the end of the file
     # and that it is of the right type
     assert new_config.endswith(b"[bumpversion:file:file.py]" + newline)
+
+class TestSearchStrictWontFallbackReplaceTheDefaultVersion:
+
+    def test_per_file_configuration(self, tmpdir):
+        tmpdir.join(".bumpversion.cfg").write(dedent("""
+            [bumpversion]
+            current_version = 0.7.2
+
+            [bumpversion:file:myfile]
+            search = version={current_version}
+            replace = version={new_version}
+            search_strict = True
+            """).strip())
+        tmpdir.join("myfile").write(dedent("""
+            version=0.7.4
+            other=0.7.2
+            """).strip())
+        tmpdir.chdir()
+        
+        with pytest.raises(
+            exceptions.VersionNotFoundException,
+            match=".*'version=0.7.2'.*"
+        ):
+            main(['patch'])
+
+        assert 'other=0.7.2' in tmpdir.join("myfile").read()
+
+    def test_file_inherits_global_config(self, tmpdir):
+        tmpdir.join(".bumpversion.cfg").write(dedent("""
+            [bumpversion]
+            current_version = 0.7.2
+            search_strict = True
+
+            [bumpversion:file:myfile]
+            search = version={current_version}
+            replace = version={new_version}
+            """).strip())
+        tmpdir.join("myfile").write(dedent("""
+            other=0.7.2
+            """).strip())
+        tmpdir.chdir()
+        
+        with pytest.raises(
+            exceptions.VersionNotFoundException,
+            match=".*'version=0.7.2'.*"
+        ):
+            main(['patch'])
+
+        assert 'other=0.7.2' in tmpdir.join("myfile").read()
+
+    def test_file_inherits_command_line_option(self, tmpdir):
+        tmpdir.join(".bumpversion.cfg").write(dedent("""
+            [bumpversion]
+            current_version = 0.7.2
+
+            [bumpversion:file:myfile]
+            search = version={current_version}
+            replace = version={new_version}
+            """).strip())
+        tmpdir.join("myfile").write(dedent("""
+            other=0.7.2
+            """).strip())
+        tmpdir.chdir()
+        
+        with pytest.raises(
+            exceptions.VersionNotFoundException,
+            match=".*'version=0.7.2'.*"
+        ):
+            main(['--search-strict', 'patch'])
+
+        assert 'other=0.7.2' in tmpdir.join("myfile").read()
 
 
 class TestSplitArgsInOptionalAndPositional:

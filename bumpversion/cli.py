@@ -337,6 +337,11 @@ def _load_configuration(config_file, explicit_config, defaults):
                     "search", "{current_version}"
                 )
 
+            if "search_strict" not in section_config:
+                section_config["search_strict"] = defaults.get(
+                    "search_strict", False
+                )
+
             if "replace" not in section_config:
                 section_config["replace"] = defaults.get("replace", "{new_version}")
 
@@ -378,6 +383,13 @@ def _parse_arguments_phase_2(args, known_args, defaults, root_parser):
         default=defaults.get("search", "{current_version}"),
     )
     parser2.add_argument(
+        "--search-strict",
+        action="store_true",
+        default=defaults.get("search_strict", False),
+        help="Search strictly for the given strings - no fallback to the original version",
+        required=False,
+    )
+    parser2.add_argument(
         "--replace",
         metavar="REPLACE",
         help="Template for complete string to replace",
@@ -398,6 +410,7 @@ def _setup_versionconfig(known_args, part_configs):
             parse=known_args.parse,
             serialize=known_args.serialize,
             search=known_args.search,
+            search_strict=known_args.search_strict,
             replace=known_args.replace,
             part_configs=part_configs,
         )
