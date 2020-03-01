@@ -298,6 +298,11 @@ values =
 
 This configuration is in the section: `[bumpversion:file:…]`
 
+Note: The configuration file format requires each section header to be
+unique. If you want to process a certain file multiple times,
+you may append a description between parens to the `file` keyword:
+`[bumpversion:file (special one):…]`.
+
 #### `parse =`
   **default:** `(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)`
 

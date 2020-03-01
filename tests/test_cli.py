@@ -64,6 +64,17 @@ def configfile(request):
     return request.param
 
 
+@pytest.fixture(params=[
+    "file",
+    "file(suffix)",
+    "file (suffix with space)",
+    "file (suffix lacking closing paren",
+])
+def file_keyword(request):
+    """Return multiple possible styles for the bumpversion:file keyword."""
+    return request.param
+
+
 try:
     RawConfigParser(empty_lines_in_values=False)
     using_old_configparser = False
@@ -281,6 +292,22 @@ new_version: 0.10.3
     assert "0.10.3" == tmpdir.join("file2").read()
 
 
+def test_file_keyword_with_suffix_is_accepted(tmpdir, configfile, file_keyword):
+    tmpdir.join("file2").write("0.10.2")
+    tmpdir.join(configfile).write(
+        """[bumpversion]
+    current_version: 0.10.2
+    new_version: 0.10.3
+    [bumpversion:%s:file2]
+    """ % file_keyword
+    )
+
+    tmpdir.chdir()
+    main(['patch'])
+
+    assert "0.10.3" == tmpdir.join("file2").read()
+
+
 def test_multiple_config_files(tmpdir):
     tmpdir.join("file2").write("0.10.2")
     tmpdir.join("setup.cfg").write("""[bumpversion]
@@ -296,6 +323,39 @@ new_version: 0.10.4
     main(['patch'])
 
     assert "0.10.4" == tmpdir.join("file2").read()
+
+
+def test_single_file_processed_twice(tmpdir):
+    """
+    Verify that a single file "file2" can be processed twice.
+
+    Use two file_ entries, both with a different suffix after
+    the underscore.
+    Employ different parse/serialize and search/replace configs
+    to verify correct interpretation.
+    """
+    tmpdir.join("file2").write("dots: 0.10.2\ndashes: 0-10-2")
+    tmpdir.join("setup.cfg").write("""[bumpversion]
+current_version: 0.10.2
+new_version: 0.10.3
+[bumpversion:file:file2]""")
+    tmpdir.join(".bumpversion.cfg").write(r"""[bumpversion]
+current_version: 0.10.2
+new_version: 0.10.4
+[bumpversion:file (version with dots):file2]
+search = dots: {current_version}
+replace = dots: {new_version}
+[bumpversion:file (version with dashes):file2]
+search = dashes: {current_version}
+replace = dashes: {new_version}
+parse = (?P<major>\d+)-(?P<minor>\d+)-(?P<patch>\d+)
+serialize = {major}-{minor}-{patch}
+""")
+
+    tmpdir.chdir()
+    main(['patch'])
+
+    assert "dots: 0.10.4\ndashes: 0-10-4" == tmpdir.join("file2").read()
 
 
 def test_config_file_is_updated(tmpdir):

@@ -42,6 +42,16 @@ DESCRIPTION = "{}: v{} (using Python v{})".format(
 )
 VCS = [Git, Mercurial]
 
+# detect either
+# bumpversion:part:value
+# bumpversion:file:value
+# bumpversion:file(suffix):value
+# bumpversion:file ( suffix with spaces):value
+RE_DETECT_SECTION_TYPE = re.compile(
+    r"^bumpversion:"
+    r"((?P<file>file)(\s*\(\s*(?P<file_suffix>[^\):]+)\)?)?|(?P<part>part)):"
+    r"(?P<value>.+)",
+)
 
 logger_list = logging.getLogger("bumpversion.list")
 logger = logging.getLogger(__name__)
@@ -279,18 +289,18 @@ def _load_configuration(config_file, explicit_config, defaults):
 
     part_configs = {}
     files = []
-    file_or_part = re.compile("^bumpversion:(file|part):(.+)")
-    for section_name in config.sections():
-        section_name_match = file_or_part.match(section_name)
 
-        if not section_name_match:
+    for section_name in config.sections():
+        section_type_match = RE_DETECT_SECTION_TYPE.match(section_name)
+
+        if not section_type_match:
             continue
 
-        section_prefix, section_value = section_name_match.groups()
-
+        section_type = section_type_match.groupdict()
+        section_value = section_type.get("value")
         section_config = dict(config.items(section_name))
 
-        if section_prefix == "part":
+        if section_type.get("part"):
             ThisVersionPartConfiguration = NumericVersionPartConfiguration
 
             if "values" in section_config:
@@ -305,8 +315,7 @@ def _load_configuration(config_file, explicit_config, defaults):
             part_configs[section_value] = ThisVersionPartConfiguration(
                 **section_config
             )
-
-        elif section_prefix == "file":
+        elif section_type.get("file"):
             filename = section_value
 
             if "serialize" in section_config:
