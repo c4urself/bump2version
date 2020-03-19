@@ -1619,6 +1619,18 @@ def test_search_replace_to_avoid_updating_unconcerned_lines(tmpdir):
     tmpdir.chdir()
 
     tmpdir.join("requirements.txt").write("Django>=1.5.6,<1.6\nMyProject==1.5.6")
+    tmpdir.join("CHANGELOG.md").write(dedent("""
+    # https://keepachangelog.com/en/1.0.0/
+
+    ## [Unreleased]
+    ### Added
+    - Foobar
+
+    ## [0.0.1] - 2014-05-31
+    ### Added
+    - This CHANGELOG file to hopefully serve as an evolving example of a
+      standardized open source project CHANGELOG.
+    """))
 
     tmpdir.join(".bumpversion.cfg").write(dedent("""
       [bumpversion]
@@ -1627,14 +1639,22 @@ def test_search_replace_to_avoid_updating_unconcerned_lines(tmpdir):
       [bumpversion:file:requirements.txt]
       search = MyProject=={current_version}
       replace = MyProject=={new_version}
+
+      [bumpversion:file:CHANGELOG.md]
+      search = {#}{#} [Unreleased]
+      replace = {#}{#} [Unreleased]
+
+        {#}{#} [{new_version}] - {utcnow:%Y-%m-%d}
       """).strip())
 
     with LogCapture() as log_capture:
         main(['minor', '--verbose'])
 
+    utc_today = datetime.utcnow().strftime("%Y-%m-%d")
+
     log_capture.check(
         ('bumpversion.cli', 'INFO', 'Reading config file .bumpversion.cfg:'),
-        ('bumpversion.cli', 'INFO', '[bumpversion]\ncurrent_version = 1.5.6\n\n[bumpversion:file:requirements.txt]\nsearch = MyProject=={current_version}\nreplace = MyProject=={new_version}'),
+        ('bumpversion.cli', 'INFO', '[bumpversion]\ncurrent_version = 1.5.6\n\n[bumpversion:file:requirements.txt]\nsearch = MyProject=={current_version}\nreplace = MyProject=={new_version}\n\n[bumpversion:file:CHANGELOG.md]\nsearch = {#}{#} [Unreleased]\nreplace = {#}{#} [Unreleased]\n\n  {#}{#} [{new_version}] - {utcnow:%Y-%m-%d}'),
         ('bumpversion.version_part', 'INFO', "Parsing version '1.5.6' using regexp '(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)'"),
         ('bumpversion.version_part', 'INFO', 'Parsed the following values: major=1, minor=5, patch=6'),
         ('bumpversion.cli', 'INFO', "Attempting to increment part 'minor'"),
@@ -1642,15 +1662,18 @@ def test_search_replace_to_avoid_updating_unconcerned_lines(tmpdir):
         ('bumpversion.version_part', 'INFO', "Parsing version '1.6.0' using regexp '(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)'"),
         ('bumpversion.version_part', 'INFO', 'Parsed the following values: major=1, minor=6, patch=0'),
         ('bumpversion.cli', 'INFO', "New version will be '1.6.0'"),
-        ('bumpversion.cli', 'INFO', 'Asserting files requirements.txt contain the version string...'),
+        ('bumpversion.cli', 'INFO', 'Asserting files requirements.txt, CHANGELOG.md contain the version string...'),
         ('bumpversion.utils', 'INFO', "Found 'MyProject==1.5.6' in requirements.txt at line 1: MyProject==1.5.6"),
+        ('bumpversion.utils', 'INFO', "Found '## [Unreleased]' in CHANGELOG.md at line 3: ## [Unreleased]"),
         ('bumpversion.utils', 'INFO', 'Changing file requirements.txt:'),
         ('bumpversion.utils', 'INFO', '--- a/requirements.txt\n+++ b/requirements.txt\n@@ -1,2 +1,2 @@\n Django>=1.5.6,<1.6\n-MyProject==1.5.6\n+MyProject==1.6.0'),
+        ('bumpversion.utils', 'INFO', 'Changing file CHANGELOG.md:'),
+        ('bumpversion.utils', 'INFO', '--- a/CHANGELOG.md\n+++ b/CHANGELOG.md\n@@ -2,6 +2,8 @@\n # https://keepachangelog.com/en/1.0.0/\n \n ## [Unreleased]\n+\n+## [1.6.0] - %s\n ### Added\n - Foobar\n ' % utc_today),
         ('bumpversion.list', 'INFO', 'current_version=1.5.6'),
         ('bumpversion.list', 'INFO', 'new_version=1.6.0'),
         ('bumpversion.cli', 'INFO', 'Writing to config file .bumpversion.cfg:'),
-        ('bumpversion.cli', 'INFO', '[bumpversion]\ncurrent_version = 1.6.0\n\n[bumpversion:file:requirements.txt]\nsearch = MyProject=={current_version}\nreplace = MyProject=={new_version}\n\n')
-    )
+        ('bumpversion.cli', 'INFO', '[bumpversion]\ncurrent_version = 1.6.0\n\n[bumpversion:file:requirements.txt]\nsearch = MyProject=={current_version}\nreplace = MyProject=={new_version}\n\n[bumpversion:file:CHANGELOG.md]\nsearch = {#}{#} [Unreleased]\nreplace = {#}{#} [Unreleased]\n\t\n\t{#}{#} [{new_version}] - {utcnow:%Y-%m-%d}\n\n')
+     )
 
     assert 'MyProject==1.6.0' in tmpdir.join("requirements.txt").read()
     assert 'Django>=1.5.6' in tmpdir.join("requirements.txt").read()
