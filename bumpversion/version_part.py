@@ -69,7 +69,39 @@ class VersionPart:
         return self.value == self.config.optional_value
 
     def __format__(self, format_spec):
-        return self.value
+        formatted = None
+        template = '{value:{format_spec}}'
+        error = None
+
+        for target_type in [str, int]:
+            # Try to format the val as a string and an int
+            # This should cover most, if not all, bases of format specs
+            try:
+                coerced_val = target_type(self.value)
+                formatted = template.format(
+                    value=coerced_val,
+                    format_spec=format_spec,
+                )
+            except Exception as e:
+                logger.debug(
+                    'Unable to parse format: {}'.format(e)
+                )
+                error = e
+
+            if formatted is not None:
+                break
+
+        if formatted is None:
+            logger.warning(
+                'Defaulting to unformated {value}. Formatting with format spec {format_spec} failed: {error}'.format(
+                    value=self.value,
+                    format_spec=format_spec,
+                    error=error,
+                )
+            )
+            formatted = self.value
+
+        return formatted
 
     def __repr__(self):
         return "<bumpversion.VersionPart:{}:{}>".format(

@@ -45,8 +45,17 @@ def test_version_part_check_optional_true(confvpc):
 
 
 def test_version_part_format(confvpc):
-    assert "{}".format(
-        VersionPart(confvpc.first_value, confvpc)) == confvpc.first_value
+    version_part = VersionPart(confvpc.first_value, confvpc)
+
+    test_cases = [
+        ('{:04d}', '000{}'),
+        ('{:0>4}', '000{}'),
+        ('{:*^30}', '**************{}***************'),
+        ('{}', confvpc.first_value),
+    ]
+
+    for actual, expected in test_cases:
+        assert actual.format(version_part) == expected.format(confvpc.first_value)
 
 
 def test_version_part_equality(confvpc):
