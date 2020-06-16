@@ -407,6 +407,80 @@ message = DO NOT BUMP VERSIONS WITH THIS FILE
     assert "DO NOT" not in vcs_log
 
 
+def test_dry_run_verbose_log(tmpdir, vcs):
+    tmpdir.chdir()
+
+    version = "0.12.0"
+    patch = "0.12.1"
+    v_parts = version.split('.')
+    p_parts = patch.split('.')
+    file = "file4"
+    message = "DO NOT BUMP VERSIONS WITH THIS FILE"
+    config = """[bumpversion]
+current_version = {version}
+tag = True
+commit = True
+message = {message}
+
+[bumpversion:file:{file}]
+
+""".format(version=version, file=file, message=message)
+
+    bumpcfg = ".bumpversion.cfg"
+    tmpdir.join(file).write(version)
+    tmpdir.join(bumpcfg).write(config)
+
+    check_call([vcs, "init"])
+    check_call([vcs, "add", file])
+    check_call([vcs, "add", bumpcfg])
+    check_call([vcs, "commit", "-m", "initial commit"])
+
+    with LogCapture(level=logging.INFO) as log_capture:
+        main(['patch', '--dry-run', '--verbose'])
+
+    vcs_name = "Mercurial" if vcs == "hg" else "Git"
+    log_capture.check_present(
+        # generic --verbose entries
+        ('bumpversion.cli', 'INFO', 'Reading config file {}:'.format(bumpcfg)),
+        ('bumpversion.cli', 'INFO', config),
+        ('bumpversion.version_part', 'INFO',
+         "Parsing version '{}' using regexp '(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)'".format(version)),
+        ('bumpversion.version_part', 'INFO',
+         'Parsed the following values: major={}, minor={}, patch={}'.format(v_parts[0], v_parts[1], v_parts[2])),
+        ('bumpversion.cli', 'INFO', "Attempting to increment part 'patch'"),
+        ('bumpversion.cli', 'INFO',
+         'Values are now: major={}, minor={}, patch={}'.format(p_parts[0], p_parts[1], p_parts[2])),
+        ('bumpversion.cli', 'INFO', "Dry run active, won't touch any files."),  # only in dry-run mode
+        ('bumpversion.version_part', 'INFO',
+         "Parsing version '{}' using regexp '(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)'".format(patch)),
+        ('bumpversion.version_part', 'INFO',
+         'Parsed the following values: major={}, minor={}, patch={}'.format(p_parts[0], p_parts[1], p_parts[2])),
+        ('bumpversion.cli', 'INFO', "New version will be '{}'".format(patch)),
+        ('bumpversion.cli', 'INFO', 'Asserting files {} contain the version string...'.format(file)),
+        ('bumpversion.utils', 'INFO', "Found '{v}' in {f} at line 0: {v}".format(v=version, f=file)),  # verbose
+        ('bumpversion.utils', 'INFO', 'Would change file {}:'.format(file)),  # dry-run change to 'would'
+        ('bumpversion.utils', 'INFO',
+         '--- a/{f}\n+++ b/{f}\n@@ -1 +1 @@\n-{v}\n+{p}'.format(f=file, v=version, p=patch)),
+        ('bumpversion.list', 'INFO', 'current_version={}'.format(version)),
+        ('bumpversion.list', 'INFO', 'tag=True'),
+        ('bumpversion.list', 'INFO', 'commit=True'),
+        ('bumpversion.list', 'INFO', 'message={}'.format(message)),
+        ('bumpversion.list', 'INFO', 'new_version={}'.format(patch)),
+        ('bumpversion.cli', 'INFO', 'Would write to config file {}:'.format(bumpcfg)),  # dry-run 'would'
+        ('bumpversion.cli', 'INFO', config.replace(version, patch)),
+        # following entries are only present if both --verbose and --dry-run are specified
+        # all entries use 'would do x' variants instead of 'doing x'
+        ('bumpversion.cli', 'INFO', 'Would prepare {vcs} commit'.format(vcs=vcs_name)),
+        ('bumpversion.cli', 'INFO', "Would add changes in file '{file}' to {vcs}".format(file=file, vcs=vcs_name)),
+        ('bumpversion.cli', 'INFO', "Would add changes in file '{file}' to {vcs}".format(file=bumpcfg, vcs=vcs_name)),
+        ('bumpversion.cli', 'INFO', "Would commit to {vcs} with message '{msg}'".format(msg=message, vcs=vcs_name)),
+        ('bumpversion.cli', 'INFO',
+         "Would tag 'v{p}' with message 'Bump version: {v} → {p}' in {vcs} and not signing"
+         .format(v=version, p=patch, vcs=vcs_name)),
+        order_matters=True
+    )
+
+
 def test_bump_version(tmpdir):
     tmpdir.join("file5").write("1.0.0")
     tmpdir.chdir()
