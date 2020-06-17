@@ -194,6 +194,10 @@ def _parse_arguments_phase_1(original_args):
 
 def _setup_logging(show_list, verbose):
     logformatter = logging.Formatter("%(message)s")
+    if not logger.handlers:
+        ch1 = logging.StreamHandler(sys.stderr)
+        ch1.setFormatter(logformatter)
+        logger.addHandler(ch1)
     if not logger_list.handlers:
         ch2 = logging.StreamHandler(sys.stdout)
         ch2.setFormatter(logformatter)
