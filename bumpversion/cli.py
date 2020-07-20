@@ -103,6 +103,10 @@ def main(original_args=None):
     args, file_names = _parse_arguments_phase_3(remaining_argv, positionals, defaults, parser2)
     new_version = _parse_new_version(args, new_version, version_config)
 
+    # do not use the files from the config
+    if args.no_configured_files:
+        files = []
+
     # replace version in target files
     vcs = _determine_vcs_dirty(VCS, defaults)
     files.extend(
@@ -454,6 +458,13 @@ def _parse_arguments_phase_3(remaining_argv, positionals, defaults, parser2):
         metavar="VERSION",
         help="Version that needs to be updated",
         required="current_version" not in defaults,
+    )
+    parser3.add_argument(
+        "--no-configured-files",
+        action="store_true",
+        default=False,
+        dest="no_configured_files",
+        help="Only replace the version in files specified on the command line, ignoring the files from the configuration file.",
     )
     parser3.add_argument(
         "--dry-run",
