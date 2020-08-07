@@ -356,7 +356,7 @@ def _load_configuration(config_file, explicit_config, defaults):
 
             version_config = VersionConfig(**section_config)
             if section_type.get("file") == "glob":
-                for filename_glob in glob.glob(filename):
+                for filename_glob in glob.glob(filename, recursive=True):
                     files.append(ConfiguredFile(filename_glob, version_config))
             else:
                 files.append(ConfiguredFile(filename, version_config))
