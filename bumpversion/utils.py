@@ -75,7 +75,7 @@ class ConfiguredFile:
         if not search:
             return False
 
-        with open(self.path, "rt", encoding="utf-8") as f:
+        with open(self.path, "rt", encoding=self._versionconfig.encoding) as f:
             search_lines = search.splitlines()
             lookbehind = []
 
@@ -102,7 +102,7 @@ class ConfiguredFile:
 
     def replace(self, current_version, new_version, context, dry_run):
 
-        with open(self.path, "rt", encoding="utf-8") as f:
+        with open(self.path, "rt", encoding=self._versionconfig.encoding) as f:
             file_content_before = f.read()
             file_new_lines = f.newlines
 
@@ -141,7 +141,7 @@ class ConfiguredFile:
             logger.info("%s file %s", "Would not change" if dry_run else "Not changing", self.path)
 
         if not dry_run:
-            with open(self.path, "wt", encoding="utf-8", newline=file_new_lines) as f:
+            with open(self.path, "wt", encoding=self._versionconfig.encoding, newline=file_new_lines) as f:
                 f.write(file_content_after)
 
     def __str__(self):
