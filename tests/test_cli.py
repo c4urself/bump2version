@@ -292,6 +292,36 @@ new_version: 0.10.3
     assert "0.10.3" == tmpdir.join("file2").read()
 
 
+def test_glob_keyword(tmpdir, configfile):
+    tmpdir.join("file1.txt").write("0.9.34")
+    tmpdir.join("file2.txt").write("0.9.34")
+    tmpdir.join(configfile).write("""[bumpversion]
+current_version: 0.9.34
+new_version: 0.9.35
+[bumpversion:glob:*.txt]""")
+
+    tmpdir.chdir()
+    main(["patch"])
+    assert "0.9.35" == tmpdir.join("file1.txt").read()
+    assert "0.9.35" == tmpdir.join("file2.txt").read()
+
+def test_glob_keyword_recursive(tmpdir, configfile):
+    tmpdir.mkdir("subdir").mkdir("subdir2")
+    file1 = tmpdir.join("subdir").join("file1.txt")
+    file1.write("0.9.34")
+    file2 = tmpdir.join("subdir").join("subdir2").join("file2.txt")
+    file2.write("0.9.34")
+    tmpdir.join(configfile).write("""[bumpversion]
+current_version: 0.9.34
+new_version: 0.9.35
+[bumpversion:glob:**/*.txt]""")
+
+    tmpdir.chdir()
+    main(["patch"])
+    assert "0.9.35" == file1.read()
+    assert "0.9.35" == file2.read()
+
+
 def test_file_keyword_with_suffix_is_accepted(tmpdir, configfile, file_keyword):
     tmpdir.join("file2").write("0.10.2")
     tmpdir.join(configfile).write(

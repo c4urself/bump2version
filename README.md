@@ -286,7 +286,11 @@ values =
 
 ### Configuration file -- File specific configuration
 
-This configuration is in the section: `[bumpversion:file:…]`
+This configuration is in the section: `[bumpversion:file:…]` or `[bumpversion:glob:…]`
+
+Both, `file:` and `glob:` are configured the same. Their difference is that
+file will match file names directly like `requirements.txt`. While glob also
+matches multiple files via wildcards like `**/pom.xml`.
 
 Note: The configuration file format requires each section header to be
 unique. If you want to process a certain file multiple times,

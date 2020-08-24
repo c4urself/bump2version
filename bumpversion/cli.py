@@ -1,5 +1,6 @@
 import argparse
 from datetime import datetime
+import glob
 import io
 import itertools
 import logging
@@ -49,7 +50,7 @@ VCS = [Git, Mercurial]
 # bumpversion:file ( suffix with spaces):value
 RE_DETECT_SECTION_TYPE = re.compile(
     r"^bumpversion:"
-    r"((?P<file>file)(\s*\(\s*(?P<file_suffix>[^\):]+)\)?)?|(?P<part>part)):"
+    r"((?P<file>file|glob)(\s*\(\s*(?P<file_suffix>[^\):]+)\)?)?|(?P<part>part)):"
     r"(?P<value>.+)",
 )
 
@@ -353,8 +354,12 @@ def _load_configuration(config_file, explicit_config, defaults):
             if "replace" not in section_config:
                 section_config["replace"] = defaults.get("replace", "{new_version}")
 
-            files.append(ConfiguredFile(filename, VersionConfig(**section_config)))
-
+            version_config = VersionConfig(**section_config)
+            if section_type.get("file") == "glob":
+                for filename_glob in glob.glob(filename, recursive=True):
+                    files.append(ConfiguredFile(filename_glob, version_config))
+            else:
+                files.append(ConfiguredFile(filename, version_config))
     return config, config_file_exists, config_newlines, part_configs, files
 
 
