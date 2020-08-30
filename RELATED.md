@@ -4,7 +4,7 @@
   off of which `bump2version` was forked.  We'll be merging
   back with them at some point (issue [#86](https://github.com/c4urself/bump2version/issues/86)).
   
- * [tbump](https://github.com/tankerhq/tbump) is a complete rewrite, with a nicer UX and additional features, like running commands (aka hooks) before or after the bump. It only works for Git repos right now.
+* [tbump](https://github.com/tankerhq/tbump) is a complete rewrite, with a nicer UX and additional features, like running commands (aka hooks) before or after the bump. It only works for Git repos right now.
 
 * [ADVbumpversion](https://github.com/andrivet/advbumpversion) is another fork.
   It offers some features which are still work in progress here; it's
@@ -29,7 +29,9 @@
   automatically bumps your (semantic) version number based on the 
   types of commits (breaking/new/bugfix) in your source control.
   
-  
+* [PyCalVer](https://gitlab.com/mbarkhau/pycalver) is very similar to bump2version, but with support for [calendar based versioning](https://calver.org/).
+
+
 ## Change log building
   
 * [towncrier](https://pypi.org/project/towncrier/) assembles a changelog
