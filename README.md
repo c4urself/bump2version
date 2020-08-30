@@ -67,9 +67,9 @@ and using a configuration file (`bumpversion.cfg`) for more complex multi-file o
 
   The file that will be modified.
 
-  If not given, the list of `[bumpversion:file:…]` sections from the
-  configuration file will be used. If no files are mentioned on the
-  configuration file either, then no files will be modified.
+  This file is added to the list of files specified in `[bumpversion:file:…]`
+  sections from the configuration file. If you want to rewrite only files
+  specified on the command line, use `--no-configured-files`.
 
   Example bumping 1.1.9 to 2.0.0:
 
@@ -380,6 +380,12 @@ Additionally, the following options are available:
   Normally, bumpversion will abort if the working directory is dirty to protect
   yourself from releasing unversioned files and/or overwriting unsaved changes.
   Use this option to override this check.
+
+`--no-configured-files`
+  Will not update/check files specified in the bumpversion.cfg.
+  Similar to dry-run, but will also avoid checking the files.
+  Also useful when you want to update just one file with e.g.,
+    `bump2version --no-configured-files major my-file.txt`
 
 `--verbose`
   Print useful information to stderr

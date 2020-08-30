@@ -106,6 +106,7 @@ EXPECTED_OPTIONS = r"""
 [--search SEARCH]
 [--replace REPLACE]
 [--current-version VERSION]
+[--no-configured-files]
 [--dry-run]
 --new-version VERSION
 [--commit | --no-commit]
@@ -144,6 +145,10 @@ optional arguments:
                         {new_version})
   --current-version VERSION
                         Version that needs to be updated (default: None)
+  --no-configured-files
+                        Only replace the version in files specified on the
+                        command line, ignoring the files from the
+                        configuration file. (default: False)
   --dry-run, -n         Don't write any files, just pretend. (default: False)
   --new-version VERSION
                         New version that should be in the files (default:
@@ -2194,6 +2199,32 @@ def test_retain_newline(tmpdir, configfile, newline):
     # Ensure there is only a single newline (not two) at the end of the file
     # and that it is of the right type
     assert new_config.endswith(b"[bumpversion:file:file.py]" + newline)
+
+
+def test_no_configured_files(tmpdir, vcs):
+    tmpdir.join("please_ignore_me.txt").write("0.5.5")
+    tmpdir.chdir()
+    tmpdir.join(".bumpversion.cfg").write(dedent("""
+        [bumpversion]
+        current_version = 1.1.1
+        [bumpversion:file:please_ignore_me.txt]
+        """).strip())
+    main(['--no-configured-files', 'patch'])
+    assert "0.5.5" == tmpdir.join("please_ignore_me.txt").read()
+
+
+def test_no_configured_files_still_file_args_work(tmpdir, vcs):
+    tmpdir.join("please_ignore_me.txt").write("0.5.5")
+    tmpdir.join("please_update_me.txt").write("1.1.1")
+    tmpdir.chdir()
+    tmpdir.join(".bumpversion.cfg").write(dedent("""
+        [bumpversion]
+        current_version = 1.1.1
+        [bumpversion:file:please_ignore_me.txt]
+        """).strip())
+    main(['--no-configured-files', 'patch', "please_update_me.txt"])
+    assert "0.5.5" == tmpdir.join("please_ignore_me.txt").read()
+    assert "1.1.2" == tmpdir.join("please_update_me.txt").read()
 
 
 class TestSplitArgsInOptionalAndPositional:
