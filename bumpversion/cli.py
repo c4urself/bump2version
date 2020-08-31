@@ -57,6 +57,7 @@ RE_DETECT_SECTION_TYPE = re.compile(
 logger_list = logging.getLogger("bumpversion.list")
 logger = logging.getLogger(__name__)
 time_context = {"now": datetime.now(), "utcnow": datetime.utcnow()}
+special_char_context = {c: c for c in ("#", ";")}
 
 
 OPTIONAL_ARGUMENTS_THAT_TAKE_VALUES = [
@@ -94,7 +95,12 @@ def main(original_args=None):
     version_config = _setup_versionconfig(known_args, part_configs)
     current_version = version_config.parse(known_args.current_version)
     context = dict(
-        itertools.chain(time_context.items(), prefixed_environ().items(), vcs_info.items())
+        itertools.chain(
+            time_context.items(),
+            prefixed_environ().items(),
+            vcs_info.items(),
+            special_char_context.items(),
+        )
     )
 
     # calculate the desired new version
@@ -686,6 +692,7 @@ def _commit_to_vcs(files, context, config_file, config_file_exists, vcs, args,
     context.update(prefixed_environ())
     context.update({'current_' + part: current_version[part].value for part in current_version})
     context.update({'new_' + part: new_version[part].value for part in new_version})
+    context.update(special_char_context)
 
     commit_message = args.message.format(**context)
 
