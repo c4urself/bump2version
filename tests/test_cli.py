@@ -1506,6 +1506,35 @@ def test_no_list_no_stdout(tmpdir, vcs):
     assert out == ""
 
 
+def test_non_default_search_of_omitted_optional_value(tmpdir):
+    tmpdir.join("version.txt").write("v0.0")
+    tmpdir.chdir()
+
+    tmpdir.join(".bumpversion.cfg").write(dedent(r"""
+                [bumpversion]
+                current_version = 0.0
+                parse = (?P<major>\d+)\.(?P<minor>\d+)(\-?(?P<release>[a-z]+))?
+                serialize =
+                  {major}.{minor}-{release}
+                  {major}.{minor}
+
+                [bumpversion:part:release]
+                optional_value = prod
+                values =
+                  dev
+                  prod
+                [bumpversion:file:version.txt]
+                search = v{current_version}
+                replace = {new_version}
+                """).strip())
+    try:
+        main(['minor'])
+    except exceptions.VersionNotFoundException as e:
+        pytest.fail(
+                str(e) + "\n\t- '0.0' is equivalent to '0.0-prod', so 'v0.0' should be found"
+        )
+
+
 def test_bump_non_numeric_parts(tmpdir):
     tmpdir.join("with_pre_releases.txt").write("1.5.dev")
     tmpdir.chdir()
