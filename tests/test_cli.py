@@ -1535,6 +1535,31 @@ def test_non_default_search_of_omitted_optional_value(tmpdir):
         )
 
 
+def test_non_default_replace_of_omitted_optional_value(tmpdir):
+    tmpdir.join("version.txt").write("v0.0")
+    tmpdir.chdir()
+
+    tmpdir.join(".bumpversion.cfg").write(dedent(r"""
+                    [bumpversion]
+                    current_version = 0.0
+                    parse = (?P<major>\d+)\.(?P<minor>\d+)(\-?(?P<release>[a-z]+))?
+                    serialize =
+                      {major}.{minor}-{release}
+                      {major}.{minor}
+
+                    [bumpversion:part:release]
+                    optional_value = prod
+                    values =
+                      dev
+                      prod
+                    [bumpversion:file:version.txt]
+                    search = v{current_version}
+                    replace = v{new_version}
+                    """).strip())
+    main(['minor'])
+    assert 'v0.1-dev' == tmpdir.join("version.txt").read()
+
+
 def test_bump_non_numeric_parts(tmpdir):
     tmpdir.join("with_pre_releases.txt").write("1.5.dev")
     tmpdir.chdir()

@@ -112,8 +112,11 @@ class ConfiguredFile:
 
         if file_content_before == file_content_after:
             # TODO expose this to be configurable
+            search_for_original_formatted = self._versionconfig.search.format(
+                current_version=current_version.original
+            )
             file_content_after = file_content_before.replace(
-                current_version.original, replace_with
+                search_for_original_formatted, replace_with
             )
 
         if file_content_before != file_content_after:
