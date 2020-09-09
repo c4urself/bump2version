@@ -1851,11 +1851,11 @@ def test_non_matching_search_does_not_modify_file(tmpdir):
 
     changelog_content = dedent("""
     # Unreleased
-    
+
     * bullet point A
-    
+
     # Release v'older' (2019-09-17)
-    
+
     * bullet point B
     """)
 
@@ -2197,7 +2197,7 @@ def test_correct_interpolation_for_setup_cfg_files(tmpdir, configfile):
     assert "current_version = 1.0.0" in tmpdir.join(configfile).read()
 
 
-@pytest.mark.parametrize("newline", [b'\n', b'\r\n'])
+@pytest.mark.parametrize("newline", [b'\n', b'\r\n', b'\r'])
 def test_retain_newline(tmpdir, configfile, newline):
     tmpdir.join("file.py").write_binary(dedent("""
         0.7.2
@@ -2205,19 +2205,26 @@ def test_retain_newline(tmpdir, configfile, newline):
         """).strip().encode(encoding='UTF-8').replace(b'\n', newline))
     tmpdir.chdir()
 
-    tmpdir.join(configfile).write_binary(dedent("""
-        [bumpversion]
-        current_version = 0.7.2
-        search = {current_version}
-        replace = {new_version}
-        [bumpversion:file:file.py]
-        """).strip().encode(encoding='UTF-8').replace(b'\n', newline))
+    tmpdir.join(configfile).write_binary((
+        b"[bumpversion]\n"
+        b"current_version = 0.7.2\n"
+        b"search = {current_version}      \n"
+        b"replace = {new_version}\n"
+        b"[bumpversion:file:file.py]\n"
+        ).strip().replace(b'\n', newline))
+
+    # Ensure that the old config has the tailing whitespaces
+    old_config = tmpdir.join(configfile).read_binary()
+    assert any([line.endswith(b" ") for line in old_config.split(newline)])
 
     main(["major"])
 
     assert newline in tmpdir.join("file.py").read_binary()
     new_config = tmpdir.join(configfile).read_binary()
     assert newline in new_config
+
+    # Check that no line ends with tailing whitespaces
+    assert all([not line.endswith(b" ") for line in new_config.split(newline)])
 
     # Ensure there is only a single newline (not two) at the end of the file
     # and that it is of the right type
