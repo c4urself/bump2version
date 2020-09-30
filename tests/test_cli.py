@@ -2209,13 +2209,17 @@ def test_retain_newline(tmpdir, configfile, newline):
         b"[bumpversion]\n"
         b"current_version = 0.7.2\n"
         b"search = {current_version}      \n"
-        b"replace = {new_version}\n"
+        b"replace = {new_version}\t\t\n"
         b"[bumpversion:file:file.py]\n"
+        b"[metadata]\n"
+        b"classifiers = \n"
+        b"\tDevelopment Status :: 4 - Beta\n"
         ).strip().replace(b'\n', newline))
 
     # Ensure that the old config has the tailing whitespaces
     old_config = tmpdir.join(configfile).read_binary()
     assert any([line.endswith(b" ") for line in old_config.split(newline)])
+    assert any([line.endswith(b"\t") for line in old_config.split(newline)])
 
     main(["major"])
 
@@ -2224,11 +2228,11 @@ def test_retain_newline(tmpdir, configfile, newline):
     assert newline in new_config
 
     # Check that no line ends with tailing whitespaces
-    assert all([not line.endswith(b" ") for line in new_config.split(newline)])
+    assert all([not (line.endswith(b" ") or line.endswith(b"\t")) for line in new_config.split(newline)])
 
     # Ensure there is only a single newline (not two) at the end of the file
     # and that it is of the right type
-    assert new_config.endswith(b"[bumpversion:file:file.py]" + newline)
+    assert new_config.endswith(b"\tDevelopment Status :: 4 - Beta" + newline)
 
 
 def test_no_configured_files(tmpdir, vcs):
