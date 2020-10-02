@@ -123,7 +123,11 @@ def main(original_args=None):
     )
 
     if config_file_exists and config_file not in files:
-        files.extend([ConfiguredFile(config_file, version_config)])
+        config_version_config = VersionConfig(parse=known_args.parse,
+                                              serialize=known_args.serialize,
+                                              search="{current_version}",
+                                              replace="{new_version}")
+        files.extend([ConfiguredFile(config_file, config_version_config)])
 
     _check_files_contain_version(files, current_version, context)
     _replace_version_in_files(files, current_version, new_version, args.dry_run, context)
