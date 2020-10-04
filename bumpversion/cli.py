@@ -122,17 +122,18 @@ def main(original_args=None):
         in (file_names or positionals[1:])
     )
 
-    if config_file_exists and config_file not in files:
-        files.extend([ConfiguredFile(config_file, version_config)])
+    write_config = (not args.dry_run) and config_file_exists
+    # do not update the config-file, when the updating should be handled by bump2version
+    if config_file in [f.path for f in files]:
+        logger.info("Not rewriting '%s' because it is handled by bump2version", config_file)
+        write_config = False
 
     _check_files_contain_version(files, current_version, context)
     _replace_version_in_files(files, current_version, new_version, args.dry_run, context)
     _log_list(config, args.new_version)
 
     # store the new version
-    _update_config_file(
-        config, config_file, config_newlines, config_file_exists, args.new_version, args.dry_run,
-    )
+    _update_config_file(config, config_file, config_newlines, args.new_version, write_config)
 
     # commit and tag
     if vcs:
@@ -635,24 +636,20 @@ def _log_list(config, new_version):
     config.remove_option("bumpversion", "new_version")
 
 
-def _update_config_file(
-        config, config_file, config_newlines, config_file_exists, new_version, dry_run,
-):
+def _update_config_file(config, config_file, config_newlines, new_version, write_file):
     config.set("bumpversion", "current_version", new_version)
     new_config = io.StringIO()
     try:
-        write_to_config_file = (not dry_run) and not config_file_exists
-
         logger.info(
             "%s to config file %s:",
-            "Would write" if not write_to_config_file else "Writing",
+            "Would write" if not write_file else "Writing",
             config_file,
         )
 
         config.write(new_config)
         logger.info(new_config.getvalue())
 
-        if write_to_config_file:
+        if write_file:
             with open(config_file, "wt", encoding="utf-8", newline=config_newlines) as f:
                 f.write(new_config.getvalue().strip() + "\n")
 
