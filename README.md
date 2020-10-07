@@ -39,11 +39,15 @@ You can download and install the latest version of this software from the Python
 
     pip install --upgrade bump2version
 
+**NOTE: `pip install bumpversion` now installs the latest bump2version!**
+
 ## Changelog
 
 Please find the changelog here: [CHANGELOG.md](CHANGELOG.md)
 
 ## Usage
+
+NOTE: Throughout this document you can use `bumpversion` or `bump2version` interchangeably.
 
 There are two modes of operation: On the command line for single-file operation
 and using a configuration file (`bumpversion.cfg`) for more complex multi-file operations.
@@ -105,7 +109,7 @@ If no `.bumpversion.cfg` exists, `bump2version` will also look into
 
 General configuration is grouped in a `[bumpversion]` section.
 
-#### `current_version` 
+#### `current_version`
   _**required**_<br />
   **default**: none
 
@@ -148,7 +152,7 @@ General configuration is grouped in a `[bumpversion]` section.
 
   The name of the tag that will be created. Only valid when using `--tag` / `tag = True`.
 
-  This is templated using the [Python Format String Syntax](https://docs.python.org/3/library/string.html#format-string-syntax).  
+  This is templated using the [Python Format String Syntax](https://docs.python.org/3/library/string.html#format-string-syntax).
   Available in the template context are `current_version` and `new_version`
   as well as `current_[part]` and `new_[part]` (e.g. '`current_major`'
   or '`new_patch`').
@@ -156,7 +160,7 @@ General configuration is grouped in a `[bumpversion]` section.
   You can also use the variables `now` or `utcnow` to get a current timestamp. Both accept
   datetime formatting (when used like as in `{now:%d.%m.%Y}`).
 
-  Also available as command-line flag `tag-name`.  Example usage:  
+  Also available as command-line flag `tag-name`.  Example usage:
   `bump2version --tag-name 'release-{new_version}' patch`
 
   In addition, it is also possible to provide a tag message by using `--tag-message TAG_MESSAGE`. Example usage:
@@ -187,15 +191,15 @@ General configuration is grouped in a `[bumpversion]` section.
 
   The commit message to use when creating a commit. Only valid when using `--commit` / `commit = True`.
 
-  This is templated using the [Python Format String Syntax](https://docs.python.org/3/library/string.html#format-string-syntax).  
+  This is templated using the [Python Format String Syntax](https://docs.python.org/3/library/string.html#format-string-syntax).
   Available in the template context are `current_version` and `new_version`
   as well as `current_[part]` and `new_[part]` (e.g. '`current_major`'
   or '`new_patch`').
-  In addition, all environment variables are exposed, prefixed with `$`.  
+  In addition, all environment variables are exposed, prefixed with `$`.
   You can also use the variables `now` or `utcnow` to get a current timestamp. Both accept
   datetime formatting (when used like as in `{now:%d.%m.%Y}`).
 
-  Also available as command-line flag `--message`.  Example usage:  
+  Also available as command-line flag `--message`.  Example usage:
   `bump2version --message '[{now:%Y-%m-%d}] Jenkins Build {$BUILD_NUMBER}: {new_version}' patch`)
 
 #### `commit_args =`
@@ -424,7 +428,7 @@ For example, if you are updating the minor number and looking for the new versio
 
 ## Using bumpversion to maintain a go.mod file within a Go project
 
-In a module-aware Go project, when you create a major version of your module beyond v1, your module name will need 
+In a module-aware Go project, when you create a major version of your module beyond v1, your module name will need
 to include the major version # (e.g. `github.com/myorg/myproject/v2`).
 
 You can use bump2version to maintain the major version # within the go.mod file by using the `parse` and `serialize`
@@ -468,6 +472,8 @@ Your `go.mod` file now contains this module directive:
 ```
 
 ## Development & Contributing
+
+Thank you contributors! You can find a full list here: https://github.com/c4urself/bump2version/graphs/contributors
 
 See also our [CONTRIBUTING.md](CONTRIBUTING.md)
 
