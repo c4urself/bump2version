@@ -1,5 +1,5 @@
 **unreleased**
-**v1.0.1**
+**v1.0.2-dev**
 
 **v1.0.1**
 - Added: enable special characters in search/replace, thanks @mckelvin
