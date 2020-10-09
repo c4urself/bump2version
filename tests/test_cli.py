@@ -1244,6 +1244,29 @@ def test_multiple_serialize_two_part_patch(tmpdir):
     assert '0.7.1' == tmpdir.join("fileC").read()
 
 
+def test_multiple_serialize_two_part_patch_start(tmpdir):
+    tmpdir.join("fileD").write("""{
+    "version": "0.0",
+    "package": "20.0,
+}""")
+    tmpdir.chdir()
+    main([
+         '--current-version', '0.0',
+         '--parse', r'(?P<major>\d+)\.(?P<minor>\d+)(\.(?P<patch>\d+))?',
+         '--serialize', '{major}.{minor}.{patch}',
+         '--serialize', '{major}.{minor}',
+         '--search', '"version": "{current_version}",',
+         '--replace', '"version": "{new_version}",',
+         'patch',
+         'fileD'
+         ])
+
+    assert """{
+    "version": "0.0.1",
+    "package": "20.0,
+}""" == tmpdir.join("fileD").read()
+
+
 def test_multiple_serialize_two_part_patch_configfile(tmpdir):
     tmpdir.join("fileD").write("0.6")
     tmpdir.chdir()

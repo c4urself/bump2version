@@ -220,9 +220,9 @@ class VersionConfig:
             )
 
         keys_needing_representation = set()
-        found_required = False
 
-        for k in self.order():
+        keys = list(self.order())
+        for i, k in enumerate(keys):
             v = values[k]
 
             if not isinstance(v, VersionPart):
@@ -231,10 +231,7 @@ class VersionConfig:
                 continue
 
             if not v.is_optional():
-                found_required = True
-                keys_needing_representation.add(k)
-            elif not found_required:
-                keys_needing_representation.add(k)
+                keys_needing_representation = set(keys[:i+1])
 
         required_by_format = set(labels_for_format(serialize_format))
 
@@ -261,9 +258,17 @@ class VersionConfig:
                 self._serialize(
                     version, serialize_format, context, raise_if_incomplete=True
                 )
-                chosen = serialize_format
-                logger.debug("Found '%s' to be a usable serialization format", chosen)
+                # prefer shorter or first
+                if \
+                        not chosen \
+                        or len(list(string.Formatter().parse(chosen))) > \
+                                len(list(string.Formatter().parse(serialize_format))):
+                    chosen = serialize_format
+                    logger.debug("Found '%s' to be a usable serialization format", chosen)
+                else:
+                    logger.debug("Found '%s' usable serialization format, but it's longer", serialize_format)
             except IncompleteVersionRepresentationException as e:
+                # If chosen, prefer shorter
                 if not chosen:
                     chosen = serialize_format
             except MissingValueForSerializationException as e:
