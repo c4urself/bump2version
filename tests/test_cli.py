@@ -568,6 +568,13 @@ def test_bumpversion_custom_parse_semver(tmpdir):
     assert 'XXX1.1.7-master+allan2' == tmpdir.join("file15").read()
 
 
+def test_bump_version_missing_part(tmpdir):
+    tmpdir.join("file5").write("1.0.0")
+    tmpdir.chdir()
+    with pytest.raises(exceptions.InvalidVersionPartException):
+        main(['bugfix', '--current-version', '1.0.0', 'file5'])
+
+
 def test_dirty_work_dir(tmpdir, vcs):
     tmpdir.chdir()
     check_call([vcs, "init"])
