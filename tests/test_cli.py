@@ -572,7 +572,10 @@ def test_bumpversion_custom_parse_semver(tmpdir):
 def test_bump_version_missing_part(tmpdir):
     tmpdir.join("file5").write("1.0.0")
     tmpdir.chdir()
-    with pytest.raises(exceptions.InvalidVersionPartException):
+    with pytest.raises(
+            exceptions.InvalidVersionPartException,
+            match="No part named 'bugfix'"
+    ):
         main(['bugfix', '--current-version', '1.0.0', 'file5'])
 
 
