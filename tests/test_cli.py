@@ -29,6 +29,7 @@ SUBPROCESS_ENV = _get_subprocess_env()
 call = partial(subprocess.call, env=SUBPROCESS_ENV, shell=True)
 check_call = partial(subprocess.check_call, env=SUBPROCESS_ENV)
 check_output = partial(subprocess.check_output,  env=SUBPROCESS_ENV)
+run = partial(subprocess.run, env=SUBPROCESS_ENV)
 
 xfail_if_no_git = pytest.mark.xfail(
   call("git version") != 0,
@@ -566,6 +567,16 @@ def test_bumpversion_custom_parse_semver(tmpdir):
          ])
 
     assert 'XXX1.1.7-master+allan2' == tmpdir.join("file15").read()
+
+
+def test_bump_version_missing_part(tmpdir):
+    tmpdir.join("file5").write("1.0.0")
+    tmpdir.chdir()
+    with pytest.raises(
+            exceptions.InvalidVersionPartException,
+            match="No part named 'bugfix'"
+    ):
+        main(['bugfix', '--current-version', '1.0.0', 'file5'])
 
 
 def test_dirty_work_dir(tmpdir, vcs):
@@ -1497,11 +1508,11 @@ def test_no_list_no_stdout(tmpdir, vcs):
     check_call([vcs, "add", "please_dont_list_me.txt"])
     check_call([vcs, "commit", "-m", "initial commit"])
 
-    out = check_output(
-        'bumpversion patch; exit 0',
-        shell=True,
-        stderr=subprocess.STDOUT
-    ).decode('utf-8')
+    out = run(
+        ['bumpversion', 'patch'],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+    ).stdout.decode('utf-8')
 
     assert out == ""
 
