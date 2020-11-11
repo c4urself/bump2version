@@ -50,7 +50,7 @@ Please find the changelog here: [CHANGELOG.md](CHANGELOG.md)
 NOTE: Throughout this document you can use `bumpversion` or `bump2version` interchangeably.
 
 There are two modes of operation: On the command line for single-file operation
-and using a configuration file (`bumpversion.cfg`) for more complex multi-file operations.
+and using a configuration file (`.bumpversion.cfg`) for more complex multi-file operations.
 
     bump2version [options] part [file]
 
@@ -386,7 +386,7 @@ Additionally, the following options are available:
   Use this option to override this check.
 
 `--no-configured-files`
-  Will not update/check files specified in the bumpversion.cfg.
+  Will not update/check files specified in the .bumpversion.cfg.
   Similar to dry-run, but will also avoid checking the files.
   Also useful when you want to update just one file with e.g.,
     `bump2version --no-configured-files major my-file.txt`
