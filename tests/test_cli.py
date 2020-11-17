@@ -1545,6 +1545,44 @@ def test_bump_non_numeric_parts(tmpdir):
 
     assert '1.6.dev' == tmpdir.join("with_pre_releases.txt").read()
 
+@pytest.mark.parametrize("metadata", ["3.2.1", "metadata", "3.2.1-meta", "meta-3.2.1"])
+def test_part_not_bumped_when_keep_value_true(tmpdir, capsys, metadata):
+    tmpdir.join("with_keep_value.txt").write("1.2.3-SNAPSHOT+{}".format(metadata))
+    tmpdir.chdir()
+
+    tmpdir.join(".bumpversion.cfg").write(dedent(r"""
+        [bumpversion]
+        current_version = 1.2.3-SNAPSHOT+%s
+        parse = (?P<major>\d+).(?P<minor>\d+).(?P<patch>\d+)(-(?P<release>[^\+]+))?(\+(?P<metadata>.*))?
+        serialize =
+            {major}.{minor}.{patch}-{release}+{metadata}
+            {major}.{minor}.{patch}+{metadata}
+            {major}.{minor}.{patch}
+
+        [bumpversion:part:metadata]
+        keep_value = True
+
+        [bumpversion:part:release]
+        optional_value = release
+        values =
+            SNAPSHOT
+            release
+
+        [bumpversion:file:with_keep_value.txt]
+        """ % metadata).strip())
+
+    main(['patch', '--verbose'])
+    assert '1.2.4-SNAPSHOT+{}'.format(metadata) == tmpdir.join("with_keep_value.txt").read()
+
+    main(['minor', '--verbose'])
+    assert '1.3.0-SNAPSHOT+{}'.format(metadata) == tmpdir.join("with_keep_value.txt").read()
+
+    main(['major', '--verbose'])
+    assert '2.0.0-SNAPSHOT+{}'.format(metadata) == tmpdir.join("with_keep_value.txt").read()
+
+    main(['release', '--verbose'])
+    assert '2.0.0+{}'.format(metadata) == tmpdir.join("with_keep_value.txt").read()
+
 
 def test_optional_value_from_documentation(tmpdir):
     tmpdir.join("optional_value_from_doc.txt").write("1.alpha")

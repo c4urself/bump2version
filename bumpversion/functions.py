@@ -17,7 +17,7 @@ class NumericFunction:
 
     FIRST_NUMERIC = re.compile(r"([^\d]*)(\d+)(.*)")
 
-    def __init__(self, first_value=None):
+    def __init__(self, first_value=None, keep_value=False):
 
         if first_value is not None:
             try:
@@ -33,6 +33,8 @@ class NumericFunction:
 
         self.first_value = str(first_value)
         self.optional_value = self.first_value
+        self.keep_value = keep_value
+
 
     def bump(self, value):
         part_prefix, part_numeric, part_suffix = self.FIRST_NUMERIC.search(
@@ -57,7 +59,7 @@ class ValuesFunction:
     you get a ValueError exception.
     """
 
-    def __init__(self, values, optional_value=None, first_value=None):
+    def __init__(self, values, optional_value=None, first_value=None, keep_value=False):
 
         if not values:
             raise ValueError("Version part values cannot be empty")
@@ -87,6 +89,9 @@ class ValuesFunction:
             )
 
         self.first_value = first_value
+
+        self.keep_value = keep_value
+
 
     def bump(self, value):
         try:
