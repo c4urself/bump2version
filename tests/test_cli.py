@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import argparse
 import logging
 import os
@@ -2165,6 +2166,33 @@ def test_retain_newline(tmpdir, configfile, newline):
     # and that it is of the right type
     assert new_config.endswith(b"[bumpversion:file:file.py]" + newline)
 
+
+@pytest.mark.parametrize("encoding", [None, "utf-8", "latin1"])
+def test_file_encoding(tmpdir, configfile, encoding):
+    tmpdir.join("file.py").write_binary(dedent("""
+        0.7.2
+        Some encoded Content: äöüß
+        """).strip().encode(encoding=encoding or "utf-8"))
+    tmpdir.chdir()
+
+    if encoding is None:
+        configstring = ""
+    else:
+        configstring = "encoding = %s" % encoding
+
+    tmpdir.join(configfile).write_binary(dedent(("""
+        [bumpversion]
+        current_version = 0.7.2
+        search = {current_version}
+        replace = {new_version}
+        [bumpversion:file:file.py]
+	%s
+        """) % configstring).strip().encode(encoding='UTF-8'))
+
+    # Ensure the program works (without any exceptions or errors)
+    # regardless of encoding if the encoding is configured
+    # correctly
+    main(["major"])
 
 class TestSplitArgsInOptionalAndPositional:
 
