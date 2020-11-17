@@ -374,6 +374,14 @@ replace = MyProject=={new_version}
 
   Can be multiple lines, templated using [Python Format String Syntax](https://docs.python.org/3/library/string.html#format-string-syntax).
 
+#### `encoding =`
+  **default:** `UTF-8`
+
+  Encoding to be used with the file. Might need to be set for files that
+  contain special characters and use a different encoding than UTF-8.
+
+  You can consult [the Python Documentation](https://docs.python.org/3/library/codecs.html#standard-encodings) for a list of possible encodings.
+
 ## Command-line Options
 
 Most of the configuration values above can also be given as an option on the command-line.
