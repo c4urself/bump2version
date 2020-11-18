@@ -1,5 +1,6 @@
 import argparse
 from datetime import datetime
+import glob
 import io
 import itertools
 import logging
@@ -49,13 +50,14 @@ VCS = [Git, Mercurial]
 # bumpversion:file ( suffix with spaces):value
 RE_DETECT_SECTION_TYPE = re.compile(
     r"^bumpversion:"
-    r"((?P<file>file)(\s*\(\s*(?P<file_suffix>[^\):]+)\)?)?|(?P<part>part)):"
+    r"((?P<file>file|glob)(\s*\(\s*(?P<file_suffix>[^\):]+)\)?)?|(?P<part>part)):"
     r"(?P<value>.+)",
 )
 
 logger_list = logging.getLogger("bumpversion.list")
 logger = logging.getLogger(__name__)
 time_context = {"now": datetime.now(), "utcnow": datetime.utcnow()}
+special_char_context = {c: c for c in ("#", ";")}
 
 
 OPTIONAL_ARGUMENTS_THAT_TAKE_VALUES = [
@@ -93,7 +95,12 @@ def main(original_args=None):
     version_config = _setup_versionconfig(known_args, part_configs)
     current_version = version_config.parse(known_args.current_version)
     context = dict(
-        itertools.chain(time_context.items(), prefixed_environ().items(), vcs_info.items())
+        itertools.chain(
+            time_context.items(),
+            prefixed_environ().items(),
+            vcs_info.items(),
+            special_char_context.items(),
+        )
     )
 
     # calculate the desired new version
@@ -102,6 +109,10 @@ def main(original_args=None):
     )
     args, file_names = _parse_arguments_phase_3(remaining_argv, positionals, defaults, parser2)
     new_version = _parse_new_version(args, new_version, version_config)
+
+    # do not use the files from the config
+    if args.no_configured_files:
+        files = []
 
     # replace version in target files
     vcs = _determine_vcs_dirty(VCS, defaults)
@@ -353,8 +364,12 @@ def _load_configuration(config_file, explicit_config, defaults):
             if "replace" not in section_config:
                 section_config["replace"] = defaults.get("replace", "{new_version}")
 
-            files.append(ConfiguredFile(filename, VersionConfig(**section_config)))
-
+            version_config = VersionConfig(**section_config)
+            if section_type.get("file") == "glob":
+                for filename_glob in glob.glob(filename, recursive=True):
+                    files.append(ConfiguredFile(filename_glob, version_config))
+            else:
+                files.append(ConfiguredFile(filename, version_config))
     return config, config_file_exists, config_newlines, part_configs, files
 
 
@@ -454,6 +469,13 @@ def _parse_arguments_phase_3(remaining_argv, positionals, defaults, parser2):
         metavar="VERSION",
         help="Version that needs to be updated",
         required="current_version" not in defaults,
+    )
+    parser3.add_argument(
+        "--no-configured-files",
+        action="store_true",
+        default=False,
+        dest="no_configured_files",
+        help="Only replace the version in files specified on the command line, ignoring the files from the configuration file.",
     )
     parser3.add_argument(
         "--dry-run",
@@ -670,6 +692,7 @@ def _commit_to_vcs(files, context, config_file, config_file_exists, vcs, args,
     context.update(prefixed_environ())
     context.update({'current_' + part: current_version[part].value for part in current_version})
     context.update({'new_' + part: new_version[part].value for part in new_version})
+    context.update(special_char_context)
 
     commit_message = args.message.format(**context)
 

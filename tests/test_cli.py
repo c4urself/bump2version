@@ -30,6 +30,7 @@ SUBPROCESS_ENV = _get_subprocess_env()
 call = partial(subprocess.call, env=SUBPROCESS_ENV, shell=True)
 check_call = partial(subprocess.check_call, env=SUBPROCESS_ENV)
 check_output = partial(subprocess.check_output,  env=SUBPROCESS_ENV)
+run = partial(subprocess.run, env=SUBPROCESS_ENV)
 
 xfail_if_no_git = pytest.mark.xfail(
   call("git version") != 0,
@@ -107,6 +108,7 @@ EXPECTED_OPTIONS = r"""
 [--search SEARCH]
 [--replace REPLACE]
 [--current-version VERSION]
+[--no-configured-files]
 [--dry-run]
 --new-version VERSION
 [--commit | --no-commit]
@@ -145,6 +147,10 @@ optional arguments:
                         {new_version})
   --current-version VERSION
                         Version that needs to be updated (default: None)
+  --no-configured-files
+                        Only replace the version in files specified on the
+                        command line, ignoring the files from the
+                        configuration file. (default: False)
   --dry-run, -n         Don't write any files, just pretend. (default: False)
   --new-version VERSION
                         New version that should be in the files (default:
@@ -291,6 +297,36 @@ new_version: 0.10.3
     main(['patch'])
 
     assert "0.10.3" == tmpdir.join("file2").read()
+
+
+def test_glob_keyword(tmpdir, configfile):
+    tmpdir.join("file1.txt").write("0.9.34")
+    tmpdir.join("file2.txt").write("0.9.34")
+    tmpdir.join(configfile).write("""[bumpversion]
+current_version: 0.9.34
+new_version: 0.9.35
+[bumpversion:glob:*.txt]""")
+
+    tmpdir.chdir()
+    main(["patch"])
+    assert "0.9.35" == tmpdir.join("file1.txt").read()
+    assert "0.9.35" == tmpdir.join("file2.txt").read()
+
+def test_glob_keyword_recursive(tmpdir, configfile):
+    tmpdir.mkdir("subdir").mkdir("subdir2")
+    file1 = tmpdir.join("subdir").join("file1.txt")
+    file1.write("0.9.34")
+    file2 = tmpdir.join("subdir").join("subdir2").join("file2.txt")
+    file2.write("0.9.34")
+    tmpdir.join(configfile).write("""[bumpversion]
+current_version: 0.9.34
+new_version: 0.9.35
+[bumpversion:glob:**/*.txt]""")
+
+    tmpdir.chdir()
+    main(["patch"])
+    assert "0.9.35" == file1.read()
+    assert "0.9.35" == file2.read()
 
 
 def test_file_keyword_with_suffix_is_accepted(tmpdir, configfile, file_keyword):
@@ -532,6 +568,16 @@ def test_bumpversion_custom_parse_semver(tmpdir):
          ])
 
     assert 'XXX1.1.7-master+allan2' == tmpdir.join("file15").read()
+
+
+def test_bump_version_missing_part(tmpdir):
+    tmpdir.join("file5").write("1.0.0")
+    tmpdir.chdir()
+    with pytest.raises(
+            exceptions.InvalidVersionPartException,
+            match="No part named 'bugfix'"
+    ):
+        main(['bugfix', '--current-version', '1.0.0', 'file5'])
 
 
 def test_dirty_work_dir(tmpdir, vcs):
@@ -1463,11 +1509,11 @@ def test_no_list_no_stdout(tmpdir, vcs):
     check_call([vcs, "add", "please_dont_list_me.txt"])
     check_call([vcs, "commit", "-m", "initial commit"])
 
-    out = check_output(
-        'bumpversion patch; exit 0',
-        shell=True,
-        stderr=subprocess.STDOUT
-    ).decode('utf-8')
+    out = run(
+        ['bumpversion', 'patch'],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+    ).stdout.decode('utf-8')
 
     assert out == ""
 
@@ -1694,6 +1740,18 @@ def test_search_replace_to_avoid_updating_unconcerned_lines(tmpdir):
     tmpdir.chdir()
 
     tmpdir.join("requirements.txt").write("Django>=1.5.6,<1.6\nMyProject==1.5.6")
+    tmpdir.join("CHANGELOG.md").write(dedent("""
+    # https://keepachangelog.com/en/1.0.0/
+
+    ## [Unreleased]
+    ### Added
+    - Foobar
+
+    ## [0.0.1] - 2014-05-31
+    ### Added
+    - This CHANGELOG file to hopefully serve as an evolving example of a
+      standardized open source project CHANGELOG.
+    """))
 
     tmpdir.join(".bumpversion.cfg").write(dedent("""
       [bumpversion]
@@ -1702,14 +1760,22 @@ def test_search_replace_to_avoid_updating_unconcerned_lines(tmpdir):
       [bumpversion:file:requirements.txt]
       search = MyProject=={current_version}
       replace = MyProject=={new_version}
+
+      [bumpversion:file:CHANGELOG.md]
+      search = {#}{#} [Unreleased]
+      replace = {#}{#} [Unreleased]
+
+        {#}{#} [{new_version}] - {utcnow:%Y-%m-%d}
       """).strip())
 
     with LogCapture() as log_capture:
         main(['minor', '--verbose'])
 
+    utc_today = datetime.utcnow().strftime("%Y-%m-%d")
+
     log_capture.check(
         ('bumpversion.cli', 'INFO', 'Reading config file .bumpversion.cfg:'),
-        ('bumpversion.cli', 'INFO', '[bumpversion]\ncurrent_version = 1.5.6\n\n[bumpversion:file:requirements.txt]\nsearch = MyProject=={current_version}\nreplace = MyProject=={new_version}'),
+        ('bumpversion.cli', 'INFO', '[bumpversion]\ncurrent_version = 1.5.6\n\n[bumpversion:file:requirements.txt]\nsearch = MyProject=={current_version}\nreplace = MyProject=={new_version}\n\n[bumpversion:file:CHANGELOG.md]\nsearch = {#}{#} [Unreleased]\nreplace = {#}{#} [Unreleased]\n\n  {#}{#} [{new_version}] - {utcnow:%Y-%m-%d}'),
         ('bumpversion.version_part', 'INFO', "Parsing version '1.5.6' using regexp '(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)'"),
         ('bumpversion.version_part', 'INFO', 'Parsed the following values: major=1, minor=5, patch=6'),
         ('bumpversion.cli', 'INFO', "Attempting to increment part 'minor'"),
@@ -1717,15 +1783,18 @@ def test_search_replace_to_avoid_updating_unconcerned_lines(tmpdir):
         ('bumpversion.version_part', 'INFO', "Parsing version '1.6.0' using regexp '(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)'"),
         ('bumpversion.version_part', 'INFO', 'Parsed the following values: major=1, minor=6, patch=0'),
         ('bumpversion.cli', 'INFO', "New version will be '1.6.0'"),
-        ('bumpversion.cli', 'INFO', 'Asserting files requirements.txt contain the version string...'),
+        ('bumpversion.cli', 'INFO', 'Asserting files requirements.txt, CHANGELOG.md contain the version string...'),
         ('bumpversion.utils', 'INFO', "Found 'MyProject==1.5.6' in requirements.txt at line 1: MyProject==1.5.6"),
+        ('bumpversion.utils', 'INFO', "Found '## [Unreleased]' in CHANGELOG.md at line 3: ## [Unreleased]"),
         ('bumpversion.utils', 'INFO', 'Changing file requirements.txt:'),
         ('bumpversion.utils', 'INFO', '--- a/requirements.txt\n+++ b/requirements.txt\n@@ -1,2 +1,2 @@\n Django>=1.5.6,<1.6\n-MyProject==1.5.6\n+MyProject==1.6.0'),
+        ('bumpversion.utils', 'INFO', 'Changing file CHANGELOG.md:'),
+        ('bumpversion.utils', 'INFO', '--- a/CHANGELOG.md\n+++ b/CHANGELOG.md\n@@ -2,6 +2,8 @@\n # https://keepachangelog.com/en/1.0.0/\n \n ## [Unreleased]\n+\n+## [1.6.0] - %s\n ### Added\n - Foobar\n ' % utc_today),
         ('bumpversion.list', 'INFO', 'current_version=1.5.6'),
         ('bumpversion.list', 'INFO', 'new_version=1.6.0'),
         ('bumpversion.cli', 'INFO', 'Writing to config file .bumpversion.cfg:'),
-        ('bumpversion.cli', 'INFO', '[bumpversion]\ncurrent_version = 1.6.0\n\n[bumpversion:file:requirements.txt]\nsearch = MyProject=={current_version}\nreplace = MyProject=={new_version}\n\n')
-    )
+        ('bumpversion.cli', 'INFO', '[bumpversion]\ncurrent_version = 1.6.0\n\n[bumpversion:file:requirements.txt]\nsearch = MyProject=={current_version}\nreplace = MyProject=={new_version}\n\n[bumpversion:file:CHANGELOG.md]\nsearch = {#}{#} [Unreleased]\nreplace = {#}{#} [Unreleased]\n\t\n\t{#}{#} [{new_version}] - {utcnow:%Y-%m-%d}\n\n')
+     )
 
     assert 'MyProject==1.6.0' in tmpdir.join("requirements.txt").read()
     assert 'Django>=1.5.6' in tmpdir.join("requirements.txt").read()
@@ -2166,7 +2235,6 @@ def test_retain_newline(tmpdir, configfile, newline):
     # and that it is of the right type
     assert new_config.endswith(b"[bumpversion:file:file.py]" + newline)
 
-
 @pytest.mark.parametrize("encoding", [None, "utf-8", "latin1"])
 def test_file_encoding(tmpdir, configfile, encoding):
     tmpdir.join("file.py").write_binary(dedent("""
@@ -2193,6 +2261,32 @@ def test_file_encoding(tmpdir, configfile, encoding):
     # regardless of encoding if the encoding is configured
     # correctly
     main(["major"])
+
+
+def test_no_configured_files(tmpdir, vcs):
+    tmpdir.join("please_ignore_me.txt").write("0.5.5")
+    tmpdir.chdir()
+    tmpdir.join(".bumpversion.cfg").write(dedent("""
+        [bumpversion]
+        current_version = 1.1.1
+        [bumpversion:file:please_ignore_me.txt]
+        """).strip())
+    main(['--no-configured-files', 'patch'])
+    assert "0.5.5" == tmpdir.join("please_ignore_me.txt").read()
+
+
+def test_no_configured_files_still_file_args_work(tmpdir, vcs):
+    tmpdir.join("please_ignore_me.txt").write("0.5.5")
+    tmpdir.join("please_update_me.txt").write("1.1.1")
+    tmpdir.chdir()
+    tmpdir.join(".bumpversion.cfg").write(dedent("""
+        [bumpversion]
+        current_version = 1.1.1
+        [bumpversion:file:please_ignore_me.txt]
+        """).strip())
+    main(['--no-configured-files', 'patch', "please_update_me.txt"])
+    assert "0.5.5" == tmpdir.join("please_ignore_me.txt").read()
+    assert "1.1.2" == tmpdir.join("please_update_me.txt").read()
 
 class TestSplitArgsInOptionalAndPositional:
 

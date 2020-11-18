@@ -6,6 +6,7 @@ import string
 from bumpversion.exceptions import (
     MissingValueForSerializationException,
     IncompleteVersionRepresentationException,
+    InvalidVersionPartException,
 )
 from bumpversion.functions import NumericFunction, ValuesFunction
 from bumpversion.utils import keyvaluestring
@@ -115,6 +116,9 @@ class Version:
                 new_values[label] = self._values[label].null()
             else:
                 new_values[label] = self._values[label].copy()
+
+        if not bumped:
+            raise InvalidVersionPartException("No part named %r" % part_name)
 
         new_version = Version(new_values)
 

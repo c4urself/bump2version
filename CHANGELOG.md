@@ -1,4 +1,14 @@
 **unreleased**
+**v1.0.2-dev**
+
+**v1.0.1**
+- Added: enable special characters in search/replace, thanks @mckelvin
+- Added: allow globbing a pattern to match multiple files, thanks @balrok
+- Added: way to only bump a specified file via --no-configured-files, thanks @balrok
+- Fixed: dry-run now correctly outputs, thanks @fmigneault
+- Housekeeping: documentation for lightweight tags improved, thanks @GreatBahram
+- Housekeeping: added related tools document, thanks @florisla
+- Fixed: no more falling back to default search, thanks @florisla
 
 **v1.0.0**
 - Fix the spurious newline that bump2version adds when writing to bumpversion.cfg, thanks @kyluca #58

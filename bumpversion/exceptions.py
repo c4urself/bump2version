@@ -26,3 +26,7 @@ class MercurialDoesNotSupportSignedTagsException(BumpVersionException):
 
 class VersionNotFoundException(BumpVersionException):
     """A version number was not found in a source file."""
+
+
+class InvalidVersionPartException(BumpVersionException):
+    """The specified part (e.g. 'bugfix') was not found"""
