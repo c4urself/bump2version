@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import argparse
 import logging
 import os
@@ -2234,6 +2235,33 @@ def test_retain_newline(tmpdir, configfile, newline):
     # and that it is of the right type
     assert new_config.endswith(b"[bumpversion:file:file.py]" + newline)
 
+@pytest.mark.parametrize("encoding", [None, "utf-8", "latin1"])
+def test_file_encoding(tmpdir, configfile, encoding):
+    tmpdir.join("file.py").write_binary(dedent("""
+        0.7.2
+        Some encoded Content: äöüß
+        """).strip().encode(encoding=encoding or "utf-8"))
+    tmpdir.chdir()
+
+    if encoding is None:
+        configstring = ""
+    else:
+        configstring = "encoding = %s" % encoding
+
+    tmpdir.join(configfile).write_binary(dedent(("""
+        [bumpversion]
+        current_version = 0.7.2
+        search = {current_version}
+        replace = {new_version}
+        [bumpversion:file:file.py]
+	%s
+        """) % configstring).strip().encode(encoding='UTF-8'))
+
+    # Ensure the program works (without any exceptions or errors)
+    # regardless of encoding if the encoding is configured
+    # correctly
+    main(["major"])
+
 
 def test_no_configured_files(tmpdir, vcs):
     tmpdir.join("please_ignore_me.txt").write("0.5.5")
@@ -2259,7 +2287,6 @@ def test_no_configured_files_still_file_args_work(tmpdir, vcs):
     main(['--no-configured-files', 'patch', "please_update_me.txt"])
     assert "0.5.5" == tmpdir.join("please_ignore_me.txt").read()
     assert "1.1.2" == tmpdir.join("please_update_me.txt").read()
-
 
 class TestSplitArgsInOptionalAndPositional:
 
