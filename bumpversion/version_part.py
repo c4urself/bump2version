@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 class PartConfiguration:
+
     function_cls = NumericFunction
 
     def __init__(self, *args, **kwds):
@@ -34,18 +35,21 @@ class PartConfiguration:
 
 
 class ConfiguredVersionPartConfiguration(PartConfiguration):
+
     function_cls = ValuesFunction
 
 
 class NumericVersionPartConfiguration(PartConfiguration):
+
     function_cls = NumericFunction
 
 
 class VersionPart:
-
     """
-    This class represents part of a version number. It contains a self.config
-    object that rules how the part behaves when increased or reset.
+    Represent part of a version number.
+
+    Offer a self.config object that rules how the part behaves when
+    increased or reset.
     """
 
     def __init__(self, value, config=None):
@@ -85,6 +89,7 @@ class VersionPart:
 
 
 class Version:
+
     def __init__(self, values, original=None):
         self._values = dict(values)
         self.original = original
@@ -132,13 +137,11 @@ def labels_for_format(serialize_format):
 
 
 class VersionConfig:
-
     """
-    Holds a complete representation of a version string
+    Hold a complete representation of a version string.
     """
 
     def __init__(self, parse, serialize, search, replace, part_configs=None):
-
         try:
             self.parse_regex = re.compile(parse, re.VERBOSE)
         except sre_constants.error as e:
@@ -154,7 +157,6 @@ class VersionConfig:
         self.part_configs = part_configs
         self.search = search
         self.replace = replace
-
 
     def order(self):
         # currently, order depends on the first given serialization format
@@ -248,7 +250,6 @@ class VersionConfig:
         return serialized
 
     def _choose_serialize_format(self, version, context):
-
         chosen = None
 
         logger.debug("Available serialization formats: '%s'", "', '".join(self.serialize_formats))
