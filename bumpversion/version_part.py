@@ -258,11 +258,10 @@ class VersionConfig:
                 self._serialize(
                     version, serialize_format, context, raise_if_incomplete=True
                 )
-                # prefer shorter or first
-                if \
-                        not chosen \
-                        or len(list(string.Formatter().parse(chosen))) > \
-                                len(list(string.Formatter().parse(serialize_format))):
+                # Prefer shorter or first search expression.
+                chosen_part_count = None if not chosen else len(list(string.Formatter().parse(chosen)))
+                serialize_part_count = len(list(string.Formatter().parse(serialize_format)))
+                if not chosen or chosen_part_count > serialize_part_count:
                     chosen = serialize_format
                     logger.debug("Found '%s' to be a usable serialization format", chosen)
                 else:
