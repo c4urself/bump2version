@@ -59,6 +59,14 @@ logger = logging.getLogger(__name__)
 time_context = {"now": datetime.now(), "utcnow": datetime.utcnow()}
 special_char_context = {c: c for c in ("#", ";")}
 
+FLAG_ARGUMENTS = [
+    "commit",
+    "tag",
+    "dry_run",
+    "allow_dirty",
+    "push",
+    "sign_tags",
+]
 
 OPTIONAL_ARGUMENTS_THAT_TAKE_VALUES = [
     "--config-file",
@@ -294,13 +302,13 @@ def _load_configuration(config_file, explicit_config, defaults):
         except NoOptionError:
             pass  # no default value then ;)
 
-    for boolvaluename in ("commit", "tag", "dry_run", "allow_dirty", "push", "sign_tags"):
+    for flag_argument in FLAG_ARGUMENTS:
         try:
-            defaults[boolvaluename] = config.getboolean(
-                "bumpversion", boolvaluename
+            defaults[flag_argument] = config.getboolean(
+                "bumpversion", flag_argument
             )
         except NoOptionError:
-            pass  # no default value then ;)
+            pass  # no default value then (like, False-y)
 
     part_configs = {}
     files = []
