@@ -277,7 +277,8 @@ class VersionConfig:
 
         return chosen
 
-    def serialize(self, version, context):
+    def serialize(self, version, context=None):
+        context = context or {}
         serialized = self._serialize(
             version, self._choose_serialize_format(version, context), context
         )
