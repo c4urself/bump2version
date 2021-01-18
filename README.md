@@ -324,8 +324,8 @@ you may append a description between parens to the `file` keyword:
   `$`).
 
   Can be specified multiple times, bumpversion will try the serialization
-  formats beginning with the first and choose the last one where all values can
-  be represented like this:
+  formats beginning with the first (most complete) one and choose the last
+  one where all values can be represented like this:
 
 ```ini
 serialize =
