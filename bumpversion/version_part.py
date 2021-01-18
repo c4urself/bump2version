@@ -148,13 +148,9 @@ class VersionConfig:
 
         self.serialize_formats = serialize
 
-        if not part_configs:
-            part_configs = {}
-
-        self.part_configs = part_configs
+        self.part_configs = part_configs or {}
         self.search = search
         self.replace = replace
-
 
     def order(self):
         # currently, order depends on the first given serialization format
@@ -177,7 +173,6 @@ class VersionConfig:
 
         match = self.parse_regex.search(version_string)
 
-        _parsed = {}
         if not match:
             logger.warning(
                 "Evaluating 'parse' option: '%s' does not parse current version '%s'",
@@ -186,6 +181,7 @@ class VersionConfig:
             )
             return None
 
+        _parsed = {}
         for key, value in match.groupdict().items():
             _parsed[key] = VersionPart(value, self.part_configs.get(key))
 
