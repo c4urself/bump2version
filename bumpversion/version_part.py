@@ -61,7 +61,7 @@ class VersionPart:
         return self._value or self.config.optional_value
 
     def copy(self):
-        return VersionPart(self._value)
+        return VersionPart(self._value, self.config)
 
     def bump(self):
         return VersionPart(self.config.bump(self.value), self.config)
