@@ -52,7 +52,7 @@ class BaseVCS:
                 == 0
             )
         except OSError as e:
-            if e.errno in (errno.ENOENT, errno.EACCES):
+            if e.errno in (errno.ENOENT, errno.EACCES, errno.ENOTDIR):
                 return False
             raise
 
