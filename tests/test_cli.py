@@ -1262,6 +1262,37 @@ parse = (?P<major>\d+)\.(?P<minor>\d+)(\.(?P<patch>\d+))?
     assert '0.6.1' == tmpdir.join("fileD").read()
 
 
+def test_search_uses_shortest_possible_custom_search_pattern(tmpdir):
+    config = dedent(r"""
+        [bumpversion]
+        current_version = 0.0.0
+        commit = True
+        tag = True
+        parse = (?P<major>\d+).(?P<minor>\d+).(?P<patch>\d+).?((?P<prerelease>.*))?
+        serialize =
+            {major}.{minor}.{patch}.{prerelease}
+            {major}.{minor}.{patch}
+
+        [bumpversion:file:package.json]
+        search = "version": "{current_version}",
+        replace = "version": "{new_version}",
+    """)
+    tmpdir.join(".bumpversion.cfg").write(config.encode('utf-8'), mode='wb')
+
+    tmpdir.join("package.json").write("""{
+        "version": "0.0.0",
+        "package": "20.0.0",
+    }""")
+
+    tmpdir.chdir()
+    main(["patch"])
+
+    assert """{
+        "version": "0.0.1",
+        "package": "20.0.0",
+    }""" == tmpdir.join("package.json").read()
+
+
 def test_log_no_config_file_info_message(tmpdir):
     tmpdir.chdir()
 

@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 class PartConfiguration:
+
     function_cls = NumericFunction
 
     def __init__(self, *args, **kwds):
@@ -34,18 +35,21 @@ class PartConfiguration:
 
 
 class ConfiguredVersionPartConfiguration(PartConfiguration):
+
     function_cls = ValuesFunction
 
 
 class NumericVersionPartConfiguration(PartConfiguration):
+
     function_cls = NumericFunction
 
 
 class VersionPart:
-
     """
-    This class represents part of a version number. It contains a self.config
-    object that rules how the part behaves when increased or reset.
+    Represent part of a version number.
+
+    Offer a self.config object that rules how the part behaves when
+    increased or reset.
     """
 
     def __init__(self, value, config=None):
@@ -85,6 +89,7 @@ class VersionPart:
 
 
 class Version:
+
     def __init__(self, values, original=None):
         self._values = dict(values)
         self.original = original
@@ -132,13 +137,11 @@ def labels_for_format(serialize_format):
 
 
 class VersionConfig:
-
     """
-    Holds a complete representation of a version string
+    Hold a complete representation of a version string.
     """
 
     def __init__(self, parse, serialize, search, replace, part_configs=None):
-
         try:
             self.parse_regex = re.compile(parse, re.VERBOSE)
         except sre_constants.error as e:
@@ -154,7 +157,6 @@ class VersionConfig:
         self.part_configs = part_configs
         self.search = search
         self.replace = replace
-
 
     def order(self):
         # currently, order depends on the first given serialization format
@@ -220,9 +222,9 @@ class VersionConfig:
             )
 
         keys_needing_representation = set()
-        found_required = False
 
-        for k in self.order():
+        keys = list(self.order())
+        for i, k in enumerate(keys):
             v = values[k]
 
             if not isinstance(v, VersionPart):
@@ -231,10 +233,7 @@ class VersionConfig:
                 continue
 
             if not v.is_optional():
-                found_required = True
-                keys_needing_representation.add(k)
-            elif not found_required:
-                keys_needing_representation.add(k)
+                keys_needing_representation = set(keys[:i+1])
 
         required_by_format = set(labels_for_format(serialize_format))
 
@@ -251,7 +250,6 @@ class VersionConfig:
         return serialized
 
     def _choose_serialize_format(self, version, context):
-
         chosen = None
 
         logger.debug("Available serialization formats: '%s'", "', '".join(self.serialize_formats))
@@ -261,9 +259,16 @@ class VersionConfig:
                 self._serialize(
                     version, serialize_format, context, raise_if_incomplete=True
                 )
-                chosen = serialize_format
-                logger.debug("Found '%s' to be a usable serialization format", chosen)
+                # Prefer shorter or first search expression.
+                chosen_part_count = None if not chosen else len(list(string.Formatter().parse(chosen)))
+                serialize_part_count = len(list(string.Formatter().parse(serialize_format)))
+                if not chosen or chosen_part_count > serialize_part_count:
+                    chosen = serialize_format
+                    logger.debug("Found '%s' to be a usable serialization format", chosen)
+                else:
+                    logger.debug("Found '%s' usable serialization format, but it's longer", serialize_format)
             except IncompleteVersionRepresentationException as e:
+                # If chosen, prefer shorter
                 if not chosen:
                     chosen = serialize_format
             except MissingValueForSerializationException as e:
