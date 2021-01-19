@@ -372,6 +372,27 @@ replace = MyProject=={new_version}
 
   Can be multiple lines, templated using [Python Format String Syntax](https://docs.python.org/3/library/string.html#format-string-syntax).
 
+  **NOTE**: (*Updated in v1.0.1*) It is important to point out that if a
+  custom search pattern is configured, then `bump2version` will only perform
+  a change if it finds an exact match and will not fallback to the default
+  pattern. This is to prevent accidentally changing strings that match the
+  default pattern when there is a typo in the custom search pattern.
+
+  For example, if the string to be replaced includes literal quotes,
+  the search and replace patterns must include them too to match. Given the
+  file `version.sh`:
+
+      MY_VERSION="1.2.3"
+
+  Then the following search and replace patterns (including quotes) would be
+  required:
+
+```ini
+[bumpversion:file:version.sh]
+search = MY_VERSION="{current_version}"
+replace = MY_VERSION="{new_version}"
+```
+
 ## Command-line Options
 
 Most of the configuration values above can also be given as an option on the command-line.
