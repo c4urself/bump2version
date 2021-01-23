@@ -285,9 +285,9 @@ values =
 
   You should consider the version of `1` to technically be `1.gamma`
   with the `.gamma` part not being serialized since it is optional.
-  and the `{num}` entry in the `serialize` list allows it to be hidden.
-  If you only had `{num}.{release}`, an optional release will always be
-  serialized.
+  The `{num}` entry in the `serialize` list allows the release part to be
+  hidden. If you only had `{num}.{release}`, an optional release will always
+  be serialized.
 
   Attempting to bump the release when it is the value of
   `gamma` will cause a `ValueError` as it will think you are trying to
