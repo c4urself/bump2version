@@ -43,8 +43,9 @@ setup(
         'Programming Language :: Python :: Implementation :: PyPy',
     ],
     extras_require={
-        'test': ['testfixtures>=1.2.0',
-                 'pytest>=3.4.0',
-                 ],
+        'test': [
+            'testfixtures>=1.2.0',
+            'pytest>=3.4.0',
+         ],
     },
 )
