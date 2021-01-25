@@ -283,10 +283,45 @@ values =
   `bump2version release` again would bump `1.beta` to `1`, because
   `release` being `gamma` is configured optional.
 
+  You should consider the version of `1` to technically be `1.gamma`
+  with the `.gamma` part not being serialized since it is optional.
+  The `{num}` entry in the `serialize` list allows the release part to be
+  hidden. If you only had `{num}.{release}`, an optional release will always
+  be serialized.
+
+  Attempting to bump the release when it is the value of
+  `gamma` will cause a `ValueError` as it will think you are trying to
+  exceed the `values` list of the release part.
+
 #### `first_value =`
   **default**: The first entry in `values =`.
 
   When the part is reset, the value will be set to the value specified here.
+
+  Example:
+
+```ini
+[bumpversion]
+current_version = 1.alpha1
+parse = (?P<num>\d+)(\.(?P<release>.*)(?P<build>\d+))?
+serialize =
+  {num}.{release}{build}
+
+[bumpversion:part:release]
+values =
+  alpha
+  beta
+  gamma
+
+[bumpversion:part:build]
+first_value = 1
+```
+
+  Here, `bump2version release` would bump `1.alpha1` to `1.beta1`.
+
+  Without the `first_value = 1` of the build part configured,
+  `bump2version release` would bump `1.alpha1` to `1.beta0`, starting
+  the build at `0`.
 
 ### Configuration file -- File specific configuration
 
