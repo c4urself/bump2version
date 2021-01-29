@@ -1,4 +1,5 @@
 import re
+from importlib import import_module
 
 
 class NumericFunction:
@@ -17,7 +18,7 @@ class NumericFunction:
 
     FIRST_NUMERIC = re.compile(r"([^\d]*)(\d+)(.*)")
 
-    def __init__(self, first_value=None):
+    def __init__(self, first_value=None, conditional_bump=None):
 
         if first_value is not None:
             try:
@@ -33,14 +34,36 @@ class NumericFunction:
 
         self.first_value = str(first_value)
         self.optional_value = self.first_value
+        self.conditional_bump = _get_function_from_path(conditional_bump)
 
-    def bump(self, value):
+    def bump(self, value, version=None):
         part_prefix, part_numeric, part_suffix = self.FIRST_NUMERIC.search(
             value
         ).groups()
-        bumped_numeric = int(part_numeric) + 1
 
-        return "".join([part_prefix, str(bumped_numeric), part_suffix])
+        bumped_numeric = int(part_numeric) + 1
+        parts_conditionally_bumped = _execute_conditional_bump(self.conditional_bump, version)
+
+        return (
+            "".join([part_prefix, str(bumped_numeric), part_suffix]),
+            parts_conditionally_bumped
+        )
+
+
+def _get_function_from_path(path: str):
+    if path is not None:
+        # Path could be `something.module.function`, we want just `something.module`
+        # and then get just `function`.
+        module_path = "".join(path.split(".")[:-1])
+        function_name = path.split(".")[-1]
+        module = import_module(module_path)
+        return getattr(module, function_name)
+
+
+def _execute_conditional_bump(conditional_bump=None, version=None):
+    if conditional_bump is not None:
+        return conditional_bump(version)
+    return []
 
 
 class ValuesFunction:
@@ -57,7 +80,7 @@ class ValuesFunction:
     you get a ValueError exception.
     """
 
-    def __init__(self, values, optional_value=None, first_value=None):
+    def __init__(self, values, optional_value=None, first_value=None, conditional_bump=None):
 
         if not values:
             raise ValueError("Version part values cannot be empty")
@@ -87,9 +110,11 @@ class ValuesFunction:
             )
 
         self.first_value = first_value
+        self.conditional_bump = conditional_bump
 
-    def bump(self, value):
+    def bump(self, value, version=None):
         try:
+            _execute_conditional_bump(self.conditional_bump, version)
             return self._values[self._values.index(value) + 1]
         except IndexError:
             raise ValueError(

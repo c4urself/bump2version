@@ -30,8 +30,8 @@ class PartConfiguration:
     def optional_value(self):
         return str(self.function.optional_value)
 
-    def bump(self, value=None):
-        return self.function.bump(value)
+    def bump(self, value=None, version=None):
+        return self.function.bump(value, version)
 
 
 class ConfiguredVersionPartConfiguration(PartConfiguration):
@@ -64,11 +64,19 @@ class VersionPart:
     def value(self):
         return self._value or self.config.optional_value
 
+    @value.setter
+    def value(self, new_value):
+        self._value = new_value
+
     def copy(self):
         return VersionPart(self._value)
 
-    def bump(self):
-        return VersionPart(self.config.bump(self.value), self.config)
+    def bump(self, version=None):
+        new_part_value, conditionally_bumped = self.config.bump(self.value, version)
+        return (
+            VersionPart(new_part_value, self.config),
+            conditionally_bumped
+        )
 
     def is_optional(self):
         return self.value == self.config.optional_value
@@ -110,14 +118,15 @@ class Version:
         bumped = False
 
         new_values = {}
+        conditionally_bumped = []
 
         for label in order:
             if label not in self._values:
                 continue
             if label == part_name:
-                new_values[label] = self._values[label].bump()
+                new_values[label], conditionally_bumped = self._values[label].bump(version=self)
                 bumped = True
-            elif bumped:
+            elif bumped and label not in conditionally_bumped:
                 new_values[label] = self._values[label].null()
             else:
                 new_values[label] = self._values[label].copy()
@@ -283,6 +292,9 @@ class VersionConfig:
         return chosen
 
     def serialize(self, version, context):
+        for part in self.part_configs:
+            version[part].config = self.part_configs[part]
+
         serialized = self._serialize(
             version, self._choose_serialize_format(version, context), context
         )
