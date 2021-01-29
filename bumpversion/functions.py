@@ -114,8 +114,11 @@ class ValuesFunction:
 
     def bump(self, value, version=None):
         try:
-            _execute_conditional_bump(self.conditional_bump, version)
-            return self._values[self._values.index(value) + 1]
+            parts_conditionally_bumped = _execute_conditional_bump(self.conditional_bump, version)
+            return (
+                self._values[self._values.index(value) + 1],
+                parts_conditionally_bumped
+            )
         except IndexError:
             raise ValueError(
                 "The part has already the maximum value among {} and cannot be bumped.".format(
