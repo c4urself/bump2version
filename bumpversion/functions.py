@@ -54,7 +54,7 @@ def _get_function_from_path(path: str):
     if path is not None:
         # Path could be `something.module.function`, we want just `something.module`
         # and then get just `function`.
-        module_path = "".join(path.split(".")[:-1])
+        module_path = ".".join(path.split(".")[:-1])
         function_name = path.split(".")[-1]
         module = import_module(module_path)
         return getattr(module, function_name)
