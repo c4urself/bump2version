@@ -311,6 +311,7 @@ new_version: 0.9.35
     assert "0.9.35" == tmpdir.join("file1.txt").read()
     assert "0.9.35" == tmpdir.join("file2.txt").read()
 
+
 def test_glob_keyword_recursive(tmpdir, configfile):
     tmpdir.mkdir("subdir").mkdir("subdir2")
     file1 = tmpdir.join("subdir").join("file1.txt")

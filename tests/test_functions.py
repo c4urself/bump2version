@@ -76,7 +76,7 @@ def test_values_bump():
     assert func.bump(0) == 5
 
 
-def test_values_bump():
+def test_values_bump_with_value_error():
     func = ValuesFunction([0, 5, 10])
     with pytest.raises(ValueError):
         func.bump(10)
