@@ -35,12 +35,12 @@ def test_version_part_copy(confvpc):
 
 def test_version_part_bump(confvpc):
     vp = VersionPart(confvpc.first_value, confvpc)
-    vc = vp.bump()
-    assert vc.value == confvpc.bump(confvpc.first_value)
+    vc = vp.bump()[0]
+    assert vc.value == confvpc.bump(confvpc.first_value)[0]
 
 
 def test_version_part_check_optional_false(confvpc):
-    assert not VersionPart(confvpc.first_value, confvpc).bump().is_optional()
+    assert not VersionPart(confvpc.first_value, confvpc).bump()[0].is_optional()
 
 
 def test_version_part_check_optional_true(confvpc):

@@ -22,12 +22,12 @@ def test_numeric_init_non_numeric_first_value():
 
 def test_numeric_bump_simple_number():
     func = NumericFunction()
-    assert func.bump('0') == '1'
+    assert func.bump('0')[0] == '1'
 
 
 def test_numeric_bump_prefix_and_suffix():
     func = NumericFunction()
-    assert func.bump('v0b') == 'v1b'
+    assert func.bump('v0b')[0] == 'v1b'
 
 
 # ValuesFunction
@@ -73,7 +73,7 @@ def test_values_init_w_incorrect_first_value():
 
 def test_values_bump():
     func = ValuesFunction([0, 5, 10])
-    assert func.bump(0) == 5
+    assert func.bump(0)[0] == 5
 
 
 def test_values_bump_with_value_error():
