@@ -1609,6 +1609,51 @@ def test_optional_value_from_documentation(tmpdir):
     assert '1' == tmpdir.join("optional_value_from_doc.txt").read()
 
 
+def test_conditional_bump(tmpdir):
+    import sys
+    sys.path.insert(0, tmpdir.strpath)
+
+    tmpdir.join("condition_version_bump.txt").write("3.5-beta")
+    tmpdir.chdir()
+
+    tmpdir.join("__init__.py").write("")
+    tmpdir.join("mybump.py").write(dedent(r"""
+        def bump_patch(version):
+            if version['release'].value != 'gamma':
+                version['release'].value = 'gamma'
+                return ['release']
+            return []
+        """).strip())
+
+    tmpdir.join(".bumpversion.cfg").write(dedent(r"""
+        [bumpversion]
+        current_version = 3.5-beta
+        parse = (?P<major>\d+)\.(?P<patch>\d+)(\-(?P<release>.*))?
+        serialize =
+            {major}.{patch}-{release}
+
+        [bumpversion:part:release]
+        optional_value = gamma
+        values =
+            alpha
+            beta
+            gamma
+
+        [bumpversion:part:patch]
+        conditional_bump = mybump.bump_patch
+
+        [bumpversion:file:condition_version_bump.txt]
+        """).strip())
+
+    main(['patch', '--verbose'])
+
+    assert '3.6-gamma' == tmpdir.join("condition_version_bump.txt").read()
+
+    main(['major', '--verbose'])
+
+    assert '4.0-alpha' == tmpdir.join("condition_version_bump.txt").read()
+
+
 def test_python_pre_release_release_post_release(tmpdir):
     tmpdir.join("python386.txt").write("1.0a")
     tmpdir.chdir()
