@@ -35,12 +35,12 @@ def test_version_part_copy(confvpc):
 
 def test_version_part_bump(confvpc):
     vp = VersionPart(confvpc.first_value, confvpc)
-    vc = vp.bump()[0]
-    assert vc.value == confvpc.bump(confvpc.first_value)[0]
+    vc = vp.bump()
+    assert vc.value == confvpc.bump(confvpc.first_value)
 
 
 def test_version_part_check_optional_false(confvpc):
-    assert not VersionPart(confvpc.first_value, confvpc).bump()[0].is_optional()
+    assert not VersionPart(confvpc.first_value, confvpc).bump().is_optional()
 
 
 def test_version_part_check_optional_true(confvpc):
@@ -67,8 +67,10 @@ def test_version_part_null(confvpc):
 def bump_patch(version: Version):
     if version["release"].value != "gamma":
         version["release"].value = "gamma"
-        return ["release"]
-    return []
+    if version["major"].value == '9':
+        int_val = int(version["patch"].value)
+        new_val = int_val + 2
+        version["patch"].value = str(new_val)
 
 
 @pytest.fixture
@@ -111,3 +113,8 @@ def test_version_conditional_bump_required_value(version_config):
     new_version = version.bump("patch", version_config.order())
     assert version_config.serialize(new_version, {}) == "2.5-gamma"
 
+
+def test_version_conditional_bump_self_bump(version_config):
+    version = version_config.parse("9.4-beta")
+    new_version = version.bump("patch", version_config.order())
+    assert version_config.serialize(new_version, {}) == "9.6"

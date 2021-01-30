@@ -20,6 +20,7 @@ class PartConfiguration:
     function_cls = NumericFunction
 
     def __init__(self, *args, **kwds):
+        self.part_key = None
         self.function = self.function_cls(*args, **kwds)
 
     @property
@@ -31,7 +32,7 @@ class PartConfiguration:
         return str(self.function.optional_value)
 
     def bump(self, value=None, version=None):
-        return self.function.bump(value, version)
+        return self.function.bump(value, version, self.part_key)
 
 
 class ConfiguredVersionPartConfiguration(PartConfiguration):
@@ -59,6 +60,7 @@ class VersionPart:
             config = NumericVersionPartConfiguration()
 
         self.config = config
+        self.manually_set = False
 
     @property
     def value(self):
@@ -66,17 +68,15 @@ class VersionPart:
 
     @value.setter
     def value(self, new_value):
+        self.manually_set = True
         self._value = new_value
 
     def copy(self):
         return VersionPart(self._value)
 
     def bump(self, version=None):
-        new_part_value, conditionally_bumped = self.config.bump(self.value, version)
-        return (
-            VersionPart(new_part_value, self.config),
-            conditionally_bumped
-        )
+        new_part_value = self.config.bump(self.value, version)
+        return VersionPart(new_part_value, self.config)
 
     def is_optional(self):
         return self.value == self.config.optional_value
@@ -118,15 +118,14 @@ class Version:
         bumped = False
 
         new_values = {}
-        conditionally_bumped = []
 
         for label in order:
             if label not in self._values:
                 continue
             if label == part_name:
-                new_values[label], conditionally_bumped = self._values[label].bump(version=self)
+                new_values[label] = self._values[label].bump(version=self)
                 bumped = True
-            elif bumped and label not in conditionally_bumped:
+            elif bumped and not self._values[label].manually_set:
                 new_values[label] = self._values[label].null()
             else:
                 new_values[label] = self._values[label].copy()
@@ -163,7 +162,11 @@ class VersionConfig:
         if not part_configs:
             part_configs = {}
 
+        # Set the part configs and allow it to be aware of its own key.
+        for key in part_configs:
+            part_configs[key].part_key = key
         self.part_configs = part_configs
+
         self.search = search
         self.replace = replace
 

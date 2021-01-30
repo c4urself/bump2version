@@ -36,18 +36,15 @@ class NumericFunction:
         self.optional_value = self.first_value
         self.conditional_bump = _get_function_from_path(conditional_bump)
 
-    def bump(self, value, version=None):
+    def bump(self, value, version=None, part_key=None):
         part_prefix, part_numeric, part_suffix = self.FIRST_NUMERIC.search(
             value
         ).groups()
 
-        bumped_numeric = int(part_numeric) + 1
-        parts_conditionally_bumped = _execute_conditional_bump(self.conditional_bump, version)
+        _execute_conditional_bump(self.conditional_bump, version)
+        bumped_numeric = _get_next_part_value(part_key, version, int(part_numeric) + 1)
 
-        return (
-            "".join([part_prefix, str(bumped_numeric), part_suffix]),
-            parts_conditionally_bumped
-        )
+        return "".join([part_prefix, str(bumped_numeric), part_suffix])
 
 
 def _get_function_from_path(path: str):
@@ -62,8 +59,17 @@ def _get_function_from_path(path: str):
 
 def _execute_conditional_bump(conditional_bump=None, version=None):
     if conditional_bump is not None:
-        return conditional_bump(version)
-    return []
+        conditional_bump(version)
+
+
+def _get_next_part_value(part_key, version, standard_value):
+    """
+    If the part was not manually set then it returns the `standard_value`.
+    Otherwise it will return the manually set value for the target part.
+    """
+    if part_key is not None and version[part_key].manually_set:
+        return version[part_key].value
+    return standard_value
 
 
 class ValuesFunction:
@@ -110,15 +116,17 @@ class ValuesFunction:
             )
 
         self.first_value = first_value
-        self.conditional_bump = conditional_bump
+        self.conditional_bump = _get_function_from_path(conditional_bump)
+        self.part_key = None
 
-    def bump(self, value, version=None):
+    def bump(self, value, version=None, part_key=None):
         try:
-            parts_conditionally_bumped = _execute_conditional_bump(self.conditional_bump, version)
-            return (
-                self._values[self._values.index(value) + 1],
-                parts_conditionally_bumped
+            _execute_conditional_bump(self.conditional_bump, version)
+            bumped_value = _get_next_part_value(
+                part_key, version, self._values[self._values.index(value) + 1]
             )
+
+            return bumped_value
         except IndexError:
             raise ValueError(
                 "The part has already the maximum value among {} and cannot be bumped.".format(

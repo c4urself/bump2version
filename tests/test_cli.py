@@ -1621,8 +1621,6 @@ def test_conditional_bump(tmpdir):
         def bump_patch(version):
             if version['release'].value != 'gamma':
                 version['release'].value = 'gamma'
-                return ['release']
-            return []
         """).strip())
 
     tmpdir.join(".bumpversion.cfg").write(dedent(r"""
