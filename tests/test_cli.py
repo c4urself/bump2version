@@ -1609,18 +1609,18 @@ def test_optional_value_from_documentation(tmpdir):
     assert '1' == tmpdir.join("optional_value_from_doc.txt").read()
 
 
-def test_conditional_bump(tmpdir):
+def test_side_effect_bump(tmpdir):
     import sys
     sys.path.insert(0, tmpdir.strpath)
 
-    tmpdir.join("condition_version_bump.txt").write("3.5-beta")
+    tmp_version_file = "side_effect_version.txt"
+    tmpdir.join(tmp_version_file).write("3.5-beta")
     tmpdir.chdir()
 
     tmpdir.join("__init__.py").write("")
     tmpdir.join("mybump.py").write(dedent(r"""
         def bump_patch(version):
-            if version['release'].value != 'gamma':
-                version['release'].value = 'gamma'
+            version['release'].value = 'gamma'
         """).strip())
 
     tmpdir.join(".bumpversion.cfg").write(dedent(r"""
@@ -1638,18 +1638,18 @@ def test_conditional_bump(tmpdir):
             gamma
 
         [bumpversion:part:patch]
-        conditional_bump = mybump.bump_patch
+        side_effect = mybump.bump_patch
 
-        [bumpversion:file:condition_version_bump.txt]
+        [bumpversion:file:side_effect_version.txt]
         """).strip())
 
     main(['patch', '--verbose'])
 
-    assert '3.6-gamma' == tmpdir.join("condition_version_bump.txt").read()
+    assert '3.6-gamma' == tmpdir.join(tmp_version_file).read()
 
     main(['major', '--verbose'])
 
-    assert '4.0-alpha' == tmpdir.join("condition_version_bump.txt").read()
+    assert '4.0-alpha' == tmpdir.join(tmp_version_file).read()
 
 
 def test_python_pre_release_release_post_release(tmpdir):

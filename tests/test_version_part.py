@@ -62,11 +62,10 @@ def test_version_part_null(confvpc):
         confvpc.first_value, confvpc)
 
 
-# Conditional bumping
+# Side effect
 
 def bump_patch(version: Version):
-    if version["release"].value != "gamma":
-        version["release"].value = "gamma"
+    version["release"].value = "gamma"
     if version["major"].value == '9':
         int_val = int(version["patch"].value)
         new_val = int_val + 2
@@ -74,9 +73,9 @@ def bump_patch(version: Version):
 
 
 @pytest.fixture
-@mock.patch("bumpversion.functions._get_function_from_path")
-def version_config(mock_conditional):
-    mock_conditional.return_value = bump_patch
+@mock.patch("bumpversion.functions._get_side_effect_function")
+def version_config(mock_get_function):
+    mock_get_function.return_value = bump_patch
 
     release_part_config = ConfiguredVersionPartConfiguration(
         first_value="beta",
@@ -85,7 +84,7 @@ def version_config(mock_conditional):
     )
     patch_part_config = NumericVersionPartConfiguration(
         first_value="1",
-        conditional_bump="my.function"
+        side_effect="my.function"
     )
     version_config = VersionConfig(
         parse=r"(?P<major>\d+)\.(?P<patch>\d+)(\-(?P<release>[a-z]+))?",
@@ -100,13 +99,13 @@ def version_config(mock_conditional):
     return version_config
 
 
-def test_version_conditional_bump_optional_value(version_config):
+def test_version_side_effect_bump_optional_value(version_config):
     version = version_config.parse("2.4-beta")
     new_version = version.bump("patch", version_config.order())
     assert version_config.serialize(new_version, {}) == "2.5"
 
 
-def test_version_conditional_bump_required_value(version_config):
+def test_version_side_effect_bump_required_value(version_config):
     version_config.part_configs["release"].function.optional_value = None
 
     version = version_config.parse("2.4-beta")
@@ -114,7 +113,7 @@ def test_version_conditional_bump_required_value(version_config):
     assert version_config.serialize(new_version, {}) == "2.5-gamma"
 
 
-def test_version_conditional_bump_self_bump(version_config):
+def test_version_side_effect_bump_self_bump(version_config):
     version = version_config.parse("9.4-beta")
     new_version = version.bump("patch", version_config.order())
     assert version_config.serialize(new_version, {}) == "9.6"
