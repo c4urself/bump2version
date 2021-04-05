@@ -55,6 +55,7 @@ RE_DETECT_SECTION_TYPE = re.compile(
 )
 
 logger_list = logging.getLogger("bumpversion.list")
+logger_show = logging.getLogger("bumpversion.show")
 logger = logging.getLogger(__name__)
 time_context = {"now": datetime.now(), "utcnow": datetime.utcnow()}
 special_char_context = {c: c for c in ("#", ";")}
@@ -79,7 +80,7 @@ def main(original_args=None):
     # determine configuration based on command-line arguments
     # and on-disk configuration files
     args, known_args, root_parser, positionals = _parse_arguments_phase_1(original_args)
-    _setup_logging(known_args.list, known_args.verbose)
+    _setup_logging(known_args.list or known_args.show, known_args.verbose)
     vcs_info = _determine_vcs_usability()
     defaults = _determine_current_version(vcs_info)
     explicit_config = None
@@ -94,6 +95,10 @@ def main(original_args=None):
     )
     version_config = _setup_versionconfig(known_args, part_configs)
     current_version = version_config.parse(known_args.current_version)
+    if known_args.show:
+        logger_show.info("{}".format(current_version.original))
+        return
+
     context = dict(
         itertools.chain(
             time_context.items(),
@@ -193,6 +198,13 @@ def _parse_arguments_phase_1(original_args):
         required=False,
     )
     root_parser.add_argument(
+        "--show",
+        action="store_true",
+        default=False,
+        help="Show machine readable current version",
+        required=False,
+    )
+    root_parser.add_argument(
         "--allow-dirty",
         action="store_true",
         default=False,
@@ -215,6 +227,7 @@ def _setup_logging(show_list, verbose):
         logger_list.addHandler(ch2)
     if show_list:
         logger_list.setLevel(logging.DEBUG)
+        logger_show.setLevel(logging.DEBUG)
     try:
         log_level = [logging.WARNING, logging.INFO, logging.DEBUG][verbose]
     except IndexError:
