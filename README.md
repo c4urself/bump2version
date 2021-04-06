@@ -163,10 +163,29 @@ General configuration is grouped in a `[bumpversion]` section.
   Also available as command-line flag `tag-name`.  Example usage:
   `bump2version --tag-name 'release-{new_version}' patch`
 
-  In addition, it is also possible to provide a tag message by using `--tag-message TAG_MESSAGE`. Example usage:
-  `bump2version --tag-name 'release-{new_version}' --tag-message "Release {new_version}" patch`
+#### `tag_message =`
+  _**[optional]**_<br />
+  **default:** `Bump version: {current_version} → {new_version}`
 
-  * If neither tag message or sign tag is provided, `bumpversion` uses a `lightweight` tag in Git. Otherwise, it utilizes an `annotated` Git tag. You can read more about Git tagging [here](https://git-scm.com/book/en/v2/Git-Basics-Tagging).
+  The tag message to use when creating a tag. Only valid when using `--tag` / `tag = True`.
+
+  This is templated using the [Python Format String Syntax](https://docs.python.org/3/library/string.html#format-string-syntax).
+  Available in the template context are `current_version` and `new_version`
+  as well as `current_[part]` and `new_[part]` (e.g. '`current_major`'
+  or '`new_patch`').
+  In addition, all environment variables are exposed, prefixed with `$`.
+  You can also use the variables `now` or `utcnow` to get a current timestamp. Both accept
+  datetime formatting (when used like as in `{now:%d.%m.%Y}`).
+
+  Also available as command-line flag `--tag-message`.  Example usage:
+  `bump2version --tag-message 'Release {new_version}' patch`
+
+  `bump2version` creates an `annotated` tag in Git by default. To disable this and create a `lightweight` tag, you must explicitly set an empty `tag_message`:
+
+  * either in the configuration file: `tag_message =`
+  * or in the command-line: `bump2version --tag-message ''`
+
+  You can read more about Git tagging [here](https://git-scm.com/book/en/v2/Git-Basics-Tagging).
 
 #### `commit = (True | False)`
   _**[optional]**_<br />
@@ -203,7 +222,7 @@ General configuration is grouped in a `[bumpversion]` section.
   `bump2version --message '[{now:%Y-%m-%d}] Jenkins Build {$BUILD_NUMBER}: {new_version}' patch`)
 
 #### `commit_args =`
-  _**[optional**_<br />
+  _**[optional]**_<br />
   **default:** empty
 
   Extra arguments to pass to commit command. Only valid when using `--commit` /
