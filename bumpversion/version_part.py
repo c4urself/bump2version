@@ -30,6 +30,10 @@ class PartConfiguration:
     def optional_value(self):
         return str(self.function.optional_value)
 
+    @property
+    def keep_value(self):
+        return bool(self.function.keep_value)
+
     def bump(self, value=None):
         return self.function.bump(value)
 
@@ -57,6 +61,7 @@ class VersionPart:
 
         if config is None:
             config = NumericVersionPartConfiguration()
+        #print("#+#+#+#+#+ version part: %s - %s" % (value, config.function.keep_value))
 
         self.config = config
 
@@ -73,6 +78,9 @@ class VersionPart:
     def is_optional(self):
         return self.value == self.config.optional_value
 
+    def keep_value(self):
+        return self.config.keep_value
+
     def __format__(self, format_spec):
         return self.value
 
@@ -85,6 +93,8 @@ class VersionPart:
         return self.value == other.value
 
     def null(self):
+        if self.keep_value():
+            return self.copy()
         return VersionPart(self.config.first_value, self.config)
 
 
