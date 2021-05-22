@@ -105,6 +105,7 @@ EXPECTED_OPTIONS = r"""
 [--parse REGEX]
 [--serialize FORMAT]
 [--search SEARCH]
+[--search-regex SEARCH_REGEX]
 [--replace REPLACE]
 [--current-version VERSION]
 [--no-configured-files]
@@ -142,6 +143,8 @@ optional arguments:
                         (default: ['{major}.{minor}.{patch}'])
   --search SEARCH       Template for complete string to search (default:
                         {current_version})
+  --search-regex SEARCH_REGEX
+                        Regex pattern to search (default: None)
   --replace REPLACE     Template for complete string to replace (default:
                         {new_version})
   --current-version VERSION
@@ -170,6 +173,24 @@ optional arguments:
                         {current_version} → {new_version})
 """ % DESCRIPTION).lstrip()
 
+def test_search_regex(tmpdir):
+    tmpdir.join("VERSION").write('"version"="0.9.34"')
+    tmpdir.chdir()
+    main(shlex_split("""patch --current-version 0.9.34 --search-regex '(?<="version"=").+(?=")' VERSION"""))
+    assert '"version"="0.9.35"' == tmpdir.join("VERSION").read()
+
+def test_search_regex_with_config(tmpdir):
+    tmpdir.join("VERSION").write('"version"="0.9.34"')
+    tmpdir.join(".bumpversion.cfg").write("""[bumpversion]
+current_version: 0.9.34
+[bumpversion:file:VERSION]
+search_regex = (?<="version"=").+(?=")
+replace = {new_version}""")
+
+    tmpdir.chdir()
+    main(shlex_split("patch"))
+
+    assert '"version"="0.9.35"' == tmpdir.join("VERSION").read()
 
 def test_usage_string(tmpdir, capsys):
     tmpdir.chdir()
@@ -493,9 +514,9 @@ message = {message}
          'Parsed the following values: major={}, minor={}, patch={}'.format(p_parts[0], p_parts[1], p_parts[2])),
         ('bumpversion.cli', 'INFO', "New version will be '{}'".format(patch)),
         ('bumpversion.cli', 'INFO', 'Asserting files {} contain the version string...'.format(file)),
-        ('bumpversion.utils', 'INFO', "Found '{v}' in {f} at line 0: {v}".format(v=version, f=file)),  # verbose
-        ('bumpversion.utils', 'INFO', 'Would change file {}:'.format(file)),  # dry-run change to 'would'
-        ('bumpversion.utils', 'INFO',
+        ('bumpversion.cli', 'INFO', "Found '{v}' in {f} at line 1:\n{v}".format(v=version, f=file)),  # verbose
+        ('bumpversion.cli', 'INFO', 'Would change file {}:'.format(file)),  # dry-run change to 'would'
+        ('bumpversion.cli', 'INFO',
          '--- a/{f}\n+++ b/{f}\n@@ -1 +1 @@\n-{v}\n+{p}'.format(f=file, v=version, p=patch)),
         ('bumpversion.list', 'INFO', 'current_version={}'.format(version)),
         ('bumpversion.list', 'INFO', 'tag=True'),
@@ -1311,9 +1332,9 @@ def test_log_no_config_file_info_message(tmpdir):
         ('bumpversion.version_part', 'INFO', 'Parsed the following values: major=1, minor=0, patch=1'),
         ('bumpversion.cli', 'INFO', "New version will be '1.0.1'"),
         ('bumpversion.cli', 'INFO', 'Asserting files a_file.txt contain the version string...'),
-        ('bumpversion.utils', 'INFO', "Found '1.0.0' in a_file.txt at line 0: 1.0.0"),
-        ('bumpversion.utils', 'INFO', 'Changing file a_file.txt:'),
-        ('bumpversion.utils', 'INFO', '--- a/a_file.txt\n+++ b/a_file.txt\n@@ -1 +1 @@\n-1.0.0\n+1.0.1'),
+        ('bumpversion.cli', 'INFO', "Found '1.0.0' in a_file.txt at line 1:\n1.0.0"),
+        ('bumpversion.cli', 'INFO', 'Changing file a_file.txt:'),
+        ('bumpversion.cli', 'INFO', '--- a/a_file.txt\n+++ b/a_file.txt\n@@ -1 +1 @@\n-1.0.0\n+1.0.1'),
         ('bumpversion.cli', 'INFO', 'Would write to config file .bumpversion.cfg:'),
         ('bumpversion.cli', 'INFO', '[bumpversion]\ncurrent_version = 1.0.1\n\n'),
         order_matters=True
@@ -1379,9 +1400,9 @@ def test_complex_info_logging(tmpdir):
         ('bumpversion.version_part', 'INFO', 'Parsed the following values: major=0, minor=4, patch=1'),
         ('bumpversion.cli', 'INFO', "New version will be '0.4.1'"),
         ('bumpversion.cli', 'INFO', 'Asserting files fileE contain the version string...'),
-        ('bumpversion.utils', 'INFO', "Found '0.4' in fileE at line 0: 0.4"),
-        ('bumpversion.utils', 'INFO', 'Changing file fileE:'),
-        ('bumpversion.utils', 'INFO', '--- a/fileE\n+++ b/fileE\n@@ -1 +1 @@\n-0.4\n+0.4.1'),
+        ('bumpversion.cli', 'INFO', "Found '0.4' in fileE at line 1:\n0.4"),
+        ('bumpversion.cli', 'INFO', 'Changing file fileE:'),
+        ('bumpversion.cli', 'INFO', '--- a/fileE\n+++ b/fileE\n@@ -1 +1 @@\n-0.4\n+0.4.1'),
         ('bumpversion.list', 'INFO', 'current_version=0.4'),
         ('bumpversion.list', 'INFO', 'serialize=\n{major}.{minor}.{patch}\n{major}.{minor}'),
         ('bumpversion.list', 'INFO', 'parse=(?P<major>\\d+)\\.(?P<minor>\\d+)(\\.(?P<patch>\\d+))?'),
@@ -1428,9 +1449,9 @@ def test_subjunctive_dry_run_logging(tmpdir, vcs):
         ('bumpversion.version_part', 'INFO', 'Parsed the following values: major=0, minor=8, patch=1'),
         ('bumpversion.cli', 'INFO', "New version will be '0.8.1'"),
         ('bumpversion.cli', 'INFO', 'Asserting files dont_touch_me.txt contain the version string...'),
-        ('bumpversion.utils', 'INFO', "Found '0.8' in dont_touch_me.txt at line 0: 0.8"),
-        ('bumpversion.utils', 'INFO', 'Would change file dont_touch_me.txt:'),
-        ('bumpversion.utils', 'INFO', '--- a/dont_touch_me.txt\n+++ b/dont_touch_me.txt\n@@ -1 +1 @@\n-0.8\n+0.8.1'),
+        ('bumpversion.cli', 'INFO', "Found '0.8' in dont_touch_me.txt at line 1:\n0.8"),
+        ('bumpversion.cli', 'INFO', 'Would change file dont_touch_me.txt:'),
+        ('bumpversion.cli', 'INFO', '--- a/dont_touch_me.txt\n+++ b/dont_touch_me.txt\n@@ -1 +1 @@\n-0.8\n+0.8.1'),
         ('bumpversion.list', 'INFO', 'current_version=0.8'),
         ('bumpversion.list', 'INFO', 'commit=True'),
         ('bumpversion.list', 'INFO', 'tag=True'),
@@ -1479,9 +1500,9 @@ def test_log_commit_message_if_no_commit_tag_but_usable_vcs(tmpdir, vcs):
         ('bumpversion.version_part', 'INFO', 'Parsed the following values: major=0, minor=3, patch=4'),
         ('bumpversion.cli', 'INFO', "New version will be '0.3.4'"),
         ('bumpversion.cli', 'INFO', 'Asserting files please_touch_me.txt contain the version string...'),
-        ('bumpversion.utils', 'INFO', "Found '0.3.3' in please_touch_me.txt at line 0: 0.3.3"),
-        ('bumpversion.utils', 'INFO', 'Changing file please_touch_me.txt:'),
-        ('bumpversion.utils', 'INFO', '--- a/please_touch_me.txt\n+++ b/please_touch_me.txt\n@@ -1 +1 @@\n-0.3.3\n+0.3.4'),
+        ('bumpversion.cli', 'INFO', "Found '0.3.3' in please_touch_me.txt at line 1:\n0.3.3"),
+        ('bumpversion.cli', 'INFO', 'Changing file please_touch_me.txt:'),
+        ('bumpversion.cli', 'INFO', '--- a/please_touch_me.txt\n+++ b/please_touch_me.txt\n@@ -1 +1 @@\n-0.3.3\n+0.3.4'),
         ('bumpversion.list', 'INFO', 'current_version=0.3.3'),
         ('bumpversion.list', 'INFO', 'commit=False'),
         ('bumpversion.list', 'INFO', 'tag=False'),
@@ -1814,12 +1835,12 @@ def test_search_replace_to_avoid_updating_unconcerned_lines(tmpdir):
         ('bumpversion.version_part', 'INFO', 'Parsed the following values: major=1, minor=6, patch=0'),
         ('bumpversion.cli', 'INFO', "New version will be '1.6.0'"),
         ('bumpversion.cli', 'INFO', 'Asserting files requirements.txt, CHANGELOG.md contain the version string...'),
-        ('bumpversion.utils', 'INFO', "Found 'MyProject==1.5.6' in requirements.txt at line 1: MyProject==1.5.6"),
-        ('bumpversion.utils', 'INFO', "Found '## [Unreleased]' in CHANGELOG.md at line 3: ## [Unreleased]"),
-        ('bumpversion.utils', 'INFO', 'Changing file requirements.txt:'),
-        ('bumpversion.utils', 'INFO', '--- a/requirements.txt\n+++ b/requirements.txt\n@@ -1,2 +1,2 @@\n Django>=1.5.6,<1.6\n-MyProject==1.5.6\n+MyProject==1.6.0'),
-        ('bumpversion.utils', 'INFO', 'Changing file CHANGELOG.md:'),
-        ('bumpversion.utils', 'INFO', '--- a/CHANGELOG.md\n+++ b/CHANGELOG.md\n@@ -2,6 +2,8 @@\n # https://keepachangelog.com/en/1.0.0/\n \n ## [Unreleased]\n+\n+## [1.6.0] - %s\n ### Added\n - Foobar\n ' % utc_today),
+        ('bumpversion.cli', 'INFO', "Found 'MyProject==1.5.6' in requirements.txt at line 2:\nMyProject==1.5.6"),
+        ('bumpversion.cli', 'INFO', "Found '## [Unreleased]' in CHANGELOG.md at line 4:\n## [Unreleased]"),
+        ('bumpversion.cli', 'INFO', 'Changing file requirements.txt:'),
+        ('bumpversion.cli', 'INFO', '--- a/requirements.txt\n+++ b/requirements.txt\n@@ -1,2 +1,2 @@\n Django>=1.5.6,<1.6\n-MyProject==1.5.6\n+MyProject==1.6.0'),
+        ('bumpversion.cli', 'INFO', 'Changing file CHANGELOG.md:'),
+        ('bumpversion.cli', 'INFO', '--- a/CHANGELOG.md\n+++ b/CHANGELOG.md\n@@ -2,6 +2,8 @@\n # https://keepachangelog.com/en/1.0.0/\n \n ## [Unreleased]\n+\n+## [1.6.0] - %s\n ### Added\n - Foobar\n ' % utc_today),
         ('bumpversion.list', 'INFO', 'current_version=1.5.6'),
         ('bumpversion.list', 'INFO', 'new_version=1.6.0'),
         ('bumpversion.cli', 'INFO', 'Writing to config file .bumpversion.cfg:'),

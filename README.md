@@ -401,6 +401,24 @@ serialize =
   might be present multiple times in the file and you mean to only bump one of the
   occurrences. Can be multiple lines, templated using [Python Format String Syntax](https://docs.python.org/3/library/string.html#format-string-syntax)
 
+#### `search_regex =`
+  **default:** none
+
+  Regex to search for the string to be replaced in the file.
+  Support `{current_version}` template string (e.g. `(?<=version='){current_version}(?=')`).
+  If search_regex is defined, the search template string will be ignored in the section.
+
+```ini
+[bumpversion]
+current_version = 1.5.6
+
+[bumpversion:file:requirements.txt]
+search_regex = (?<=MyProject==){current_version}
+search = MyProject=={current_version} ; will be ignored
+replace = MyProject=={new_version}
+```
+  Also available as `--search-regex`
+
 #### `replace =`
   **default:** `{new_version}`
 

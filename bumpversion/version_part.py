@@ -141,7 +141,7 @@ class VersionConfig:
     Hold a complete representation of a version string.
     """
 
-    def __init__(self, parse, serialize, search, replace, part_configs=None):
+    def __init__(self, parse, serialize, search, search_regex, replace, part_configs=None):
         try:
             self.parse_regex = re.compile(parse, re.VERBOSE)
         except sre_constants.error as e:
@@ -156,6 +156,7 @@ class VersionConfig:
 
         self.part_configs = part_configs
         self.search = search
+        self.search_regex = search_regex
         self.replace = replace
 
     def order(self):
