@@ -137,6 +137,8 @@ optional arguments:
   --list                List machine readable information (default: False)
   --allow-dirty         Don't abort if working directory is dirty (default:
                         False)
+  --disable-config-comments
+                        treat comments as part of the value (default: False)
   --parse REGEX         Regex parsing the version string (default:
                         (?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+))
   --serialize FORMAT    How to format what is parsed back to a version
