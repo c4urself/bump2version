@@ -102,6 +102,7 @@ EXPECTED_OPTIONS = r"""
 [--verbose]
 [--list]
 [--allow-dirty]
+[--ignore-config-comments]
 [--parse REGEX]
 [--serialize FORMAT]
 [--search SEARCH]
@@ -1893,11 +1894,11 @@ def test_non_matching_search_does_not_modify_file(tmpdir):
 
     changelog_content = dedent("""
     # Unreleased
-    
+
     * bullet point A
-    
+
     # Release v'older' (2019-09-17)
-    
+
     * bullet point B
     """)
 
