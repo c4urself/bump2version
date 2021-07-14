@@ -102,7 +102,7 @@ EXPECTED_OPTIONS = r"""
 [--verbose]
 [--list]
 [--allow-dirty]
-[--ignore-config-comments]
+[--disable-config-comments]
 [--parse REGEX]
 [--serialize FORMAT]
 [--search SEARCH]
