@@ -87,7 +87,7 @@ def main(original_args=None):
         explicit_config = known_args.config_file
     config_file = _determine_config_file(explicit_config)
     config, config_file_exists, config_newlines, part_configs, files = _load_configuration(
-        config_file, explicit_config, defaults,
+        config_file, explicit_config, defaults, known_args.ignore_config_comments
     )
     known_args, parser2, remaining_argv = _parse_arguments_phase_2(
         args, known_args, defaults, root_parser
@@ -199,6 +199,13 @@ def _parse_arguments_phase_1(original_args):
         help="Don't abort if working directory is dirty",
         required=False,
     )
+    root_parser.add_argument(
+        "--ignore-config-comments",
+        action="store_true",
+        default=False,
+        help="treat comments as part of the value",
+        required=False,
+    )
     known_args, _ = root_parser.parse_known_args(args)
     return args, known_args, root_parser, positionals
 
@@ -247,12 +254,13 @@ def _determine_config_file(explicit_config):
     return ".bumpversion.cfg"
 
 
-def _load_configuration(config_file, explicit_config, defaults):
+def _load_configuration(config_file, explicit_config, defaults, ignore_config_comments):
     # setup.cfg supports interpolation - for compatibility we must do the same.
+    comment_prefixes = None if ignore_config_comments else ('#', ';')
     if os.path.basename(config_file) == "setup.cfg":
-        config = ConfigParser("")
+        config = ConfigParser("", comment_prefixes=comment_prefixes)
     else:
-        config = RawConfigParser("")
+        config = RawConfigParser("", comment_prefixes=comment_prefixes)
     # don't transform keys to lowercase (which would be the default)
     config.optionxform = lambda option: option
     config.add_section("bumpversion")
