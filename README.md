@@ -460,6 +460,10 @@ Additionally, the following options are available:
   yourself from releasing unversioned files and/or overwriting unsaved changes.
   Use this option to override this check.
 
+`--disable-config-comments`
+  This option disables comments in the configuration file, which allows
+  using `#` and `;` as values in multiline search and replacements.
+
 `--no-configured-files`
   Will not update/check files specified in the .bumpversion.cfg.
   Similar to dry-run, but will also avoid checking the files.
