@@ -87,7 +87,7 @@ def main(original_args=None):
         explicit_config = known_args.config_file
     config_file = _determine_config_file(explicit_config)
     config, config_file_exists, config_newlines, part_configs, files = _load_configuration(
-        config_file, explicit_config, defaults, known_args.ignore_config_comments
+        config_file, explicit_config, defaults, known_args.disable_config_comments
     )
     known_args, parser2, remaining_argv = _parse_arguments_phase_2(
         args, known_args, defaults, root_parser
@@ -200,7 +200,7 @@ def _parse_arguments_phase_1(original_args):
         required=False,
     )
     root_parser.add_argument(
-        "--ignore-config-comments",
+        "--disable-config-comments",
         action="store_true",
         default=False,
         help="treat comments as part of the value",
@@ -254,9 +254,9 @@ def _determine_config_file(explicit_config):
     return ".bumpversion.cfg"
 
 
-def _load_configuration(config_file, explicit_config, defaults, ignore_config_comments):
+def _load_configuration(config_file, explicit_config, defaults, disable_config_comments):
     # setup.cfg supports interpolation - for compatibility we must do the same.
-    comment_prefixes = None if ignore_config_comments else ('#', ';')
+    comment_prefixes = None if disable_config_comments else ('#', ';')
     if os.path.basename(config_file) == "setup.cfg":
         config = ConfigParser("", comment_prefixes=comment_prefixes)
     else:
