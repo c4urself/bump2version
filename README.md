@@ -412,10 +412,41 @@ serialize =
 [bumpversion]
 current_version = 1.5.6
 
-[bumpversion:file:requirements.txt]
-search_regex = (?<=MyProject==){current_version}
-search = MyProject=={current_version} ; will be ignored
-replace = MyProject=={new_version}
+[bumpversion:file:pom.xml]
+search_regex = (?<=test-app-java</artifactId>\n\s{4}<version>){current_version}(?=</version>)
+search = <version>{current_version}</version> ; will be ignored
+replace = {new_version}
+```
+ Example of use, when the application version is the same as some dependencies (java application, pom.xml):
+```xml
+    ...
+    <artifactId>test-app-java</artifactId>
+    <version>2.4.5</version>
+    <packaging>jar</packaging>
+    ...
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>2.4.5</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+    ...
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                    <version>2.4.5</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    ...
 ```
   Also available as `--search-regex`
 
