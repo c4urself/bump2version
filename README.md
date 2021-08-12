@@ -22,7 +22,7 @@ commits and tags:
 * works without any VCS, but happily reads tag information from and writes
   commits and tags to Git and Mercurial if available
 * just handles text files, so it's not specific to any programming language
-* supports Python 3 and PyPy3
+* supports non-EOL Python (>=3.6 at time of writing) and PyPy3
 
 If you want to use Python 2, use `pip>=9` and you'll get the last supported version,
 or pin `bump2version<1`.
