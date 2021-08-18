@@ -1,5 +1,6 @@
 **unreleased**
 **v1.0.2-dev**
+- Housekeeping: migrated from travis+appveyor to GitHub Actions for CI, thanks @clbarnes
 
 **v1.0.1**
 - Added: enable special characters in search/replace, thanks @mckelvin
@@ -12,7 +13,7 @@
 
 **v1.0.0**
 - Fix the spurious newline that bump2version adds when writing to bumpversion.cfg, thanks @kyluca #58
-- Add Python3.8 support, thanks @florisla 
+- Add Python3.8 support, thanks @florisla
 - Drop Python2 support, thanks @hugovk
 - Allow additional arguments to the commit call, thanks @lubomir
 - Various documentation improvements, thanks @lubomir @florisla @padamstx @glotis
@@ -23,7 +24,7 @@
 - Housekeeping, also publish an sdist
 - Housekeeping, fix appveyor builds
 - Housekeeping, `make lint` now lints with pylint
-- Drop support for Python3.4, thanks @hugovk #79 
+- Drop support for Python3.4, thanks @hugovk #79
 - Enhance missing VCS command detection (errno 13), thanks @lowell80 #75
 - Add environment variables for other scripts to use, thanks @mauvilsa #70
 - Refactor, cli.main is now much more readable, thanks @florisla #68
