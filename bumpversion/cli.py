@@ -39,7 +39,7 @@ from bumpversion.vcs import Git, Mercurial
 DESCRIPTION = "{}: v{} (using Python v{})".format(
     __title__,
     __version__,
-    sys.version.split("\n")[0].split(" ")[0]
+    sys.version.split("\n", maxsplit=1)[0].split(" ", maxsplit=1)[0]
 )
 VCS = [Git, Mercurial]
 
@@ -86,7 +86,9 @@ def main(original_args=None):
     if hasattr(known_args, "config_file"):
         explicit_config = known_args.config_file
     config_file = _determine_config_file(explicit_config)
-    config, config_file_exists, config_newlines = _load_configuration_file(config_file, explicit_config, defaults)
+    config, config_file_exists, config_newlines = _load_configuration_file(config_file,
+                                                                           explicit_config,
+                                                                           defaults)
     known_args, parser2, remaining_argv = _parse_arguments_phase_2(
         args, known_args, defaults, root_parser
     )
@@ -478,7 +480,8 @@ def _parse_arguments_phase_3(remaining_argv, positionals, defaults, parser2):
         action="store_true",
         default=False,
         dest="no_configured_files",
-        help="Only replace the version in files specified on the command line, ignoring the files from the configuration file.",
+        help="Only replace the version in files specified on the command line, "
+             "ignoring the files from the configuration file.",
     )
     parser3.add_argument(
         "--dry-run",
