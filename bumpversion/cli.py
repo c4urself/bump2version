@@ -86,12 +86,11 @@ def main(original_args=None):
     if hasattr(known_args, "config_file"):
         explicit_config = known_args.config_file
     config_file = _determine_config_file(explicit_config)
-    config, config_file_exists, config_newlines, part_configs, files = _load_configuration(
-        config_file, explicit_config, defaults,
-    )
+    config, config_file_exists, config_newlines = _load_configuration_file(config_file, explicit_config, defaults)
     known_args, parser2, remaining_argv = _parse_arguments_phase_2(
         args, known_args, defaults, root_parser
     )
+    part_configs, files = _load_configuration(config, defaults)
     version_config = _setup_versionconfig(known_args, part_configs)
     current_version = version_config.parse(known_args.current_version)
     context = dict(
@@ -247,7 +246,7 @@ def _determine_config_file(explicit_config):
     return ".bumpversion.cfg"
 
 
-def _load_configuration(config_file, explicit_config, defaults):
+def _load_configuration_file(config_file, explicit_config, defaults):
     # setup.cfg supports interpolation - for compatibility we must do the same.
     if os.path.basename(config_file) == "setup.cfg":
         config = ConfigParser("")
@@ -263,7 +262,7 @@ def _load_configuration(config_file, explicit_config, defaults):
         if explicit_config:
             raise argparse.ArgumentTypeError(message)
         logger.info(message)
-        return config, config_file_exists, None, {}, []
+        return config, config_file_exists, None
 
     logger.info("Reading config file %s:", config_file)
 
@@ -302,6 +301,10 @@ def _load_configuration(config_file, explicit_config, defaults):
         except NoOptionError:
             pass  # no default value then ;)
 
+    return config, config_file_exists, config_newlines
+
+
+def _load_configuration(config, defaults):
     part_configs = {}
     files = []
 
@@ -370,7 +373,7 @@ def _load_configuration(config_file, explicit_config, defaults):
                     files.append(ConfiguredFile(filename_glob, version_config))
             else:
                 files.append(ConfiguredFile(filename, version_config))
-    return config, config_file_exists, config_newlines, part_configs, files
+    return part_configs, files
 
 
 def _parse_arguments_phase_2(args, known_args, defaults, root_parser):
