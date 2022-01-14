@@ -117,7 +117,7 @@ EXPECTED_OPTIONS = r"""
 [--tag-message TAG_MESSAGE]
 [--message COMMIT_MSG]
 part
-[file [file ...]]
+[file ...]
 """.strip().splitlines()
 
 EXPECTED_USAGE = (r"""
@@ -247,7 +247,7 @@ new_version: 19
     assert "New version that should be in the files (default: 19)" in out
     assert "[--current-version VERSION]" in out
     assert "[--new-version VERSION]" in out
-    assert "[file [file ...]]" in out
+    assert "[file ...]" in out
 
 
 def test_missing_explicit_config_file(tmpdir):
