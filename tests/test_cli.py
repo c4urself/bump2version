@@ -1405,8 +1405,8 @@ def test_subjunctive_dry_run_logging(tmpdir, vcs):
         commit = True
         tag = True
         serialize =
-            {major}.{minor}.{patch}
-            {major}.{minor}
+        	{major}.{minor}.{patch}
+        	{major}.{minor}
         parse = (?P<major>\d+)\.(?P<minor>\d+)(\.(?P<patch>\d+))?
         [bumpversion:file:dont_touch_me.txt]
     """).strip())
