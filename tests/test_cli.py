@@ -171,10 +171,6 @@ optional arguments:
 """ % DESCRIPTION).lstrip()
 
 
-def normalize_whitespace(s):
-    return " ".join(s.split())
-
-
 def test_usage_string(tmpdir, capsys):
     tmpdir.chdir()
 
@@ -187,7 +183,7 @@ def test_usage_string(tmpdir, capsys):
     for option_line in EXPECTED_OPTIONS:
         assert option_line in out, "Usage string is missing {}".format(option_line)
 
-    assert normalize_whitespace(EXPECTED_USAGE) in normalize_whitespace(out)
+    assert EXPECTED_USAGE in out
 
 
 def test_usage_string_fork(tmpdir):
@@ -231,7 +227,7 @@ def test_regression_help_in_work_dir(tmpdir, capsys, vcs):
     if vcs == "git":
         assert "Version that needs to be updated (default: 1.7.2013)" in out
     else:
-        assert normalize_whitespace(EXPECTED_USAGE) in normalize_whitespace(out)
+        assert EXPECTED_USAGE in out
 
 
 def test_defaults_in_usage_with_config(tmpdir, capsys):
@@ -1897,11 +1893,11 @@ def test_non_matching_search_does_not_modify_file(tmpdir):
 
     changelog_content = dedent("""
     # Unreleased
-
+    
     * bullet point A
-
+    
     # Release v'older' (2019-09-17)
-
+    
     * bullet point B
     """)
 
