@@ -327,6 +327,9 @@ def _load_configuration(config_file, explicit_config, defaults):
                 )
                 ThisVersionPartConfiguration = ConfiguredVersionPartConfiguration
 
+            if config.has_option(section_name, 'independent'):
+                section_config['independent'] = config.getboolean(section_name, 'independent')
+
             part_configs[section_value] = ThisVersionPartConfiguration(
                 **section_config
             )

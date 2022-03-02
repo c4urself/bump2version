@@ -2345,3 +2345,50 @@ class TestSplitArgsInOptionalAndPositional:
 
         assert positional == ['minor', 'setup.py']
         assert optional == ['--allow-dirty', '-m', '"Commit"']
+
+
+def test_build_number_configuration(tmpdir):
+    tmpdir.join("VERSION.txt").write("2.1.6-5123")
+    tmpdir.chdir()
+    tmpdir.join(".bumpversion.cfg").write(dedent(r"""
+        [bumpversion]
+        current_version: 2.1.6-5123
+        parse = (?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)\-(?P<build>\d+)
+        serialize = {major}.{minor}.{patch}-{build}
+
+        [bumpversion:file:VERSION.txt]
+
+        [bumpversion:part:build]
+        independent = True
+        """))
+
+    main(['build'])
+    assert '2.1.6-5124' == tmpdir.join("VERSION.txt").read()
+
+    main(['major'])
+    assert '3.0.0-5124' == tmpdir.join("VERSION.txt").read()
+
+    main(['build'])
+    assert '3.0.0-5125' == tmpdir.join("VERSION.txt").read()
+
+
+def test_independent_falsy_value_in_config_does_not_bump_independently(tmpdir):
+    tmpdir.join("VERSION").write("2.1.0-5123")
+    tmpdir.chdir()
+    tmpdir.join(".bumpversion.cfg").write(dedent(r"""
+        [bumpversion]
+        current_version: 2.1.0-5123
+        parse = (?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)\-(?P<build>\d+)
+        serialize = {major}.{minor}.{patch}-{build}
+
+        [bumpversion:file:VERSION]
+
+        [bumpversion:part:build]
+        independent = 0
+        """))
+
+    main(['build'])
+    assert '2.1.0-5124' == tmpdir.join("VERSION").read()
+
+    main(['major'])
+    assert '3.0.0-0' == tmpdir.join("VERSION").read()
