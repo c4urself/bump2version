@@ -579,14 +579,12 @@ def test_bump_version_missing_part(tmpdir):
         main(['bugfix', '--current-version', '1.0.0', 'file5'])
 
 
-def test_dirty_work_dir(tmpdir, vcs):
+def test_dirty_work_dir_without_allow_dirty_fails_with_warning(tmpdir, vcs):
     tmpdir.chdir()
     check_call([vcs, "init"])
     tmpdir.join("dirty").write("i'm dirty")
 
     check_call([vcs, "add", "dirty"])
-    vcs_name = "Mercurial" if vcs == "hg" else "Git"
-    vcs_output = "A dirty" if vcs == "hg" else "A  dirty"
 
     with pytest.raises(exceptions.WorkingDirectoryIsDirtyException):
         with LogCapture() as log_capture:
@@ -600,14 +598,41 @@ def test_dirty_work_dir(tmpdir, vcs):
             "{}\n"
             "\n"
             "Use --allow-dirty to override this if you know what you're doing.".format(
-                vcs_name,
-                vcs_output
+                "Mercurial" if vcs == "hg" else "Git",
+                "A dirty" if vcs == "hg" else "A  dirty",
             )
         )
     )
 
 
-def test_force_dirty_work_dir(tmpdir, vcs):
+def test_dirty_work_dir_with_allow_dirty_false_in_config_file_fails_with_warning(tmpdir, vcs):
+    tmpdir.chdir()
+    check_call([vcs, "init"])
+    tmpdir.join(".bumpversion.cfg").write("[bumpversion]\nallow_dirty = False\ncurrent_version = 1.0.0")
+    tmpdir.join("dirty").write("dirty file version 1.0.0")
+
+    check_call([vcs, "add", "dirty"])
+
+    with pytest.raises(exceptions.WorkingDirectoryIsDirtyException):
+        with LogCapture() as log_capture:
+            main(['patch', '--new-version', '2.0.0', 'dirty'])
+
+    log_capture.check_present(
+        (
+            'bumpversion.cli',
+            'WARNING',
+            "{} working directory is not clean:\n"
+            "{}\n"
+            "\n"
+            "Use --allow-dirty to override this if you know what you're doing.".format(
+                "Mercurial" if vcs == "hg" else "Git",
+                "A dirty" if vcs == "hg" else "A  dirty",
+            )
+        )
+    )
+
+
+def test_dirty_work_dir_with_allow_dirty_argument_passes(tmpdir, vcs):
     tmpdir.chdir()
     check_call([vcs, "init"])
     tmpdir.join("dirty2").write("i'm dirty! 1.1.1")
@@ -623,6 +648,18 @@ def test_force_dirty_work_dir(tmpdir, vcs):
     ])
 
     assert "i'm dirty! 1.1.2" == tmpdir.join("dirty2").read()
+
+
+def test_dirty_work_with_allow_dirty_true_in_config_file_passes(tmpdir, vcs):
+    tmpdir.chdir()
+    check_call([vcs, "init"])
+    tmpdir.join(".bumpversion.cfg").write("[bumpversion]\nallow_dirty = True\ncurrent_version = 1.0.0")
+    tmpdir.join("dirty").write("dirty file version 1.0.0")
+
+    check_call([vcs, "add", "dirty"])
+
+    main(['patch', '--new-version', '2.0.0', 'dirty'])
+    assert "dirty file version 2.0.0" == tmpdir.join("dirty").read()
 
 
 def test_bump_major(tmpdir):
