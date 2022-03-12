@@ -7,8 +7,9 @@
 * [tbump](https://github.com/tankerhq/tbump) is a complete rewrite, with a nicer UX and additional features, like running commands (aka hooks) before or after the bump. It only works for Git repos right now.
 
 * [ADVbumpversion](https://github.com/andrivet/advbumpversion) is another fork.
-  It offers some features which are still work in progress here; it's
-  definitely our desire to merge back (issue [#121](https://github.com/c4urself/bump2version/issues/121)).
+  It offered some features that are now incorporated by its author into `bump2version`. 
+  This fork is thus now deprecated, and it recommends to use `bump2version`
+  (issue [#121](https://github.com/c4urself/bump2version/issues/121)).
 
 * [zest.releaser](https://pypi.org/project/zest.releaser/) manages
   your Python package releases and keeps the version number in one location.

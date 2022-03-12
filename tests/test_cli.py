@@ -117,7 +117,7 @@ EXPECTED_OPTIONS = r"""
 [--tag-message TAG_MESSAGE]
 [--message COMMIT_MSG]
 part
-[file [file ...]]
+[file ...]
 """.strip().splitlines()
 
 EXPECTED_USAGE = (r"""
@@ -247,7 +247,7 @@ new_version: 19
     assert "New version that should be in the files (default: 19)" in out
     assert "[--current-version VERSION]" in out
     assert "[--new-version VERSION]" in out
-    assert "[file [file ...]]" in out
+    assert "[file ...]" in out
 
 
 def test_missing_explicit_config_file(tmpdir):
@@ -1260,6 +1260,37 @@ parse = (?P<major>\d+)\.(?P<minor>\d+)(\.(?P<patch>\d+))?
     main(['patch'])
 
     assert '0.6.1' == tmpdir.join("fileD").read()
+
+
+def test_search_uses_shortest_possible_custom_search_pattern(tmpdir):
+    config = dedent(r"""
+        [bumpversion]
+        current_version = 0.0.0
+        commit = True
+        tag = True
+        parse = (?P<major>\d+).(?P<minor>\d+).(?P<patch>\d+).?((?P<prerelease>.*))?
+        serialize =
+            {major}.{minor}.{patch}.{prerelease}
+            {major}.{minor}.{patch}
+
+        [bumpversion:file:package.json]
+        search = "version": "{current_version}",
+        replace = "version": "{new_version}",
+    """)
+    tmpdir.join(".bumpversion.cfg").write(config.encode('utf-8'), mode='wb')
+
+    tmpdir.join("package.json").write("""{
+        "version": "0.0.0",
+        "package": "20.0.0",
+    }""")
+
+    tmpdir.chdir()
+    main(["patch"])
+
+    assert """{
+        "version": "0.0.1",
+        "package": "20.0.0",
+    }""" == tmpdir.join("package.json").read()
 
 
 def test_log_no_config_file_info_message(tmpdir):
@@ -2314,3 +2345,50 @@ class TestSplitArgsInOptionalAndPositional:
 
         assert positional == ['minor', 'setup.py']
         assert optional == ['--allow-dirty', '-m', '"Commit"']
+
+
+def test_build_number_configuration(tmpdir):
+    tmpdir.join("VERSION.txt").write("2.1.6-5123")
+    tmpdir.chdir()
+    tmpdir.join(".bumpversion.cfg").write(dedent(r"""
+        [bumpversion]
+        current_version: 2.1.6-5123
+        parse = (?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)\-(?P<build>\d+)
+        serialize = {major}.{minor}.{patch}-{build}
+
+        [bumpversion:file:VERSION.txt]
+
+        [bumpversion:part:build]
+        independent = True
+        """))
+
+    main(['build'])
+    assert '2.1.6-5124' == tmpdir.join("VERSION.txt").read()
+
+    main(['major'])
+    assert '3.0.0-5124' == tmpdir.join("VERSION.txt").read()
+
+    main(['build'])
+    assert '3.0.0-5125' == tmpdir.join("VERSION.txt").read()
+
+
+def test_independent_falsy_value_in_config_does_not_bump_independently(tmpdir):
+    tmpdir.join("VERSION").write("2.1.0-5123")
+    tmpdir.chdir()
+    tmpdir.join(".bumpversion.cfg").write(dedent(r"""
+        [bumpversion]
+        current_version: 2.1.0-5123
+        parse = (?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)\-(?P<build>\d+)
+        serialize = {major}.{minor}.{patch}-{build}
+
+        [bumpversion:file:VERSION]
+
+        [bumpversion:part:build]
+        independent = 0
+        """))
+
+    main(['build'])
+    assert '2.1.0-5124' == tmpdir.join("VERSION").read()
+
+    main(['major'])
+    assert '3.0.0-0' == tmpdir.join("VERSION").read()

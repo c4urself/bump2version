@@ -1,4 +1,3 @@
-import io
 import os
 from setuptools import setup
 
@@ -42,4 +41,10 @@ setup(
         'Programming Language :: Python :: 3 :: Only',
         'Programming Language :: Python :: Implementation :: PyPy',
     ],
+    extras_require={
+        'test': [
+            'testfixtures>=1.2.0',
+            'pytest>=3.4.0',
+         ],
+    },
 )

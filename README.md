@@ -3,8 +3,7 @@
 [![image](https://img.shields.io/pypi/v/bump2version.svg)](https://pypi.org/project/bump2version/)
 [![image](https://img.shields.io/pypi/l/bump2version.svg)](https://pypi.org/project/bump2version/)
 [![image](https://img.shields.io/pypi/pyversions/bump2version.svg)](https://pypi.org/project/bump2version/)
-[![Travis](https://img.shields.io/travis/c4urself/bump2version/master.svg?logo=travis)](https://travis-ci.org/c4urself/bump2version)
-[![AppVeyor](https://img.shields.io/appveyor/ci/c4urself/bump2version.svg?logo=appveyor)](https://ci.appveyor.com/project/c4urself/bump2version)
+[![GitHub Actions](https://github.com/c4urself/bump2version/workflows/CI/badge.svg)](https://github.com/c4urself/bump2version/actions)
 
 ## NOTE
 
@@ -163,10 +162,29 @@ General configuration is grouped in a `[bumpversion]` section.
   Also available as command-line flag `tag-name`.  Example usage:
   `bump2version --tag-name 'release-{new_version}' patch`
 
-  In addition, it is also possible to provide a tag message by using `--tag-message TAG_MESSAGE`. Example usage:
-  `bump2version --tag-name 'release-{new_version}' --tag-message "Release {new_version}" patch`
+#### `tag_message =`
+  _**[optional]**_<br />
+  **default:** `Bump version: {current_version} → {new_version}`
 
-  * If neither tag message or sign tag is provided, `bumpversion` uses a `lightweight` tag in Git. Otherwise, it utilizes an `annotated` Git tag. You can read more about Git tagging [here](https://git-scm.com/book/en/v2/Git-Basics-Tagging).
+  The tag message to use when creating a tag. Only valid when using `--tag` / `tag = True`.
+
+  This is templated using the [Python Format String Syntax](https://docs.python.org/3/library/string.html#format-string-syntax).
+  Available in the template context are `current_version` and `new_version`
+  as well as `current_[part]` and `new_[part]` (e.g. '`current_major`'
+  or '`new_patch`').
+  In addition, all environment variables are exposed, prefixed with `$`.
+  You can also use the variables `now` or `utcnow` to get a current timestamp. Both accept
+  datetime formatting (when used like as in `{now:%d.%m.%Y}`).
+
+  Also available as command-line flag `--tag-message`.  Example usage:
+  `bump2version --tag-message 'Release {new_version}' patch`
+
+  `bump2version` creates an `annotated` tag in Git by default. To disable this and create a `lightweight` tag, you must explicitly set an empty `tag_message`:
+
+  * either in the configuration file: `tag_message =`
+  * or in the command-line: `bump2version --tag-message ''`
+
+  You can read more about Git tagging [here](https://git-scm.com/book/en/v2/Git-Basics-Tagging).
 
 #### `commit = (True | False)`
   _**[optional]**_<br />
@@ -203,7 +221,7 @@ General configuration is grouped in a `[bumpversion]` section.
   `bump2version --message '[{now:%Y-%m-%d}] Jenkins Build {$BUILD_NUMBER}: {new_version}' patch`)
 
 #### `commit_args =`
-  _**[optional**_<br />
+  _**[optional]**_<br />
   **default:** empty
 
   Extra arguments to pass to commit command. Only valid when using `--commit` /
@@ -283,10 +301,71 @@ values =
   `bump2version release` again would bump `1.beta` to `1`, because
   `release` being `gamma` is configured optional.
 
+  You should consider the version of `1` to technically be `1.gamma`
+  with the `.gamma` part not being serialized since it is optional.
+  The `{num}` entry in the `serialize` list allows the release part to be
+  hidden. If you only had `{num}.{release}`, an optional release will always
+  be serialized.
+
+  Attempting to bump the release when it is the value of
+  `gamma` will cause a `ValueError` as it will think you are trying to
+  exceed the `values` list of the release part.
+
 #### `first_value =`
   **default**: The first entry in `values =`.
 
   When the part is reset, the value will be set to the value specified here.
+
+  Example:
+
+```ini
+[bumpversion]
+current_version = 1.alpha1
+parse = (?P<num>\d+)(\.(?P<release>.*)(?P<build>\d+))?
+serialize =
+  {num}.{release}{build}
+
+[bumpversion:part:release]
+values =
+  alpha
+  beta
+  gamma
+
+[bumpversion:part:build]
+first_value = 1
+```
+
+  Here, `bump2version release` would bump `1.alpha1` to `1.beta1`.
+
+  Without the `first_value = 1` of the build part configured,
+  `bump2version release` would bump `1.alpha1` to `1.beta0`, starting
+  the build at `0`.
+
+
+#### `independent =`
+  **default**: `False`
+
+  When this value is set to `True`, the part is not reset when other parts are incremented. Its incrementation is
+  independent of the other parts. It is in particular useful when you have a build number in your version that is
+  incremented independently of the actual version.
+
+  Example:
+
+```ini
+[bumpversion]
+current_version: 2.1.6-5123
+parse = (?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)\-(?P<build>\d+)
+serialize = {major}.{minor}.{patch}-{build}
+
+[bumpversion:file:VERSION.txt]
+
+[bumpversion:part:build]
+independent = True
+```
+
+  Here, `bump2version build` would bump `2.1.6-5123` to `2.1.6-5124`. Executing`bump2version major`
+  would bump `2.1.6-5124` to `3.0.0-5124` without resetting the build number.
+  
 
 ### Configuration file -- File specific configuration
 
@@ -371,6 +450,27 @@ replace = MyProject=={new_version}
 ```
 
   Can be multiple lines, templated using [Python Format String Syntax](https://docs.python.org/3/library/string.html#format-string-syntax).
+
+  **NOTE**: (*Updated in v1.0.1*) It is important to point out that if a
+  custom search pattern is configured, then `bump2version` will only perform
+  a change if it finds an exact match and will not fallback to the default
+  pattern. This is to prevent accidentally changing strings that match the
+  default pattern when there is a typo in the custom search pattern.
+
+  For example, if the string to be replaced includes literal quotes,
+  the search and replace patterns must include them too to match. Given the
+  file `version.sh`:
+
+      MY_VERSION="1.2.3"
+
+  Then the following search and replace patterns (including quotes) would be
+  required:
+
+```ini
+[bumpversion:file:version.sh]
+search = MY_VERSION="{current_version}"
+replace = MY_VERSION="{new_version}"
+```
 
 ## Command-line Options
 
