@@ -3,8 +3,7 @@
 [![image](https://img.shields.io/pypi/v/bump2version.svg)](https://pypi.org/project/bump2version/)
 [![image](https://img.shields.io/pypi/l/bump2version.svg)](https://pypi.org/project/bump2version/)
 [![image](https://img.shields.io/pypi/pyversions/bump2version.svg)](https://pypi.org/project/bump2version/)
-[![Travis](https://img.shields.io/travis/c4urself/bump2version/master.svg?logo=travis)](https://travis-ci.org/c4urself/bump2version)
-[![AppVeyor](https://img.shields.io/appveyor/ci/c4urself/bump2version.svg?logo=appveyor)](https://ci.appveyor.com/project/c4urself/bump2version)
+[![GitHub Actions](https://github.com/c4urself/bump2version/workflows/CI/badge.svg)](https://github.com/c4urself/bump2version/actions)
 
 ## NOTE
 
@@ -341,6 +340,32 @@ first_value = 1
   Without the `first_value = 1` of the build part configured,
   `bump2version release` would bump `1.alpha1` to `1.beta0`, starting
   the build at `0`.
+
+
+#### `independent =`
+  **default**: `False`
+
+  When this value is set to `True`, the part is not reset when other parts are incremented. Its incrementation is
+  independent of the other parts. It is in particular useful when you have a build number in your version that is
+  incremented independently of the actual version.
+
+  Example:
+
+```ini
+[bumpversion]
+current_version: 2.1.6-5123
+parse = (?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)\-(?P<build>\d+)
+serialize = {major}.{minor}.{patch}-{build}
+
+[bumpversion:file:VERSION.txt]
+
+[bumpversion:part:build]
+independent = True
+```
+
+  Here, `bump2version build` would bump `2.1.6-5123` to `2.1.6-5124`. Executing`bump2version major`
+  would bump `2.1.6-5124` to `3.0.0-5124` without resetting the build number.
+  
 
 ### Configuration file -- File specific configuration
 
