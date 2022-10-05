@@ -503,6 +503,11 @@ Additionally, the following options are available:
     current_version=0.0.18
     new_version=0.0.19
 
+`--config-file`
+  Use a config file different to the default `.bumpversion.cfg.` This makes bumpversion
+  possible to handle multiple version within the same project e.g. when the helm
+  chart version differs from the appVersion in the Chart.yaml.
+
 `-h, --help`
   Print help and exit
 
