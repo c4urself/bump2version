@@ -1,0 +1,19 @@
+# Parser information.
+cff-version: 1.2.0
+message: Please cite this software using these meta data.
+
+# Version information.
+date-released: 2020-10-07
+version: 1.0.2-dev
+
+# Project information.
+abstract: Version-bump your software with a single command!
+authors:
+  - alias: c4urself
+    family-names: Verkerk
+    given-names: Christian
+  - name: The bump2version Community
+license: MIT
+repository-code: https://github.com/c4urself/bump2version
+title: bump2version
+url: https://pypi.python.org/pypi/bump2version
