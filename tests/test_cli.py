@@ -2410,32 +2410,32 @@ def test_special_char_escapes(tmpdir, char, var):
     """
     tmpdir.join("VERSION").write(
         dedent(
-            f"""
+            """
             1.0.0
-            {char}1.0.0
-            """.lstrip("\n")
+            %s1.0.0
+            """.lstrip("\n") % char
         )
     )
     tmpdir.join(".bumpversion.cfg").write(
         dedent(
-            f"""
+            """
             [bumpversion]
             current_version: 1.0.0
-            search = {{{var}}}{{current_version}}
-            replace = {{{var}}}{{new_version}}
+            search = {%s}{current_version}
+            replace = {%s}{new_version}
 
             [bumpversion:file:VERSION]
-            """
+            """ % (var, var)
         )
     )
     tmpdir.chdir()
     main(["major"])
     assert tmpdir.join("VERSION").read() == dedent(
         # assert that first line did not match while second did
-        f"""
+        """
         1.0.0
-        {char}2.0.0
-        """.lstrip("\n")
+        %s2.0.0
+        """.lstrip("\n") % char
     )
 
 
@@ -2445,21 +2445,21 @@ def test_special_characters_docs(tmpdir):
     """
     def json_for_version(version):
         return dedent(
-            f"""
-            {{
+            """
+            {
               "name": "mypackage",
-              "version": "{version}",
+              "version": "%s",
               "dependencies": [
-                {{
+                {
                   "name": "mydependency",
                   "version": "1.0.0"
-                }}
+                }
               ]
-            }}
-            """.lstrip("\n")
+            }
+            """.lstrip("\n") % version
         )
 
-    tmpdir.join("version.json").write(json_for_version("1.0.0"))
+    tmpdir.join("version.json").write(json_for_version("1.0.0"))  # same version as mydependency
     tmpdir.join(".bumpversion.cfg").write(
         dedent(
             """
