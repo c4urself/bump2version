@@ -472,6 +472,46 @@ search = MY_VERSION="{current_version}"
 replace = MY_VERSION="{new_version}"
 ```
 
+### Configuration file -- Special characters
+
+Some characters have a special meaning in the config file and may need to be
+escaped if you want to use them as part of values. Examples are comment
+characters `#` and `;`, as well as whitespace characters. Leading whitespace
+characters are dropped, and comment characters at the beginning of a line make
+the whole line a comment. When you do need to express these characters at the
+beginning of a line, you can use `{#}`, `{;}`, `{space}` and `{tab}`
+respectively.
+
+For example, given the following `version.json`:
+```
+{
+  "name": "mypackage",
+  "version": "1.0.0",
+  "dependencies": [
+    {
+      "name": "mydependency",
+      "version": "1.0.0"
+    }
+  ]
+}
+```
+
+Suppose we want to match the version for "mypackage", but not the version of any
+dependency. This could be specified as follows:
+```ini
+[bumpversion]
+current_version = 1.0.0
+# leading spaces are dropped: use {space} instead for at least the first space
+# we want to match on each line
+search = "name": "mypackage",
+  {space}{space}"version": "{current_version}"
+replace = "name": "mypackage",
+  {space}{space}"version": "{new_version}"
+
+[bumpversion:file:version.json]
+```
+
+
 ## Command-line Options
 
 Most of the configuration values above can also be given as an option on the command-line.
