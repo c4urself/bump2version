@@ -57,7 +57,11 @@ RE_DETECT_SECTION_TYPE = re.compile(
 logger_list = logging.getLogger("bumpversion.list")
 logger = logging.getLogger(__name__)
 time_context = {"now": datetime.now(), "utcnow": datetime.utcnow()}
-special_char_context = {c: c for c in ("#", ";")}
+special_char_context = {
+    **{c: c for c in ("#", ";")},
+    "space": " ",
+    "tab": "\t",
+}
 
 
 OPTIONAL_ARGUMENTS_THAT_TAKE_VALUES = [

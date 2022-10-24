@@ -2392,3 +2392,90 @@ def test_independent_falsy_value_in_config_does_not_bump_independently(tmpdir):
 
     main(['major'])
     assert '3.0.0-0' == tmpdir.join("VERSION").read()
+
+
+@pytest.mark.parametrize(
+    "char, var",
+    [
+        ("#", "#"),
+        (";", ";"),
+        (" ", "space"),
+        ("\t", "tab"),
+    ],
+)
+def test_special_char_escapes(tmpdir, char, var):
+    """
+    Verify behavior of escapes (through string format variables) for characters that have a special meaning in the .cfg file
+    syntax when used in a value.
+    """
+    tmpdir.join("VERSION").write(
+        dedent(
+            """
+            1.0.0
+            %s1.0.0
+            """.lstrip("\n") % char
+        )
+    )
+    tmpdir.join(".bumpversion.cfg").write(
+        dedent(
+            """
+            [bumpversion]
+            current_version: 1.0.0
+            search = {%s}{current_version}
+            replace = {%s}{new_version}
+
+            [bumpversion:file:VERSION]
+            """ % (var, var)
+        )
+    )
+    tmpdir.chdir()
+    main(["major"])
+    assert tmpdir.join("VERSION").read() == dedent(
+        # assert that first line did not match while second did
+        """
+        1.0.0
+        %s2.0.0
+        """.lstrip("\n") % char
+    )
+
+
+def test_special_characters_docs(tmpdir):
+    """
+    Verify that special characters snippets in the documentation works as advertized.
+    """
+    def json_for_version(version):
+        return dedent(
+            """
+            {
+              "name": "mypackage",
+              "version": "%s",
+              "dependencies": [
+                {
+                  "name": "mydependency",
+                  "version": "1.0.0"
+                }
+              ]
+            }
+            """.lstrip("\n") % version
+        )
+
+    tmpdir.join("version.json").write(json_for_version("1.0.0"))  # same version as mydependency
+    tmpdir.join(".bumpversion.cfg").write(
+        dedent(
+            """
+            [bumpversion]
+            current_version = 1.0.0
+            # leading spaces are dropped: use {space} instead for at least the first space
+            # we want to match on each line
+            search = "name": "mypackage",
+              {space}{space}"version": "{current_version}"
+            replace = "name": "mypackage",
+              {space}{space}"version": "{new_version}"
+
+            [bumpversion:file:version.json]
+            """
+        )
+    )
+    tmpdir.chdir()
+    main(["major"])
+    assert tmpdir.join("version.json").read() == json_for_version("2.0.0")
