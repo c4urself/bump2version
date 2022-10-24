@@ -1,5 +1,6 @@
 **unreleased**
 **v1.0.2-dev**
+- Added: expanded set of special character escapes and added documentation
 - Housekeeping: migrated from travis+appveyor to GitHub Actions for CI, thanks @clbarnes
 
 **v1.0.1**

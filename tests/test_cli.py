@@ -1401,8 +1401,8 @@ def test_subjunctive_dry_run_logging(tmpdir, vcs):
         commit = True
         tag = True
         serialize =
-        	{major}.{minor}.{patch}
-        	{major}.{minor}
+            {major}.{minor}.{patch}
+            {major}.{minor}
         parse = (?P<major>\d+)\.(?P<minor>\d+)(\.(?P<patch>\d+))?
         [bumpversion:file:dont_touch_me.txt]
     """).strip())
@@ -2392,3 +2392,48 @@ def test_independent_falsy_value_in_config_does_not_bump_independently(tmpdir):
 
     main(['major'])
     assert '3.0.0-0' == tmpdir.join("VERSION").read()
+
+
+@pytest.mark.parametrize(
+    "char, var",
+    [
+        ("#", "#"),
+        (";", ";"),
+        (" ", "space"),
+        ("\t", "tab"),
+    ],
+)
+def test_special_char_escapes(tmpdir, char, var):
+    """
+    Verify behavior of escapes (through string format variables) for characters that have a special meaning in the .cfg file
+    syntax when used in a value.
+    """
+    tmpdir.join("VERSION").write(
+        dedent(
+            f"""
+            1.0.0
+            {char}1.0.0
+            """.lstrip("\n")
+        )
+    )
+    tmpdir.join(".bumpversion.cfg").write(
+        dedent(
+            f"""
+            [bumpversion]
+            current_version: 1.0.0
+            search = {{{var}}}{{current_version}}
+            replace = {{{var}}}{{new_version}}
+
+            [bumpversion:file:VERSION]
+            """
+        )
+    )
+    tmpdir.chdir()
+    main(["major"])
+    assert tmpdir.join("VERSION").read() == dedent(
+        # assert that first line did not match while second did
+        f"""
+        1.0.0
+        {char}2.0.0
+        """.lstrip("\n")
+    )
