@@ -478,9 +478,10 @@ Some characters have a special meaning in the config file and may need to be
 escaped if you want to use them as part of values. Examples are comment
 characters `#` and `;`, as well as whitespace characters. Leading whitespace
 characters are dropped, and comment characters at the beginning of a line make
-the whole line a comment. When you do need to express these characters at the
-beginning of a line, you can use `{#}`, `{;}`, `{space}` and `{tab}`
-respectively.
+the whole line a comment.
+
+When you do need to express these characters at the beginning of a line, you can
+use the special variables `{#}`, `{;}`, `{space}` and `{tab}` respectively.
 
 For example, given the following `version.json`:
 ```
