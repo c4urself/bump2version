@@ -2437,3 +2437,45 @@ def test_special_char_escapes(tmpdir, char, var):
         {char}2.0.0
         """.lstrip("\n")
     )
+
+
+def test_special_characters_docs(tmpdir):
+    """
+    Verify that special characters snippets in the documentation works as advertized.
+    """
+    def json_for_version(version):
+        return dedent(
+            f"""
+            {{
+              "name": "mypackage",
+              "version": "{version}",
+              "dependencies": [
+                {{
+                  "name": "mydependency",
+                  "version": "1.0.0"
+                }}
+              ]
+            }}
+            """.lstrip("\n")
+        )
+
+    tmpdir.join("version.json").write(json_for_version("1.0.0"))
+    tmpdir.join(".bumpversion.cfg").write(
+        dedent(
+            """
+            [bumpversion]
+            current_version = 1.0.0
+            # leading spaces are dropped: use {space} instead for at least the first space
+            # we want to match on each line
+            search = "name": "mypackage",
+              {space}{space}"version": "{current_version}"
+            replace = "name": "mypackage",
+              {space}{space}"version": "{new_version}"
+
+            [bumpversion:file:version.json]
+            """
+        )
+    )
+    tmpdir.chdir()
+    main(["major"])
+    assert tmpdir.join("version.json").read() == json_for_version("2.0.0")
