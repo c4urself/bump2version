@@ -1924,7 +1924,10 @@ def test_non_matching_search_does_not_modify_file(tmpdir):
 
 
 def test_non_matching_search_does_not_modify_file_multiline(tmpdir):
-    # TODO: docstring + refer to issue nr
+    """
+    Verify that a multiline search with trailing characters on the first line or leading characters on the last line does not
+    match (#198).
+    """
     tmpdir.chdir()
 
     version_content = dedent(
@@ -1959,8 +1962,7 @@ def test_non_matching_search_does_not_modify_file_multiline(tmpdir):
         exceptions.VersionNotFoundException,
         match="Did not find 'multi\nline\nmatching' in file: 'VERSION'"
     ):
-        # TODO: verbose required?
-        main(['patch', '--verbose'])
+        main(['patch'])
 
     assert version_content == tmpdir.join("VERSION").read()
     assert config_content in tmpdir.join(".bumpversion.cfg").read()
