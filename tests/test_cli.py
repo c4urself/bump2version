@@ -1923,6 +1923,49 @@ def test_non_matching_search_does_not_modify_file(tmpdir):
     assert config_content in tmpdir.join(".bumpversion.cfg").read()
 
 
+def test_non_matching_search_does_not_modify_file_multiline(tmpdir):
+    # TODO: docstring + refer to issue nr
+    tmpdir.chdir()
+
+    version_content = dedent(
+        """
+        multi TRAILING
+        line
+        matching 1.0.0
+
+        multi
+        line
+        LEADING matching 1.0.0
+        """
+    )
+
+    config_content = dedent(
+        """
+        [bumpversion]
+        current_version = 1.0.0
+
+        [bumpversion:file:VERSION]
+        search = multi
+            line
+            matching
+        replace = REPLACEMENT
+        """
+    )
+
+    tmpdir.join("VERSION").write(version_content)
+    tmpdir.join(".bumpversion.cfg").write(config_content)
+
+    with pytest.raises(
+        exceptions.VersionNotFoundException,
+        match="Did not find 'multi\nline\nmatching' in file: 'VERSION'"
+    ):
+        # TODO: verbose required?
+        main(['patch', '--verbose'])
+
+    assert version_content == tmpdir.join("VERSION").read()
+    assert config_content in tmpdir.join(".bumpversion.cfg").read()
+
+
 def test_search_replace_cli(tmpdir):
     tmpdir.join("file89").write("My birthday: 3.5.98\nCurrent version: 3.5.98")
     tmpdir.chdir()
