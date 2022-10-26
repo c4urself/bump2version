@@ -1,7 +1,6 @@
 from argparse import _AppendAction
 from difflib import unified_diff
 import io
-import itertools
 import logging
 import os
 
@@ -73,39 +72,29 @@ class ConfiguredFile:
         )
 
     def contains(self, search):
-        """
-        Returns true iff the search string is found in this file. Ignores differences in line endings (LF/CRLF).
-        """
         if not search:
             return False
 
-        search_lines = search.splitlines(keepends=True)
-        # normalize line endings to LF
-        normalized_search = "\n".join(search_lines)
-
         with open(self.path, "rt", encoding="utf-8") as f:
-            file_lines = f.readlines()
-        normalized_file = "\n".join(file_lines)
-        index = normalized_file.find(normalized_search)
-        if index == -1:
-            return False
-        accumulative_line_length = itertools.accumulate(
-            itertools.chain([0], file_lines),  # accumulate does not take initial arg in 3.5
-            lambda acc, line: acc + len(line) + 1,
-        )
-        *_, (match_line, _) = itertools.takewhile(
-            lambda tup: tup[1] <= index,
-            enumerate(accumulative_line_length),
-        )
-        logger.info(
-            "Found '%s' in %s at line %s: %s",
-            search,
-            self.path,
-            match_line,
-            file_lines[match_line + len(search_lines) - 1].rstrip(),
-        )
-        return True
+            search_lines = search.splitlines()
+            lookbehind = []
 
+            for lineno, line in enumerate(f.readlines()):
+                lookbehind.append(line.rstrip("\n"))
+
+                if len(lookbehind) > len(search_lines):
+                    lookbehind = lookbehind[1:]
+
+                if "\n".join(search_lines) in "\n".join(lookbehind):
+                    logger.info(
+                        "Found '%s' in %s at line %s: %s",
+                        search,
+                        self.path,
+                        lineno - (len(lookbehind) - 1),
+                        line.rstrip(),
+                    )
+                    return True
+        return False
 
     def replace(self, current_version, new_version, context, dry_run):
 
