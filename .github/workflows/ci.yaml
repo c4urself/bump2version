@@ -4,12 +4,7 @@ on:
   - push
   - pull_request
 
-defaults:
-  run:
-    shell: bash
-
 jobs:
-
   tox:
     strategy:
       fail-fast: false
@@ -18,27 +13,30 @@ jobs:
           - ubuntu-latest
           - windows-latest
         python-version:
-          - "3.6"
           - "3.7"
           - "3.8"
-          - "pypy-3.7"
+          - "3.9"
+          - "3.10"
+          - "3.11"
+          - "pypy-3.8"
+          - "pypy-3.9"
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - name: Check git is working
         run: |
           git config --global user.email "bumpversion-test-git@github.actions"
-          git config --global user.name "Testing Git on Travis CI"
+          git config --global user.name "Testing Git on GitHub Actions"
           git --version
           git config --list
-      - name: Check mercurial is working
-        run: |
-          echo -e '[ui]\nusername = Testing Mercurial on Travis CI <bumpversion-test-hg@travis.ci>' > ~/.hgrc
-          hg --version
       - name: Install test dependencies
         run: pip install tox tox-gh-actions
       - name: Run setup and tests as defined in tox.ini
         run: tox
+      - name: Check mercurial is working
+        run: |
+          echo -e '[ui]\nusername = Testing Mercurial on Travis CI <bumpversion-test-hg@travis.ci>' > ~/.hgrc
+          hg --version
