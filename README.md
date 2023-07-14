@@ -5,9 +5,11 @@
 [![image](https://img.shields.io/pypi/pyversions/bump2version.svg)](https://pypi.org/project/bump2version/)
 [![GitHub Actions](https://github.com/c4urself/bump2version/workflows/CI/badge.svg)](https://github.com/c4urself/bump2version/actions)
 
-## NOTE
-
-This is a maintained fork of the excellent [bumpversion project](https://github.com/peritus/bumpversion).
+> ⚠️ **Warning**
+>
+> `bump2version` is **no longer maintained**.
+>
+> You should **switch to [`bump-my-version`](https://github.com/callowayproject/bump-my-version)**.
 
 ## Overview
 
