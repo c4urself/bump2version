@@ -2,6 +2,8 @@
 **v1.0.2-dev**
 - Declare `bump2version` as unmaintained
 - Housekeeping: migrated from travis+appveyor to GitHub Actions for CI, thanks @clbarnes
+- Drop Python3.6 support, thanks @clbarnes
+- Add Python3.9, thanks @clbarnes
 
 **v1.0.1**
 - Added: enable special characters in search/replace, thanks @mckelvin
