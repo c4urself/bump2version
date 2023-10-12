@@ -101,6 +101,7 @@ EXPECTED_OPTIONS = r"""
 [--config-file FILE]
 [--verbose]
 [--list]
+[--show]
 [--allow-dirty]
 [--parse REGEX]
 [--serialize FORMAT]
@@ -134,6 +135,7 @@ optional arguments:
                         (default: .bumpversion.cfg)
   --verbose             Print verbose logging to stderr (default: 0)
   --list                List machine readable information (default: False)
+  --show                Show machine readable current version (default: False)
   --allow-dirty         Don't abort if working directory is dirty (default:
                         False)
   --parse REGEX         Regex parsing the version string (default:
@@ -1546,6 +1548,32 @@ def test_no_list_no_stdout(tmpdir, vcs):
     ).stdout.decode('utf-8')
 
     assert out == ""
+
+
+def test_show(tmpdir, vcs):
+    tmpdir.join("show_me_what_i_want_to_see.txt").write("0.7.9")
+    tmpdir.chdir()
+
+    tmpdir.join(".bumpversion.cfg").write(dedent("""
+        [bumpversion]
+        current_version = 0.7.9
+        commit = False
+        tag = False
+        [bumpversion:file:show_me_what_i_want_to_see.txt]
+        """).strip())
+
+    check_call([vcs, "init"])
+    check_call([vcs, "add", "show_me_what_i_want_to_see.txt"])
+    check_call([vcs, "commit", "-m", "initial commit"])
+
+    with LogCapture() as log_capture:
+        main(['--show'])
+
+    log_capture.check(
+        ('bumpversion.show', 'INFO', '0.7.9'),
+    )
+
+    assert '0.7.9' == tmpdir.join("show_me_what_i_want_to_see.txt").read()
 
 
 def test_bump_non_numeric_parts(tmpdir):
