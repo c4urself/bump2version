@@ -1261,6 +1261,42 @@ parse = (?P<major>\d+)\.(?P<minor>\d+)(\.(?P<patch>\d+))?
 
     assert '0.6.1' == tmpdir.join("fileD").read()
 
+def test_serialize_via_cli_takes_priority_over_bumpversion_cfg(tmpdir):
+    tmpdir.join("fileD").write("0.6")
+    tmpdir.chdir()
+
+    tmpdir.join(".bumpversion.cfg").write(r"""[bumpversion]
+current_version = 0.6
+serialize =
+  {major}.{minor}
+parse = (?P<major>\d+)\.(?P<minor>\d+)(\.(?P<patch>\d+))?
+[bumpversion:file:fileD]
+""")
+
+    main(['minor',
+          '--serialize', '{major}.{minor}.{patch}'])
+
+    assert '0.7.0' == tmpdir.join("fileD").read()
+    assert '0.7.0' in tmpdir.join(".bumpversion.cfg").read()
+
+def test_serialize_via_cli_takes_priority_over_bumpversion_cfg_with_env_variable(tmpdir):
+    tmpdir.join("fileD").write("0.6")
+    tmpdir.chdir()
+
+    tmpdir.join(".bumpversion.cfg").write(r"""[bumpversion]
+current_version = 0.6
+serialize = {major}.{minor}
+parse = (?P<major>\d+)\.(?P<minor>\d+)(\.(?P<patch>\d+))?
+[bumpversion:file:fileD]
+""")
+
+    os.environ['BUILD_ID'] = 'pr_123'
+
+    main(['minor',
+          '--serialize', '{major}.{minor}.{patch}+{$BUILD_ID}'])
+
+    assert '0.7.0+pr_123' == tmpdir.join("fileD").read()
+    assert '0.7.0+pr_123' in tmpdir.join(".bumpversion.cfg").read()
 
 def test_search_uses_shortest_possible_custom_search_pattern(tmpdir):
     config = dedent(r"""
