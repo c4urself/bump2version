@@ -51,17 +51,11 @@ class ConfiguredFile:
         if self.contains(search_expression):
             return
 
-        # the `search` pattern did not match, but the original supplied
-        # version number (representing the same version part values) might
-        # match instead.
-
-        # check whether `search` isn't customized, i.e. should match only
-        # very specific parts of the file
-        search_pattern_is_default = self._versionconfig.search == "{current_version}"
-
-        if search_pattern_is_default and self.contains(version.original):
-            # original version is present and we're not looking for something
-            # more specific -> this is accepted as a match
+        # try original version to construct search_expression
+        search_expression = self._versionconfig.search.format(
+            current_version=version.original
+        )
+        if self.contains(search_expression):
             return
 
         # version not found
@@ -118,8 +112,11 @@ class ConfiguredFile:
 
         if file_content_before == file_content_after:
             # TODO expose this to be configurable
+            search_for_original_formatted = self._versionconfig.search.format(
+                current_version=current_version.original
+            )
             file_content_after = file_content_before.replace(
-                current_version.original, replace_with
+                search_for_original_formatted, replace_with
             )
 
         if file_content_before != file_content_after:
