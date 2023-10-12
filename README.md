@@ -106,6 +106,13 @@ tag = True
 If no `.bumpversion.cfg` exists, `bump2version` will also look into
 `setup.cfg` for configuration.
 
+Beware: the default operation of bump2version is rewriting the complete file, causing
+the loss of comments and custom formatting. To avoid this, add the cfg-file itself to
+be bumped by bump2version. Like:
+```ini
+[bumpversion:file:.bumpversion.cfg]
+```
+
 ### Configuration file -- Global configuration
 
 General configuration is grouped in a `[bumpversion]` section.
