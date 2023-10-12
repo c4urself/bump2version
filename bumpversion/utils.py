@@ -85,11 +85,7 @@ class ConfiguredFile:
                 if len(lookbehind) > len(search_lines):
                     lookbehind = lookbehind[1:]
 
-                if (
-                    search_lines[0] in lookbehind[0]
-                    and search_lines[-1] in lookbehind[-1]
-                    and search_lines[1:-1] == lookbehind[1:-1]
-                ):
+                if "\n".join(search_lines) in "\n".join(lookbehind):
                     logger.info(
                         "Found '%s' in %s at line %s: %s",
                         search,
