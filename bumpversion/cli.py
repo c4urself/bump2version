@@ -55,6 +55,7 @@ RE_DETECT_SECTION_TYPE = re.compile(
 )
 
 logger_list = logging.getLogger("bumpversion.list")
+logger_root = logging.getLogger("bumpversion")
 logger = logging.getLogger(__name__)
 time_context = {"now": datetime.now(), "utcnow": datetime.utcnow()}
 special_char_context = {c: c for c in ("#", ";")}
@@ -205,10 +206,10 @@ def _parse_arguments_phase_1(original_args):
 
 def _setup_logging(show_list, verbose):
     logformatter = logging.Formatter("%(message)s")
-    if not logger.handlers:
+    if not logger_root.handlers:
         ch1 = logging.StreamHandler(sys.stderr)
         ch1.setFormatter(logformatter)
-        logger.addHandler(ch1)
+        logger_root.addHandler(ch1)
     if not logger_list.handlers:
         ch2 = logging.StreamHandler(sys.stdout)
         ch2.setFormatter(logformatter)
