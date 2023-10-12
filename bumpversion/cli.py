@@ -55,7 +55,7 @@ RE_DETECT_SECTION_TYPE = re.compile(
 )
 
 logger_list = logging.getLogger("bumpversion.list")
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("bumpversion.cli")
 time_context = {"now": datetime.now(), "utcnow": datetime.utcnow()}
 special_char_context = {c: c for c in ("#", ";")}
 
@@ -68,6 +68,7 @@ OPTIONAL_ARGUMENTS_THAT_TAKE_VALUES = [
     "--parse",
     "--serialize",
     "--search",
+    "--search-regex",
     "--replace",
     "--tag-name",
     "--tag-message",
@@ -364,6 +365,10 @@ def _load_configuration(config_file, explicit_config, defaults):
                     "search", "{current_version}"
                 )
 
+            if "search_regex" not in section_config:
+                section_config["search_regex"] = defaults.get("search_regex", "")
+
+
             if "replace" not in section_config:
                 section_config["replace"] = defaults.get("replace", "{new_version}")
 
@@ -409,6 +414,11 @@ def _parse_arguments_phase_2(args, known_args, defaults, root_parser):
         default=defaults.get("search", "{current_version}"),
     )
     parser2.add_argument(
+        "--search-regex",
+        metavar="SEARCH_REGEX",
+        help="Regex pattern to search",
+    )
+    parser2.add_argument(
         "--replace",
         metavar="REPLACE",
         help="Template for complete string to replace",
@@ -429,6 +439,7 @@ def _setup_versionconfig(known_args, part_configs):
             parse=known_args.parse,
             serialize=known_args.serialize,
             search=known_args.search,
+            search_regex=known_args.search_regex,
             replace=known_args.replace,
             part_configs=part_configs,
         )

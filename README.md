@@ -428,6 +428,55 @@ serialize =
   might be present multiple times in the file and you mean to only bump one of the
   occurrences. Can be multiple lines, templated using [Python Format String Syntax](https://docs.python.org/3/library/string.html#format-string-syntax)
 
+#### `search_regex =`
+  **default:** none
+
+  Regex to search for the string to be replaced in the file.
+  Support `{current_version}` template string (e.g. `(?<=version='){current_version}(?=')`).
+  If search_regex is defined, the search template string will be ignored in the section.
+
+```ini
+[bumpversion]
+current_version = 2.4.5
+
+[bumpversion:file:pom.xml]
+search_regex = (?<=test-app-java</artifactId>\n\s{4}<version>){current_version}(?=</version>)
+search = <version>{current_version}</version> ; will be ignored
+replace = {new_version}
+```
+ Example of use, when the application version is the same as some dependencies (java application, pom.xml):
+```xml
+    ...
+    <artifactId>test-app-java</artifactId>
+    <version>2.4.5</version>
+    <packaging>jar</packaging>
+    ...
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>2.4.5</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+    ...
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                    <version>2.4.5</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    ...
+```
+  Also available as `--search-regex`
+
 #### `replace =`
   **default:** `{new_version}`
 
