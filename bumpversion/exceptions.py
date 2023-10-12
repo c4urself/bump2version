@@ -30,3 +30,8 @@ class VersionNotFoundException(BumpVersionException):
 
 class InvalidVersionPartException(BumpVersionException):
     """The specified part (e.g. 'bugfix') was not found"""
+
+
+class TaggingFailureException(BumpVersionException):
+    def __init__(self, message):
+        self.message = message

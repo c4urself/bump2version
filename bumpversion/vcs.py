@@ -7,6 +7,7 @@ from tempfile import NamedTemporaryFile
 from bumpversion.exceptions import (
     WorkingDirectoryIsDirtyException,
     MercurialDoesNotSupportSignedTagsException,
+    TaggingFailureException,
 )
 
 
@@ -135,7 +136,10 @@ class Git(BaseVCS):
             command += ["--sign"]
         if message:
             command += ["--message", message]
-        subprocess.check_output(command)
+        try:
+            subprocess.check_output(command, stderr=subprocess.STDOUT)
+        except subprocess.CalledProcessError as e:
+            raise TaggingFailureException(f"{e.returncode} {e.output.decode()}")
 
 
 class Mercurial(BaseVCS):
@@ -175,4 +179,7 @@ class Mercurial(BaseVCS):
             )
         if message:
             command += ["--message", message]
-        subprocess.check_output(command)
+        try:
+            subprocess.check_output(command, stderr=subprocess.STDOUT)
+        except subprocess.CalledProcessError as e:
+            raise TaggingFailureException(f"{e.returncode} {e.output.decode()}")
