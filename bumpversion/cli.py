@@ -294,7 +294,7 @@ def _load_configuration(config_file, explicit_config, defaults):
         except NoOptionError:
             pass  # no default value then ;)
 
-    for boolvaluename in ("commit", "tag", "dry_run"):
+    for boolvaluename in ("commit", "tag", "tag_name", "dry_run"):
         try:
             defaults[boolvaluename] = config.getboolean(
                 "bumpversion", boolvaluename
