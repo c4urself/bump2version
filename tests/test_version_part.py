@@ -4,6 +4,7 @@ from bumpversion.version_part import (
     ConfiguredVersionPartConfiguration,
     NumericVersionPartConfiguration,
     VersionPart,
+    VersionConfig,
 )
 
 
@@ -34,6 +35,29 @@ def test_version_part_bump(confvpc):
     vp = VersionPart(confvpc.first_value, confvpc)
     vc = vp.bump()
     assert vc.value == confvpc.bump(confvpc.first_value)
+
+
+def test_bump_resets_lower_parts_to_default_value():
+    # See bug 134.
+    release_part_config = ConfiguredVersionPartConfiguration(
+        first_value="dev",
+        optional_value="prod",
+        values=["dev", "prod"],
+    )
+    version_config = VersionConfig(
+        parse=r"(?P<major>\d+)(\-(?P<release>[a-z]+)(?P<build>\d+))?",
+        serialize=["{major}-{release}{build}", "{major}"],
+        part_configs={"release": release_part_config},
+        search=None,
+        replace=None,
+    )
+
+    # Start with version "0", mapping to "0-prod0".
+    # Bump `build` from 0 to 1.
+    # Part `release` should remain `prod` and be serialized as such.
+    version = version_config.parse("0")
+    new_version = version.bump("build", version_config.order())
+    assert version_config.serialize(new_version) == "0-prod1"
 
 
 def test_version_part_check_optional_false(confvpc):

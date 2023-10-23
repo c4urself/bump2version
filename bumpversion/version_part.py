@@ -69,7 +69,7 @@ class VersionPart:
         return self._value or self.config.optional_value
 
     def copy(self):
-        return VersionPart(self._value)
+        return VersionPart(self._value, self.config)
 
     def bump(self):
         return VersionPart(self.config.bump(self.value), self.config)
@@ -158,10 +158,7 @@ class VersionConfig:
 
         self.serialize_formats = serialize
 
-        if not part_configs:
-            part_configs = {}
-
-        self.part_configs = part_configs
+        self.part_configs = part_configs or {}
         self.search = search
         self.replace = replace
 
@@ -186,7 +183,6 @@ class VersionConfig:
 
         match = self.parse_regex.search(version_string)
 
-        _parsed = {}
         if not match:
             logger.warning(
                 "Evaluating 'parse' option: '%s' does not parse current version '%s'",
@@ -195,6 +191,7 @@ class VersionConfig:
             )
             return None
 
+        _parsed = {}
         for key, value in match.groupdict().items():
             _parsed[key] = VersionPart(value, self.part_configs.get(key))
 
@@ -289,7 +286,8 @@ class VersionConfig:
 
         return chosen
 
-    def serialize(self, version, context):
+    def serialize(self, version, context=None):
+        context = context or {}
         serialized = self._serialize(
             version, self._choose_serialize_format(version, context), context
         )
