@@ -121,6 +121,10 @@ def main(original_args=None):
         for file_name
         in (file_names or positionals[1:])
     )
+
+    if config_file_exists and config_file not in files:
+        files.extend([ConfiguredFile(config_file, version_config)])
+
     _check_files_contain_version(files, current_version, context)
     _replace_version_in_files(files, current_version, new_version, args.dry_run, context)
     _log_list(config, args.new_version)
@@ -640,7 +644,7 @@ def _update_config_file(
     config.set("bumpversion", "current_version", new_version)
     new_config = io.StringIO()
     try:
-        write_to_config_file = (not dry_run) and config_file_exists
+        write_to_config_file = (not dry_run) and not config_file_exists
 
         logger.info(
             "%s to config file %s:",
