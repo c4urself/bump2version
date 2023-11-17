@@ -2239,6 +2239,26 @@ def test_correct_interpolation_for_setup_cfg_files(tmpdir, configfile):
     assert "current_version = 1.0.0" in tmpdir.join(configfile).read()
 
 
+def test_setup_cfg_metadata_version(tmpdir):
+    """
+    If a setup.cfg file is used and a metadata.version is present,
+    prefer that as if it were the bumpversion.current_version.
+    """
+    tmpdir.join("setup.cfg").write("""[metadata]
+version=0.0.13
+""")
+
+    tmpdir.chdir()
+    main(['patch', '--verbose'])
+
+    assert """[bumpversion]
+
+[metadata]
+version = 0.0.14
+
+""" == tmpdir.join("setup.cfg").read()
+
+
 @pytest.mark.parametrize("newline", [b'\n', b'\r\n'])
 def test_retain_newline(tmpdir, configfile, newline):
     tmpdir.join("file.py").write_binary(dedent("""
