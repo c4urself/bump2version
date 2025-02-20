@@ -1,3 +1,8 @@
+# Successor
+
+[Bump-my-version](https://pypi.org/project/bump-my-version/) is the successor to bump2version and its predecessor bumpversion.
+
+
 # Similar or related tools
 
 * [bumpversion](https://pypi.org/project/bumpversion/) is the original project
@@ -43,3 +48,26 @@
   
 * [gitchangelog](https://pypi.org/project/gitchangelog/) searches
   the git commit history to make a configurable changelog file.
+
+## Other similar or related tools
+
+Without having looked at these, you may find these interesting:
+
+* https://github.com/silent-snowman/git_bump_version
+* https://pypi.org/project/travis-bump-version/
+* https://pypi.org/project/bump/
+* https://pypi.org/project/bump-anything/
+* https://pypi.org/project/bump-release/
+* https://github.com/Yuav/python-package-version
+* https://github.com/keleshev/version
+* https://pypi.org/project/blurb/
+* https://regro.github.io/rever-docs/
+* https://pypi.org/project/pbr/
+* https://pypi.org/project/bumpver/
+* https://pypi.org/project/pyxcute/
+* https://pypi.org/project/bumpytrack/
+* https://pypi.org/project/bumpr/
+* https://pypi.org/project/vbump/
+* https://pypi.org/project/pybump/
+* https://github.com/michaeljoseph/changes
+* https://github.com/kmfarley11/version-checker
