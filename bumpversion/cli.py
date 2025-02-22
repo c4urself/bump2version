@@ -653,7 +653,10 @@ def _update_config_file(
 
         if write_to_config_file:
             with open(config_file, "wt", encoding="utf-8", newline=config_newlines) as f:
-                f.write(new_config.getvalue().strip() + "\n")
+                config_lines = new_config.getvalue().strip().split("\n")
+                # prevent tailing white spaces
+                config_lines = [line.rstrip(" ") + "\n" for line in config_lines]
+                f.writelines(config_lines)
 
     except UnicodeEncodeError:
         warnings.warn(
