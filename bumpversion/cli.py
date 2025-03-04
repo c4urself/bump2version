@@ -599,6 +599,7 @@ def _determine_vcs_dirty(possible_vcses, defaults):
         try:
             vcs.assert_nondirty()
         except WorkingDirectoryIsDirtyException as e:
+            vcs.commit_files_extended = e.message.split('\n')[1:]
             if not defaults["allow_dirty"]:
                 logger.warning(
                     "%s\n\nUse --allow-dirty to override this if you know what you're doing.",
@@ -676,6 +677,15 @@ def _commit_to_vcs(files, context, config_file, config_file_exists, vcs, args,
         "Would prepare" if not do_commit else "Preparing",
         vcs.__name__,
     )
+
+    if hasattr(vcs, 'commit_files_extended'):
+        repr = re.compile('^(?P<Action>[A-Z]+\s)(?:\s*.*\s->\s)?(?P<path>.*)$')
+        for path in vcs.commit_files_extended:
+            change = repr.match(path).groupdict()
+            filename = change.get('path').lstrip().rstrip()
+            if filename not in commit_files:
+                commit_files.append(filename)
+
     for path in commit_files:
         logger.info(
             "%s changes in file '%s' to %s",

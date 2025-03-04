@@ -1,4 +1,6 @@
 **unreleased**
+**v1.0.3**
+**v1.0.3-dev**
 **v1.0.2-dev**
 - Declare `bump2version` as unmaintained
 - Housekeeping: migrated from travis+appveyor to GitHub Actions for CI, thanks @clbarnes
