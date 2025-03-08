@@ -127,7 +127,7 @@ def main(original_args=None):
 
     # store the new version
     _update_config_file(
-        config, config_file, config_newlines, config_file_exists, args.new_version, args.dry_run,
+        config, config_file, config_newlines, config_file_exists, args.new_version, args.dry_run, args.no_update_config,
     )
 
     # commit and tag
@@ -294,7 +294,7 @@ def _load_configuration(config_file, explicit_config, defaults):
         except NoOptionError:
             pass  # no default value then ;)
 
-    for boolvaluename in ("commit", "tag", "dry_run"):
+    for boolvaluename in ("commit", "tag", "dry_run", "no_update_config"):
         try:
             defaults[boolvaluename] = config.getboolean(
                 "bumpversion", boolvaluename
@@ -413,6 +413,12 @@ def _parse_arguments_phase_2(args, known_args, defaults, root_parser):
         metavar="REPLACE",
         help="Template for complete string to replace",
         default=defaults.get("replace", "{new_version}"),
+    )
+    parser2.add_argument(
+        "--no-update-config",
+        action="store_true",
+        help="Do not update the config file with current_version",
+        default=defaults.get("no_update_config", False),
     )
     known_args, remaining_argv = parser2.parse_known_args(args)
 
@@ -635,12 +641,12 @@ def _log_list(config, new_version):
 
 
 def _update_config_file(
-        config, config_file, config_newlines, config_file_exists, new_version, dry_run,
+        config, config_file, config_newlines, config_file_exists, new_version, dry_run, no_update_config,
 ):
     config.set("bumpversion", "current_version", new_version)
     new_config = io.StringIO()
     try:
-        write_to_config_file = (not dry_run) and config_file_exists
+        write_to_config_file = (not dry_run) and (not no_update_config) and config_file_exists
 
         logger.info(
             "%s to config file %s:",

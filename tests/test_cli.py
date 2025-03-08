@@ -144,6 +144,8 @@ optional arguments:
                         {current_version})
   --replace REPLACE     Template for complete string to replace (default:
                         {new_version})
+  --no-update-config    Do not update the config file with current_version
+                        (default: False)
   --current-version VERSION
                         Version that needs to be updated (default: None)
   --no-configured-files
