@@ -2292,6 +2292,24 @@ def test_no_configured_files_still_file_args_work(tmpdir, vcs):
     assert "1.1.2" == tmpdir.join("please_update_me.txt").read()
 
 
+def test_cfg_files_not_rewritten_when_specified(tmpdir):
+    """ when the .bumpversion.cfg is specified as a file to be bumped, the
+    config should not be rewritten (i.e., losing custom foratting + comments). """
+    tmpdir.chdir()
+    initial_config = """[bumpversion]
+current_version = 500.0.0
+# specify the .bumpversion.cfg here to avoid unintentionally rewriting it
+# for example comments are removed or trailing whitespaces
+[bumpversion:file:.bumpversion.cfg]   
+
+"""
+
+    tmpdir.join(".bumpversion.cfg").write(initial_config, mode='w')
+    main(['major'])
+    expected_new_config = initial_config.replace('500', '501')
+    assert expected_new_config == tmpdir.join(".bumpversion.cfg").read(mode='r')
+
+
 class TestSplitArgsInOptionalAndPositional:
 
     def test_all_optional(self):
